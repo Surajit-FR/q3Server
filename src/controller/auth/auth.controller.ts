@@ -578,7 +578,7 @@ export const resetPassword = asyncHandler(
       );
     }
     const userDetails = await UserModel.findOne({
-      $or: [{ email: input }, { phone: input }]
+      $or: [{ email: input }, { phone: input }],
     });
 
     if (!userDetails) {

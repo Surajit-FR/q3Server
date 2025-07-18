@@ -2,11 +2,13 @@ import { app } from './app';
 import connectDB from './db/db';
 import http from 'http';
 import dotenv from "dotenv";
+import { initSocket } from './config/socket';
 dotenv.config({ path: './.env' });
 
 
 
 const server = http.createServer(app);
+initSocket(server)
 
 connectDB().then(() => {
     server.on("error", (error) => {

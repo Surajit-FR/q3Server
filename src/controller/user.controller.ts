@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import UserModel from "../models/user.model";
-import { IUser } from "../../types/schemaTypes";
 import mongoose, { ObjectId } from "mongoose";
 import { asyncHandler } from "../../utils/asyncHandler.utils";
 import { handleResponse } from "../../utils/response.utils";
 import { CustomRequest } from "../../types/commonType";
+import RatingModel from "../models/spRatings.model";
 
 export const getSingleUser = asyncHandler(
   async (req: Request, res: Response) => {
@@ -143,3 +143,47 @@ export const getAllProviders = asyncHandler(
     );
   }
 );
+
+// giveRating controller for customer
+export const giveRating = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: giveRating");
+
+    const { rating, ratedTo, comments } = req.body;
+
+    if (!rating && !ratedTo) {
+      return handleResponse(res, "error", 400, "At least some rating required");
+    }
+
+    // Create a rating
+    const newrating = new RatingModel({
+      ratedBy: req.user?._id,
+      ratedTo: new mongoose.Types.ObjectId(ratedTo),
+      rating,
+      comments,
+    });
+
+    
+    // Save the rating to the database
+    const savedRating = await newrating.save();
+    if (savedRating) {
+      return handleResponse(
+        res,
+        "success",
+        201,
+        savedRating,
+        "Rating submitted successfully"
+      );
+    }
+    return handleResponse(
+      res,
+      "success",
+      201,
+      savedRating,
+      "Error in add rating"
+    );
+  }
+);
+
+
+ 

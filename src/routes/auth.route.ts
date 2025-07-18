@@ -65,5 +65,4 @@ router.route("/logout").post(
 //     saveFcmToken
 // );
 
-
 export default router;
