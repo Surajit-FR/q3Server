@@ -25,11 +25,11 @@ export const generateVerificationCode = (length: number): number => {
   const max = Math.pow(10, length) - 1;
   return Math.floor(min + Math.random() * (max - min + 1));
 };
-
 export const sendOTP = asyncHandler(async (req: Request, res: Response) => {
   console.log("Api runs...: sendOTP");
 
   const { phoneNumber, purpose, userType } = req.body; //phone number with country code
+  console.log(req.body);
 
   if (!phoneNumber) {
     return res
@@ -61,6 +61,7 @@ export const sendOTP = asyncHandler(async (req: Request, res: Response) => {
   if (purpose !== "verifyPhone") {
     const user = await UserModel.findOne({
       phone: phoneNumber,
+      userType,
       isDeleted: false,
     });
     if (!user) {
@@ -106,6 +107,7 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
   const defaultOtp = "00000";
 
   const isOtpValid = otp === defaultOtp || (otpEntry && otpEntry.otp === otp);
+  console.log({ isOtpValid });
 
   if (!isOtpValid) {
     return handleResponse(res, "error", 400, "Invalid OTP");

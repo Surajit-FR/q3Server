@@ -99,7 +99,7 @@ export const startRegistration = asyncHandler(
       insuranceImage,
     } = userData;
     if (phone) {
-      const existingPhone = await UserModel.findOne({ phone });
+      const existingPhone = await UserModel.findOne({ phone, userType });
       if (existingPhone) {
         throw handleResponse(
           res,
@@ -112,7 +112,7 @@ export const startRegistration = asyncHandler(
     }
 
     if (email) {
-      const existingEmail = await UserModel.findOne({ email });
+      const existingEmail = await UserModel.findOne({ email, userType });
       if (existingEmail) {
         throw handleResponse(
           res,
@@ -168,9 +168,10 @@ export const completeRegistration = asyncHandler(
   async (req: Request, res: Response) => {
     console.log("Api runs...: completeRegistration");
 
-    const { phone, password } = req.body;
+    const { phone, password, userType } = req.body;
+    console.log(req.body);
 
-    if (!phone || !password) {
+    if (!phone || !password || !userType) {
       return handleResponse(
         res,
         "error",
@@ -181,7 +182,11 @@ export const completeRegistration = asyncHandler(
     }
 
     // Find the unregistered user
-    const user = await UserModel.findOne({ phone, isRegistered: false });
+    const user = await UserModel.findOne({
+      phone,
+      userType,
+      isRegistered: false,
+    });
 
     if (!user) {
       return handleResponse(
@@ -218,18 +223,22 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     fcmToken,
     isAdminPanel,
   }: IUser & { isAdminPanel?: boolean; userType: Array<string> } = req.body;
-  if (!email && !phone) {
+  if (!userType || (!email && !phone)) {
     return handleResponse(
       res,
       "error",
       400,
       "",
-      "Either email or phone number is required"
+      "Either email or phone number with usertype is required"
     );
+  }
+  if (!password) {
+    return handleResponse(res, "error", 400, "", "password is required");
   }
 
   const user = await UserModel.findOne({
     $or: [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])],
+    userType,
     isDeleted: false,
   });
   if (!user) {
@@ -298,6 +307,9 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     userType: loggedInUser[0].userType,
     isVerified: loggedInUser[0].isVerified,
     accessToken: loggedInUser[0].accessToken,
+    phone: loggedInUser[0].phone,
+    email: loggedInUser[0].email,
+    avatar: loggedInUser[0].avatar,
   };
 
   if (user.userType === "ServiceProvider") {
@@ -477,6 +489,7 @@ export const forgetPassword = asyncHandler(
 
     const { input } = req.body;
     let identifier = "";
+      
     identifier = input.includes("@") ? "email" : "phone";
 
     // Find user by email or phone
@@ -495,7 +508,9 @@ export const forgetPassword = asyncHandler(
       const to = input;
       const filePath = path.join(
         __dirname,
-        "../../",
+        "..",
+        "..",
+        "..",
         "templates",
         "verify_email.html"
       );
@@ -544,7 +559,7 @@ export const forgetPassword = asyncHandler(
             userId: user._id,
           },
           {
-            code: otp,
+            otp,
           },
           {
             upsert: true,
@@ -557,7 +572,7 @@ export const forgetPassword = asyncHandler(
       res,
       "success",
       200,
-      "",
+      { identifier },
       "Verification code sent fsuccessfully"
     );
   }
