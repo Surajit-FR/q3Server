@@ -241,3 +241,7 @@ export const acceptServiceRequest = asyncHandler(
     }
   }
 );
+
+export const handleServiceRequestState = asyncHandler(
+  async (req: CustomRequest, res: Response) => {}
+);

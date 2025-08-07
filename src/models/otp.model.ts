@@ -16,7 +16,7 @@ const otpSchema: Schema<IOTPSchema> = new Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        index: { expires: 30 }
+        // index: { expires: 90 }
     },
 
 }, { timestamps: true });

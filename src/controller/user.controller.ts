@@ -48,14 +48,41 @@ export const getSingleUser = asyncHandler(
 
 export const getAllCustomer = asyncHandler(
   async (req: Request, res: Response) => {
+    const {
+      page = 1,
+      limit = 10,
+      query = "",
+      sortBy = "createdAt",
+      sortType = "desc",
+    } = req.query;
+
+    const pageNumber = parseInt(page as string, 10);
+    const limitNumber = parseInt(limit as string, 10);
+
+    const searchQuery = query
+      ? {
+          $or: [
+            { fullName: { $regex: query, $options: "i" } },
+            { email: { $regex: query, $options: "i" } },
+            { phone: { $regex: query, $options: "i" } },
+          ],
+        }
+      : {};
+
+    const matchCriteria = {
+      isDeleted: false,
+      userType: "Customer",
+      ...searchQuery,
+    };
+
+    const sortCriteria: any = {};
+    sortCriteria[sortBy as string] = sortType === "desc" ? -1 : 1;
+
     console.log("Api runs...: getAllCustomer");
 
     const customersDetails = await UserModel.aggregate([
       {
-        $match: {
-          isDeleted: false,
-          userType: "Customer",
-        },
+        $match: matchCriteria,
       },
       {
         $project: {
@@ -66,7 +93,11 @@ export const getAllCustomer = asyncHandler(
           __v: 0,
         },
       },
+      { $sort: sortCriteria },
+      { $skip: (pageNumber - 1) * limitNumber },
+      { $limit: limitNumber },
     ]);
+    const totalRecords = await UserModel.countDocuments(matchCriteria);
 
     if (customersDetails.length == 0) {
       return handleResponse(
@@ -81,7 +112,14 @@ export const getAllCustomer = asyncHandler(
       res,
       "success",
       200,
-      customersDetails,
+      {
+        customers: customersDetails,
+        pagination: {
+          total: totalRecords,
+          page: pageNumber,
+          limit: limitNumber,
+        },
+      },
       "Customers fetched successfully"
     );
   }
@@ -91,12 +129,39 @@ export const getAllProviders = asyncHandler(
   async (req: Request, res: Response) => {
     console.log("Api runs...: getAllProviders");
 
+    const {
+      page = 1,
+      limit = 10,
+      query = "",
+      sortBy = "createdAt",
+      sortType = "desc",
+    } = req.query;
+
+    const pageNumber = parseInt(page as string, 10);
+    const limitNumber = parseInt(limit as string, 10);
+
+    const searchQuery = query
+      ? {
+          $or: [
+            { fullName: { $regex: query, $options: "i" } },
+            { email: { $regex: query, $options: "i" } },
+            { phone: { $regex: query, $options: "i" } },
+          ],
+        }
+      : {};
+
+    const matchCriteria = {
+      isDeleted: false,
+      userType: "ServiceProvider",
+      ...searchQuery,
+    };
+
+    const sortCriteria: any = {};
+    sortCriteria[sortBy as string] = sortType === "desc" ? -1 : 1;
+
     const providersDetails = await UserModel.aggregate([
       {
-        $match: {
-          isDeleted: false,
-          userType: "ServiceProvider",
-        },
+        $match: matchCriteria,
       },
       {
         $lookup: {
@@ -122,7 +187,11 @@ export const getAllProviders = asyncHandler(
           "additionalInfo.__v": 0,
         },
       },
+      { $sort: sortCriteria },
+      { $skip: (pageNumber - 1) * limitNumber },
+      { $limit: limitNumber },
     ]);
+    const totalRecords = await UserModel.countDocuments(matchCriteria);
 
     if (providersDetails.length == 0) {
       return handleResponse(
@@ -138,7 +207,14 @@ export const getAllProviders = asyncHandler(
       res,
       "success",
       200,
-      providersDetails,
+      {
+        serviceProviders: providersDetails,
+        pagination: {
+          total: totalRecords,
+          page: pageNumber,
+          limit: limitNumber,
+        },
+      },
       "Providers fetched successfully"
     );
   }
@@ -163,7 +239,6 @@ export const giveRating = asyncHandler(
       comments,
     });
 
-    
     // Save the rating to the database
     const savedRating = await newrating.save();
     if (savedRating) {
@@ -184,6 +259,3 @@ export const giveRating = asyncHandler(
     );
   }
 );
-
-
- 

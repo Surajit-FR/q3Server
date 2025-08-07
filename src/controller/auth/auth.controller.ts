@@ -223,7 +223,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     fcmToken,
     isAdminPanel,
   }: IUser & { isAdminPanel?: boolean; userType: Array<string> } = req.body;
-  if (!userType || (!email && !phone)) {
+  if (!userType || (!email && !phone)) { 
     return handleResponse(
       res,
       "error",
@@ -251,14 +251,14 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     return handleResponse(
       res,
       "error",
-      403,
+      400,
       "",
       "Your account is not verified"
     );
   }
 
   if (userType && !userType.includes(user.userType)) {
-    return handleResponse(res, "error", 403, "", "Access denied");
+    return handleResponse(res, "error", 400, "", "Access denied");
   }
 
   const userId = user._id;
@@ -266,14 +266,14 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
   // console.log(isPasswordValid, "isPasswordValid");
 
   if (!isPasswordValid) {
-    return handleResponse(res, "error", 403, "", "Invalid user credentials");
+    return handleResponse(res, "error", 400, "", "Invalid user credentials");
   }
 
   if (user.isDeleted) {
     return handleResponse(
       res,
       "error",
-      403,
+      400,
       "",
       "Your account is banned from  this platform."
     );
@@ -322,7 +322,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
       return handleResponse(
         res,
         "error",
-        403,
+        400,
         "",
         "Your account is created but please add address & your additional information."
       );
@@ -487,18 +487,19 @@ export const forgetPassword = asyncHandler(
   async (req: Request, res: Response) => {
     console.log("Api runs...: forgetPassword");
 
-    const { input } = req.body;
+    const { input, userType } = req.body;
     let identifier = "";
-      
+
     identifier = input.includes("@") ? "email" : "phone";
 
     // Find user by email or phone
     const user = await UserModel.findOne({
+      userType,
       $or: [{ email: input }, { phone: input }],
     });
 
     if (!user) {
-      return handleResponse(res, "error", 404, "", "User not found");
+      return handleResponse(res, "error", 400, "", "User not found");
     }
     const code = generateVerificationCode(5);
 
@@ -560,6 +561,7 @@ export const forgetPassword = asyncHandler(
           },
           {
             otp,
+            phoneNumber:input
           },
           {
             upsert: true,
@@ -582,7 +584,8 @@ export const resetPassword = asyncHandler(
   async (req: Request, res: Response) => {
     console.log("Api runs...: resetPassword");
 
-    const { input, password } = req.body;
+    const { input, password, userType } = req.body;
+    console.log(req.body);
 
     if (!input) {
       return handleResponse(
@@ -593,16 +596,25 @@ export const resetPassword = asyncHandler(
       );
     }
     const userDetails = await UserModel.findOne({
+      userType,
       $or: [{ email: input }, { phone: input }],
     });
 
+    console.log({ userDetails });
+
     if (!userDetails) {
-      return handleResponse(res, "success", 200, "User not found");
+      return handleResponse(res, "error", 404, {}, "User not found");
     }
 
     // Update the password
     userDetails.password = req.body.password;
     await userDetails.save();
-    return handleResponse(res, "success", 200, "Password reset successfull");
+    return handleResponse(
+      res,
+      "success",
+      200,
+      {},
+      "Password reset successfull"
+    );
   }
 );
