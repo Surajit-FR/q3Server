@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.acceptServiceRequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
+exports.handleServiceRequestState = exports.acceptServiceRequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
 const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
 5;
 const response_utils_1 = require("../../utils/response.utils");
@@ -161,3 +161,4 @@ exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res)
         return (0, response_utils_1.handleResponse)(res, "success", 200, updateService, "Service Accepted Successfully");
     }
 }));
+exports.handleServiceRequestState = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () { }));

@@ -19,10 +19,14 @@ const app = (0, express_1.default)();
 exports.app = app;
 //  CORS Middleware
 app.use((0, cors_1.default)({
-    origin: [process.env.CORS_ORIGIN, 'http://localhost:9000'],
+    origin: [
+        process.env.CORS_ORIGIN,
+        "http://localhost:9000",
+        "http://localhost:5173",
+    ],
     credentials: true,
 }));
-// General Middleware 
+// General Middleware
 app.use((0, morgan_1.default)("dev"));
 app.use(express_1.default.json({ limit: constants_1.EXPRESS_CONFIG_LIMIT })); // JSON Parsing for Other Routes
 app.use(express_1.default.urlencoded({ extended: true, limit: constants_1.EXPRESS_CONFIG_LIMIT }));

@@ -92,6 +92,7 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
   console.log("Api runs...: verifyOTP");
 
   const { phoneNumber, otp, purpose } = req.body;
+  console.log("verify otp payload", req.body);
 
   if (!phoneNumber || !otp || !purpose) {
     return handleResponse(
@@ -106,8 +107,11 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
   // Set default OTP for testing in non-production environments
   const defaultOtp = "00000";
 
-  const isOtpValid = otp === defaultOtp || (otpEntry && otpEntry.otp === otp);
+  // const isOtpValid = otpEntry?.otp.toString() === otp  //this is for live mode
+  const isOtpValid = defaultOtp === otp;
   console.log({ isOtpValid });
+  console.log({ otpEntry });
+  console.log({ otp });
 
   if (!isOtpValid) {
     return handleResponse(res, "error", 400, "Invalid OTP");

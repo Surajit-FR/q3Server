@@ -90,14 +90,18 @@ exports.sendOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter
 exports.verifyOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("Api runs...: verifyOTP");
     const { phoneNumber, otp, purpose } = req.body;
+    console.log("verify otp payload", req.body);
     if (!phoneNumber || !otp || !purpose) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "phoneNumber, otp, and purpose are required");
     }
     const otpEntry = yield otp_model_1.default.findOne({ phoneNumber });
     // Set default OTP for testing in non-production environments
     const defaultOtp = "00000";
-    const isOtpValid = otp === defaultOtp || (otpEntry && otpEntry.otp === otp);
+    // const isOtpValid = otpEntry?.otp.toString() === otp  //this is for live mode
+    const isOtpValid = defaultOtp === otp;
     console.log({ isOtpValid });
+    console.log({ otpEntry });
+    console.log({ otp });
     if (!isOtpValid) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "Invalid OTP");
     }

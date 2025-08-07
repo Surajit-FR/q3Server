@@ -49,7 +49,7 @@ const otpSchema = new mongoose_1.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        index: { expires: 30 }
+        // index: { expires: 90 }
     },
 }, { timestamps: true });
 const OTPModel = mongoose_1.default.model('otp', otpSchema);

@@ -171,8 +171,10 @@ exports.loginUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __await
     if (!password) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "password is required");
     }
+    console.log({ email });
+    console.log({ phone });
     const user = yield user_model_1.default.findOne({
-        $or: [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])],
+        $or: [{ email }, { phone }],
         userType,
         isDeleted: false,
     });
@@ -181,20 +183,22 @@ exports.loginUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __await
     }
     // console.log(user);
     // console.log(user.isOTPVerified);
-    if (!user.isOTPVerified || !user.isVerified) {
-        return (0, response_utils_1.handleResponse)(res, "error", 403, "", "Your account is not verified");
+    if (!user.isOTPVerified
+    // || !user.isVerified
+    ) {
+        return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Your account is not verified");
     }
     if (userType && !userType.includes(user.userType)) {
-        return (0, response_utils_1.handleResponse)(res, "error", 403, "", "Access denied");
+        return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Access denied");
     }
     const userId = user._id;
     const isPasswordValid = yield user.isPasswordCorrect(password);
     // console.log(isPasswordValid, "isPasswordValid");
     if (!isPasswordValid) {
-        return (0, response_utils_1.handleResponse)(res, "error", 403, "", "Invalid user credentials");
+        return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Invalid user credentials");
     }
     if (user.isDeleted) {
-        return (0, response_utils_1.handleResponse)(res, "error", 403, "", "Your account is banned from  this platform.");
+        return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Your account is banned from  this platform.");
     }
     // Check for admin panel access
     if (isAdminPanel) {
@@ -226,11 +230,17 @@ exports.loginUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __await
             userId: user._id,
         });
         if (!userAdditionalInfo) {
-            return (0, response_utils_1.handleResponse)(res, "error", 403, "", "Your account is created but please add address & your additional information.");
+            return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Your account is created but please add address & your additional information.");
         }
-        if (!user.isVerified) {
-            return (0, response_utils_1.handleResponse)(res, "error", 403, "", "Your account verification is under process. Please wait for confirmation.");
-        }
+        // if (!user.isVerified) {
+        //   return handleResponse(
+        //     res,
+        //     "error",
+        //     403,
+        //     "",
+        //     "Your account verification is under process. Please wait for confirmation."
+        //   );
+        // }
         // Include address and additional info in the response
         const loggedInUser = Object.assign(Object.assign({}, filteredUser), { additionalInfo: userAdditionalInfo || null });
     }
@@ -326,15 +336,16 @@ exports.logoutUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awai
 }));
 exports.forgetPassword = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("Api runs...: forgetPassword");
-    const { input } = req.body;
+    const { input, userType } = req.body;
     let identifier = "";
     identifier = input.includes("@") ? "email" : "phone";
     // Find user by email or phone
     const user = yield user_model_1.default.findOne({
+        userType,
         $or: [{ email: input }, { phone: input }],
     });
     if (!user) {
-        return (0, response_utils_1.handleResponse)(res, "error", 404, "", "User not found");
+        return (0, response_utils_1.handleResponse)(res, "error", 400, "", "User not found");
     }
     const code = (0, otp_controller_1.generateVerificationCode)(5);
     if (identifier === "email") {
@@ -385,6 +396,7 @@ exports.forgetPassword = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __
                 userId: user._id,
             }, {
                 otp,
+                phoneNumber: input
             }, {
                 upsert: true,
                 new: true,
@@ -395,18 +407,21 @@ exports.forgetPassword = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __
 }));
 exports.resetPassword = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("Api runs...: resetPassword");
-    const { input, password } = req.body;
+    const { input, password, userType } = req.body;
+    console.log(req.body);
     if (!input) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "Either email or phone number is required");
     }
     const userDetails = yield user_model_1.default.findOne({
+        userType,
         $or: [{ email: input }, { phone: input }],
     });
+    console.log({ userDetails });
     if (!userDetails) {
-        return (0, response_utils_1.handleResponse)(res, "success", 200, "User not found");
+        return (0, response_utils_1.handleResponse)(res, "error", 404, {}, "User not found");
     }
     // Update the password
     userDetails.password = req.body.password;
     yield userDetails.save();
-    return (0, response_utils_1.handleResponse)(res, "success", 200, "Password reset successfull");
+    return (0, response_utils_1.handleResponse)(res, "success", 200, {}, "Password reset successfull");
 }));
