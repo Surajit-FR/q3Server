@@ -235,9 +235,12 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
   if (!password) {
     return handleResponse(res, "error", 400, "", "password is required");
   }
+console.log({email});
+console.log({phone});
+
 
   const user = await UserModel.findOne({
-    $or: [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])],
+    $or: [{email},{phone}],
     userType,
     isDeleted: false,
   });
@@ -247,7 +250,9 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
   // console.log(user);
   // console.log(user.isOTPVerified);
 
-  if (!user.isOTPVerified || !user.isVerified) {
+  if (!user.isOTPVerified 
+    // || !user.isVerified
+  ) {
     return handleResponse(
       res,
       "error",
@@ -328,15 +333,15 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
       );
     }
 
-    if (!user.isVerified) {
-      return handleResponse(
-        res,
-        "error",
-        403,
-        "",
-        "Your account verification is under process. Please wait for confirmation."
-      );
-    }
+    // if (!user.isVerified) {
+    //   return handleResponse(
+    //     res,
+    //     "error",
+    //     403,
+    //     "",
+    //     "Your account verification is under process. Please wait for confirmation."
+    //   );
+    // }
 
     // Include address and additional info in the response
     const loggedInUser = {

@@ -23,12 +23,28 @@ export const getSingleUser = asyncHandler(
         },
       },
       {
+        $lookup: {
+          from: "additionalinfos",
+          foreignField: "userId",
+          localField: "_id",
+          as: "additionalInfo",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$additionalInfo",
+        },
+      },
+      {
         $project: {
           password: 0,
           stripeCustomerId: 0,
           accessToken: 0,
           fcmToken: 0,
           __v: 0,
+          dob: 0,
+          "additionalInfo.__v": 0,
         },
       },
     ]);
@@ -57,6 +73,7 @@ export const getAllCustomer = asyncHandler(
           userType: "Customer",
         },
       },
+
       {
         $project: {
           password: 0,
@@ -163,7 +180,7 @@ export const giveRating = asyncHandler(
       comments,
     });
 
-    
+
     // Save the rating to the database
     const savedRating = await newrating.save();
     if (savedRating) {
@@ -186,4 +203,3 @@ export const giveRating = asyncHandler(
 );
 
 
- 
