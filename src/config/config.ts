@@ -1,3 +1,3 @@
-export const TWILIO_ACCOUNT_SID = "AC27e2012ed6ed7e8ba69b0193fa18081a";
-export const TWILIO_AUTH_TOKEN = "f56cb3ff141fe496ab745064b39d285f";
-export const TWILIO_PHONE_NUMBER = "+18286722687";
+export const TWILIO_ACCOUNT_SID = "";
+export const TWILIO_AUTH_TOKEN = "";
+export const TWILIO_PHONE_NUMBER = "";
