@@ -23,6 +23,7 @@ app.use((0, cors_1.default)({
         process.env.CORS_ORIGIN,
         "http://localhost:9000",
         "http://localhost:5173",
+        "http://http://3.110.157.24",
     ],
     credentials: true,
 }));

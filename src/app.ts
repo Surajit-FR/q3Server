@@ -19,6 +19,7 @@ app.use(
       process.env.CORS_ORIGIN as string,
       "http://localhost:9000",
       "http://localhost:5173",
+      "http://http://3.110.157.24",
     ],
     credentials: true,
   })
