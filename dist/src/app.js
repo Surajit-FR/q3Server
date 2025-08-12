@@ -40,7 +40,7 @@ app.use("/api/v1/service", towingServiceBooking_route_1.default);
 app.use("/api/v1/location-session", locationSession_route_1.default);
 app.use("/api/v1/user", user_route_1.default);
 //  Ping Route for Health Check
-app.get("/ping", (req, res) => {
+app.get("/api/v1/ping", (req, res) => {
     res.send("Hi!...I am server, Happy to see you boss...");
 });
 //  Internal Server Error Handling
