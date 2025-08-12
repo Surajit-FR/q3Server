@@ -107,8 +107,8 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
   // Set default OTP for testing in non-production environments
   const defaultOtp = "00000";
 
-  // const isOtpValid = otpEntry?.otp.toString() === otp  //this is for live mode
-  const isOtpValid = defaultOtp === otp;
+  const isOtpValid = otpEntry?.otp.toString() === otp  //this is for live mode
+  // const isOtpValid = defaultOtp === otp;
   console.log({ isOtpValid });
   console.log({ otpEntry });
   console.log({ otp });

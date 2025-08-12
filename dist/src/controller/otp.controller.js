@@ -97,8 +97,8 @@ exports.verifyOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __await
     const otpEntry = yield otp_model_1.default.findOne({ phoneNumber });
     // Set default OTP for testing in non-production environments
     const defaultOtp = "00000";
-    // const isOtpValid = otpEntry?.otp.toString() === otp  //this is for live mode
-    const isOtpValid = defaultOtp === otp;
+    const isOtpValid = (otpEntry === null || otpEntry === void 0 ? void 0 : otpEntry.otp.toString()) === otp; //this is for live mode
+    // const isOtpValid = defaultOtp === otp;
     console.log({ isOtpValid });
     console.log({ otpEntry });
     console.log({ otp });
