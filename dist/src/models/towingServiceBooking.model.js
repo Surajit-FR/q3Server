@@ -37,14 +37,14 @@ const mongoose_1 = __importStar(require("mongoose"));
 const towingServiceBookingSchema = new mongoose_1.Schema({
     userId: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: "user"
+        ref: "user",
     },
     picklocation: {
         type: {
             type: String,
-            enum: ['Point'],
+            enum: ["Point"],
             required: true,
-            default: 'Point'
+            default: "Point",
         },
         coordinates: {
             type: [Number],
@@ -62,7 +62,7 @@ const towingServiceBookingSchema = new mongoose_1.Schema({
     },
     vehicleTypeId: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: "vehicleType"
+        ref: "vehicleType",
     },
     disputedVehicleImage: {
         type: String,
@@ -77,20 +77,32 @@ const towingServiceBookingSchema = new mongoose_1.Schema({
     serviceProviderId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: "user",
-        default: null
+        default: null,
     },
     serviceProgess: {
         type: String,
-        enum: ["Booked", "ServiceAccepted", "ServiceStarted", "ServiceCompleted", "ServiceDeclined", "ServiceCancelled"],
-        default: "Booked"
+        enum: [
+            "Booked",
+            "ServiceExpired",
+            "ServiceAccepted",
+            "ServiceStarted",
+            "ServiceCompleted",
+            "ServiceCancelledBySP",
+            "ServiceCancelledByCustomer",
+        ],
+        default: "Booked",
     },
     startedAt: {
         type: Date,
-        default: null
+        default: null,
     },
     completedAt: {
         type: Date,
-        default: null
+        default: null,
+    },
+    declinedBy: {
+        type: [String],
+        default: []
     },
     isDeleted: {
         type: Boolean,
@@ -99,5 +111,5 @@ const towingServiceBookingSchema = new mongoose_1.Schema({
 }, { timestamps: true });
 //adding geospatial index
 towingServiceBookingSchema.index({ picklocation: "2dsphere" });
-const towingServiceBookingModel = mongoose_1.default.model('towingServiceBooking', towingServiceBookingSchema);
+const towingServiceBookingModel = mongoose_1.default.model("towingServiceBooking", towingServiceBookingSchema);
 exports.default = towingServiceBookingModel;

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTotalOnlineTime = exports.disableLocation = exports.enableLocation = void 0;
+exports.isLocationenabled = exports.getTotalOnlineTime = exports.disableLocation = exports.enableLocation = void 0;
 const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
 const response_utils_1 = require("../../utils/response.utils");
 const locationSession_models_1 = __importDefault(require("../models/locationSession.models"));
@@ -94,4 +94,24 @@ exports.getTotalOnlineTime = (0, asyncHandler_utils_1.asyncHandler)((req, res) =
         readable: formatDuration(totalDurationSeconds),
         sessionCount: sessions.length,
     });
+}));
+exports.isLocationenabled = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    console.log("Api runs...: isLocationenabled");
+    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+    console.log({ userId });
+    if (!userId) {
+        return (0, response_utils_1.handleResponse)(res, "error", 401, "", "Unauthorized: User not found");
+    }
+    // Check for an existing active session
+    const activeSession = yield locationSession_models_1.default.findOne({
+        userId,
+        isActive: true,
+    });
+    if (activeSession) {
+        return (0, response_utils_1.handleResponse)(res, "success", 200, activeSession, "Location already enabled");
+    }
+    else {
+        return (0, response_utils_1.handleResponse)(res, "success", 200, activeSession, "No active location session found");
+    }
 }));

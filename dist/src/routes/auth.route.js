@@ -23,11 +23,15 @@ router.route("/send-otp").post(otp_controller_1.sendOTP);
 router.route("/verify-otp").post(otp_controller_1.verifyOTP);
 //find near place recommendations
 router.route("/get-recommendations").post(googleapis_controller_1.getNearbyPlaces);
+//find near place recommendations
+router.route("/get-place-details-by-id").post(googleapis_controller_1.getPlaceDetailsById);
 //forget-password
 router.route("/forget-password").post(auth_controller_1.forgetPassword);
 router.route("/reset-password").post(auth_controller_1.resetPassword);
 /***************************** secured routes *****************************/
 router.use(userAuth_1.VerifyJWTToken);
+//fetch autocolpete address
+router.route("/get-autocomplete-address").post(googleapis_controller_1.getPlacesAutocomplete);
 // Refresh token routes
 router.route("/refresh-token").post(
 // rateLimiter,

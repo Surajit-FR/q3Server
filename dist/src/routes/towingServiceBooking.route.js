@@ -8,9 +8,14 @@ const towingServiceBooking_controller_1 = require("../controller/towingServiceBo
 const userAuth_1 = require("../middlewares/auth/userAuth");
 const router = express_1.default.Router();
 router.use(userAuth_1.VerifyJWTToken);
-router.route('/book-towing-service').post(towingServiceBooking_controller_1.bookTowingService);
+router.route("/book-towing-service").post(towingServiceBooking_controller_1.bookTowingService);
 // router.route('/enable-location').post(enableLocation);
-router.route('/fetch-nearby-service-request').get(towingServiceBooking_controller_1.fetchTowingServiceRequest);
-//for sp 
-router.route('/accept-service-request').post((0, userAuth_1.verifyUserType)(["ServiceProvider"]), towingServiceBooking_controller_1.acceptServiceRequest);
+router.route("/fetch-nearby-service-request").get(towingServiceBooking_controller_1.fetchTowingServiceRequest);
+router
+    .route("/decline-service-request")
+    .post((0, userAuth_1.verifyUserType)(["ServiceProvider"]), towingServiceBooking_controller_1.declineServicerequest);
+//for sp
+router
+    .route("/accept-service-request")
+    .post((0, userAuth_1.verifyUserType)(["ServiceProvider"]), towingServiceBooking_controller_1.acceptServiceRequest);
 exports.default = router;

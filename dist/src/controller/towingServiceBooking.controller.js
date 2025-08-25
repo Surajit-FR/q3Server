@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleServiceRequestState = exports.acceptServiceRequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
+exports.getSavedDestination = exports.handleServiceRequestState = exports.acceptServiceRequest = exports.declineServicerequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
 const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
 5;
 const response_utils_1 = require("../../utils/response.utils");
@@ -67,7 +67,7 @@ exports.fetchTowingServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req,
     address = yield locationSession_models_1.default.findOne({ userId, isActive: true });
     console.log({ address });
     if (!address || !address.longitude || !address.latitude) {
-        return (0, response_utils_1.handleResponse)(res, "error", 400, "User's location not found.");
+        return (0, response_utils_1.handleResponse)(res, "error", 400, "SP's location not found.");
     }
     const longitude = address.longitude;
     const latitude = address.latitude;
@@ -99,10 +99,11 @@ exports.fetchTowingServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req,
             $match: {
                 isDeleted: false,
                 isReqAccepted: false,
-                // $or: [
-                //     { requestProgress: "NotStarted" },
-                //     { requestProgress: "CancelledBySP" },
-                // ]
+                declinedBy: { $ne: String(userId) },
+                $or: [
+                    { serviceProgess: "ServiceCancelledBySP" },
+                    { serviceProgess: "Booked" },
+                ],
             },
         },
         {
@@ -115,6 +116,7 @@ exports.fetchTowingServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req,
                 location: 1,
                 longitude: 1,
                 distance: 1,
+                serviceProgess: 1,
             },
         },
     ]);
@@ -123,6 +125,22 @@ exports.fetchTowingServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req,
     }
     return (0, response_utils_1.handleResponse)(res, "success", 200, serviceRequests, "Service requests fetched successfully");
 }));
+//decline service request by sp
+exports.declineServicerequest = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    console.log("Api runs...: declineServicerequest");
+    const { serviceId } = req.body;
+    const spId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+    const declineService = yield towingServiceBooking_model_1.default.findOneAndUpdate({
+        _id: new mongoose_1.default.Types.ObjectId(serviceId),
+    }, {
+        $push: { declinedBy: spId },
+    }, {
+        new: true,
+    });
+    return (0, response_utils_1.handleResponse)(res, "success", 200, declineService, "Service declined successfully");
+}));
+//accept service requset by sp(required service state:"Booked","ServiceCancelledBySP")
 exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
     console.log("Api runs...: acceptServiceRequest");
@@ -131,7 +149,13 @@ exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res)
     if (!serviceId && !serviceProgess) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Service ID and service progress is required");
     }
-    const updateService = yield towingServiceBooking_model_1.default.findOneAndUpdate({ _id: new mongoose_1.default.Types.ObjectId(serviceId) }, {
+    const updateService = yield towingServiceBooking_model_1.default.findOneAndUpdate({
+        _id: new mongoose_1.default.Types.ObjectId(serviceId),
+        $or: [
+            { serviceProgess: "Booked" },
+            { serviceProgess: "ServiceCancelledBySP" },
+        ],
+    }, {
         serviceProgess,
         serviceProviderId: userId,
         updatedAt: Date.now(),
@@ -161,4 +185,26 @@ exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res)
         return (0, response_utils_1.handleResponse)(res, "success", 200, updateService, "Service Accepted Successfully");
     }
 }));
-exports.handleServiceRequestState = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () { }));
+exports.handleServiceRequestState = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("Api runs...: handleServiceRequestState");
+}));
+exports.getSavedDestination = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+    const savedDestination = yield towingServiceBooking_model_1.default.aggregate([
+        {
+            $match: {
+                userId,
+                isDeleted: false,
+            },
+        },
+        {
+            $project: {
+                _id: 1,
+                destinyLocation: 1,
+                userId: 1,
+            },
+        },
+    ]);
+    return (0, response_utils_1.handleResponse)(res, "success", 200, savedDestination, "Saved destinations fetched Successfully");
+}));

@@ -62,6 +62,7 @@ exports.getSingleUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __a
     return (0, response_utils_1.handleResponse)(res, "success", 200, userData, "User fetched successfully");
 }));
 exports.getAllCustomer = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("Api runs...: getAllCustomer");
     const { page = 1, limit = 10, query = "", sortBy = "createdAt", sortType = "desc", } = req.query;
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
