@@ -131,3 +131,45 @@ export const getTotalOnlineTime = asyncHandler(
     });
   }
 );
+
+export const isLocationenabled = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: isLocationenabled");
+
+    const userId = req.user?._id;
+    console.log({ userId });
+
+    if (!userId) {
+      return handleResponse(
+        res,
+        "error",
+        401,
+        "",
+        "Unauthorized: User not found"
+      );
+    }
+    // Check for an existing active session
+    const activeSession = await LocationSessionModel.findOne({
+      userId,
+      isActive: true,
+    });
+
+    if (activeSession) {
+      return handleResponse(
+        res,
+        "success",
+        200,
+        activeSession,
+        "Location already enabled"
+      );
+    } else {
+      return handleResponse(
+        res,
+        "success",
+        200,
+        activeSession,
+        "No active location session found"
+      );
+    }
+  }
+);

@@ -18,6 +18,8 @@ const authToken = TWILIO_AUTH_TOKEN;
 let client = twilio(accountSid, authToken);
 
 export const generateVerificationCode = (length: number): number => {
+  console.log("function runs...: generateVerificationCode");
+
   if (length <= 0) {
     throw new Error("Length must be greater than 0");
   }

@@ -11,7 +11,7 @@ import {
 } from "../controller/auth/auth.controller";
 import { sendMailController, verifyEmail } from "../../utils/sendEmail";
 import { sendOTP, verifyOTP } from "../controller/otp.controller";
-import { getNearbyPlaces } from "../controller/googleapis.controller";
+import { getNearbyPlaces, getPlaceDetailsById, getPlacesAutocomplete } from "../controller/googleapis.controller";
 import { VerifyJWTToken } from "../middlewares/auth/userAuth";
 
 const router: Router = express.Router();
@@ -35,6 +35,11 @@ router.route("/verify-otp").post(verifyOTP);
 //find near place recommendations
 router.route("/get-recommendations").post(getNearbyPlaces);
 
+
+
+//find near place recommendations
+router.route("/get-place-details-by-id").post(getPlaceDetailsById);
+
 //forget-password
 router.route("/forget-password").post(forgetPassword);
 
@@ -42,6 +47,9 @@ router.route("/reset-password").post(resetPassword);
 
 /***************************** secured routes *****************************/
 router.use(VerifyJWTToken);
+
+//fetch autocolpete address
+router.route("/get-autocomplete-address").post(getPlacesAutocomplete);
 
 // Refresh token routes
 router.route("/refresh-token").post(
