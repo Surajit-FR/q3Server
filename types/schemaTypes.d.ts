@@ -92,6 +92,7 @@ export interface ITowingServiceBookingSchema extends Document {
   serviceProgess: string;
   startedAt: Date;
   completedAt: Date;
+  declinedBy: Array<String>;
   isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -127,20 +128,20 @@ export interface IRatingSchema extends Document {
 }
 
 export interface IChatSchema {
-    fromUserId: ObjectId;
-    toUserId: ObjectId;
-    content: string;
-    isRead?: boolean;
-    createdAt?: Date;
-    updatedAt?: Date;
-};
+  fromUserId: ObjectId;
+  toUserId: ObjectId;
+  content: string;
+  isRead?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export interface IChatListSchema {
-    userId: ObjectId;
-    chatWithUserId: ObjectId;
-    lastMessage: string;
-    lastMessageAt: Date;
-    isRead?: boolean;
-    createdAt?: Date;
-    updatedAt?: Date;
-};
+  userId: ObjectId;
+  chatWithUserId: ObjectId;
+  lastMessage: string;
+  lastMessageAt: Date;
+  isRead?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}

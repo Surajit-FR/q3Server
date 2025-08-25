@@ -99,7 +99,7 @@ export const fetchTowingServiceRequest = asyncHandler(
     console.log({ address });
 
     if (!address || !address.longitude || !address.latitude) {
-      return handleResponse(res, "error", 400, "User's location not found.");
+      return handleResponse(res, "error", 400, "SP's location not found.");
     }
 
     const longitude = address.longitude;
@@ -134,10 +134,11 @@ export const fetchTowingServiceRequest = asyncHandler(
         $match: {
           isDeleted: false,
           isReqAccepted: false,
-          // $or: [
-          //     { requestProgress: "NotStarted" },
-          //     { requestProgress: "CancelledBySP" },
-          // ]
+          declinedBy: { $ne: String(userId) },
+          $or: [
+            { serviceProgess: "ServiceCancelledBySP" },
+            { serviceProgess: "Booked" },
+          ],
         },
       },
       {
@@ -150,6 +151,7 @@ export const fetchTowingServiceRequest = asyncHandler(
           location: 1,
           longitude: 1,
           distance: 1,
+          serviceProgess: 1,
         },
       },
     ]);
@@ -173,6 +175,34 @@ export const fetchTowingServiceRequest = asyncHandler(
   }
 );
 
+//decline service request by sp
+export const declineServicerequest = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: declineServicerequest");
+    const { serviceId } = req.body;
+    const spId = req.user?._id;
+    const declineService = await towingServiceBookingModel.findOneAndUpdate(
+      {
+        _id: new mongoose.Types.ObjectId(serviceId),
+      },
+      {
+        $push: { declinedBy: spId },
+      },
+      {
+        new: true,
+      }
+    );
+    return handleResponse(
+      res,
+      "success",
+      200,
+      declineService,
+      "Service declined successfully"
+    );
+  }
+);
+
+//accept service requset by sp(required service state:"Booked","ServiceCancelledBySP")
 export const acceptServiceRequest = asyncHandler(
   async (req: CustomRequest, res: Response) => {
     console.log("Api runs...: acceptServiceRequest");
@@ -190,7 +220,13 @@ export const acceptServiceRequest = asyncHandler(
     }
 
     const updateService = await towingServiceBookingModel.findOneAndUpdate(
-      { _id: new mongoose.Types.ObjectId(serviceId) },
+      {
+        _id: new mongoose.Types.ObjectId(serviceId),
+        $or: [
+          { serviceProgess: "Booked" },
+          { serviceProgess: "ServiceCancelledBySP" },
+        ],
+      },
       {
         serviceProgess,
         serviceProviderId: userId,
@@ -243,5 +279,36 @@ export const acceptServiceRequest = asyncHandler(
 );
 
 export const handleServiceRequestState = asyncHandler(
-  async (req: CustomRequest, res: Response) => {}
+  async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: handleServiceRequestState");
+  }
 );
+
+export const getSavedDestination = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    const userId = req.user?._id;
+    const savedDestination = await towingServiceBookingModel.aggregate([
+      {
+        $match: {
+          userId,
+          isDeleted: false,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          destinyLocation: 1,
+          userId: 1,
+        },
+      },
+    ]);
+    return handleResponse(
+      res,
+      "success",
+      200,
+      savedDestination,
+      "Saved destinations fetched Successfully"
+    );
+  }
+);
+
