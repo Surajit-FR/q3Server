@@ -8,6 +8,10 @@ const towingServiceBookingSchema: Schema<ITowingServiceBookingSchema> =
         type: Schema.Types.ObjectId,
         ref: "user",
       },
+      isCurrentLocationforPick: {
+        type: Boolean,
+        default: false,
+      },
       picklocation: {
         type: {
           type: String,
@@ -23,6 +27,12 @@ const towingServiceBookingSchema: Schema<ITowingServiceBookingSchema> =
       pickupLocation: {
         type: String,
       },
+      placeId_pickup: {
+        type: String,
+      },
+      placeId_destination: {
+        type: String,
+      },
       destinyLocation: {
         type: String,
       },
@@ -35,6 +45,23 @@ const towingServiceBookingSchema: Schema<ITowingServiceBookingSchema> =
       },
       disputedVehicleImage: {
         type: String,
+      },
+      providerVehicleDetails: {
+        type: {
+          type: String,
+        },
+        number: {
+          type: String,
+        },
+        modelName: {
+          type: String,
+        },
+        driverName: {
+          type: String,
+        },
+        driverImage: {
+          type: String,
+        },
       },
       serviceSpecificNotes: {
         type: String,
@@ -57,7 +84,7 @@ const towingServiceBookingSchema: Schema<ITowingServiceBookingSchema> =
           "ServiceStarted",
           "ServiceCompleted",
           "ServiceCancelledBySP",
-          "ServiceCancelledByCustomer",          
+          "ServiceCancelledByCustomer",
         ],
         default: "Booked",
       },
@@ -71,7 +98,7 @@ const towingServiceBookingSchema: Schema<ITowingServiceBookingSchema> =
       },
       declinedBy: {
         type: [String],
-        default:[]
+        default: [],
       },
       isDeleted: {
         type: Boolean,

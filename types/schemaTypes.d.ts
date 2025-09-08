@@ -76,17 +76,29 @@ export interface IVehicleTypeSchema extends Document {
   createdAt?: Date;
   updatedAt?: Date;
 }
+export interface IProviderVehicleDetails extends Document {
+  _id: ObjectId;
+  type: string;
+  number: string;
+  modelName: string;
+  driverName?: string;
+  driverImage?: string;
+}
 
 export interface ITowingServiceBookingSchema extends Document {
   _id: ObjectId;
   userId: ObjectId;
+  isCurrentLocationforPick: boolean;
   pickupLocation: string;
   picklocation: IGeoJSONPoint;
+  placeId_pickup: string;
+  placeId_destination: string;
   destinyLocation: string;
   totalDistance: string;
   vehicleTypeId: ObjectId;
   disputedVehicleImage: string;
   serviceSpecificNotes: string;
+  providerVehicleDetails: IProviderVehicleDetails;//providerVehicleDetails
   isReqAccepted: boolean;
   serviceProviderId: ObjectId;
   serviceProgess: string;
@@ -142,6 +154,16 @@ export interface IChatListSchema {
   lastMessage: string;
   lastMessageAt: Date;
   isRead?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+interface ICanceledServiceBySP extends Document {
+  costumerId: mongoose.Types.ObjectId;
+  spId: mongoose.Types.ObjectId;
+  serviceId: mongoose.Types.ObjectId;
+  progressBeforeCancel: string;
+  reason: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

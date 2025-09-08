@@ -4,6 +4,11 @@ import {
   fetchTowingServiceRequest,
   acceptServiceRequest,
   declineServicerequest,
+  getUserServiceDetilsByState,
+  fetchTotalServiceByAdmin,
+  fetchTotalServiceBySp,
+  fetchSingleService,
+  cancelServiceBySP,
 } from "../controller/towingServiceBooking.controller";
 import { VerifyJWTToken, verifyUserType } from "../middlewares/auth/userAuth";
 
@@ -23,5 +28,30 @@ router
 router
   .route("/accept-service-request")
   .post(verifyUserType(["ServiceProvider"]), acceptServiceRequest);
+
+router
+  .route("/fetch-customer-request-progresswise")
+  .post(verifyUserType(["Customer"]), getUserServiceDetilsByState);
+
+router
+  .route("/fetch-all-request")
+  .get(verifyUserType(["SuperAdmin"]), fetchTotalServiceByAdmin);
+
+router
+  .route("/fetch-request-progresswise-bysp")
+  .post(verifyUserType(["ServiceProvider"]), fetchTotalServiceBySp);
+
+router
+  .route("/fetch-single-request/:serviceId")
+  .get(
+    verifyUserType(["ServiceProvider", "SuperAdmin", "Customer"]),
+    fetchSingleService
+  );
+router
+  .route("/cancel-service-bysp")
+  .post(
+    verifyUserType(["ServiceProvider"]),
+    cancelServiceBySP
+  );
 
 export default router;

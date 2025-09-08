@@ -4,7 +4,6 @@ import axios from "axios";
 import { CustomRequest } from "../../types/commonType";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
 import UserModel from "../models/user.model";
-
 const GOOGLE_API_KEY = "AIzaSyDtPUxp_vFvbx9og_F-q0EBkJPAiCAbj8w";
 
 export const getNearbyPlaces = asyncHandler(
@@ -72,24 +71,26 @@ export const getNearbyPlaces = asyncHandler(
 );
 
 export async function getDistanceInKm(
-  origin: string,
-  destination: string
+  originPlaceId: string, //placeId
+  destinationPlaceId: string //placeId
 ): Promise<number> {
   console.log("function runs...: getDistanceInKm");
 
-  const url = "https://maps.googleapis.com/maps/api/distancematrix/json";
-  const response = await axios.get(url, {
-    params: {
-      origins: origin,
-      destinations: destination,
-      key: GOOGLE_API_KEY,
-      units: "metric",
-    },
-  });
+  const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=place_id:${originPlaceId}&destinations=place_id:${destinationPlaceId}&key=${GOOGLE_API_KEY}`;
 
-  const distanceMeters = response.data.rows[0]?.elements[0]?.distance?.value;
-  return distanceMeters ? Math.ceil(distanceMeters / 1000) : 0;
-}
+  // const url = "https://maps.googleapis.com/maps/api/distancematrix/json";
+  const response = await axios.get(url);
+
+  console.log({ response });
+
+  let distanceMeters = response.data.rows[0]?.elements[0]?.distance?.value;
+  const destination_addresses = response.data.destination_addresses as string;
+  const origin_addresses = response.data.origin_addresses;
+  const distance = distanceMeters ? distanceMeters / 1000 : 0; //km
+  console.log({ distance });
+
+  return distance;
+};
 
 export const getPlacesAutocomplete = asyncHandler(
   async (req: CustomRequest, res: Response) => {
@@ -143,6 +144,7 @@ export const getPlacesAutocomplete = asyncHandler(
     });
   }
 );
+// getDistanceInKm("ChIJd8BlQ2BZwokRAFUEcm_qrcA", "ChIJ6R0bZgB1AjoRFNzbjnJxiTM");
 
 export const getPlaceDetailsById = asyncHandler(
   async (req: Request, res: Response) => {
