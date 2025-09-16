@@ -39,6 +39,10 @@ const towingServiceBookingSchema = new mongoose_1.Schema({
         type: mongoose_1.Schema.Types.ObjectId,
         ref: "user",
     },
+    isCurrentLocationforPick: {
+        type: Boolean,
+        default: false,
+    },
     picklocation: {
         type: {
             type: String,
@@ -54,6 +58,12 @@ const towingServiceBookingSchema = new mongoose_1.Schema({
     pickupLocation: {
         type: String,
     },
+    placeId_pickup: {
+        type: String,
+    },
+    placeId_destination: {
+        type: String,
+    },
     destinyLocation: {
         type: String,
     },
@@ -66,6 +76,26 @@ const towingServiceBookingSchema = new mongoose_1.Schema({
     },
     disputedVehicleImage: {
         type: String,
+    },
+    providerVehicleDetails: {
+        type: {
+            type: String,
+        },
+        number: {
+            type: String,
+        },
+        modelName: {
+            type: String,
+        },
+        driverName: {
+            type: String,
+        },
+        driverImage: {
+            type: String,
+        },
+        driverNumber: {
+            type: String,
+        },
     },
     serviceSpecificNotes: {
         type: String,
@@ -102,7 +132,7 @@ const towingServiceBookingSchema = new mongoose_1.Schema({
     },
     declinedBy: {
         type: [String],
-        default: []
+        default: [],
     },
     isDeleted: {
         type: Boolean,

@@ -50,6 +50,10 @@ const initSocket = (server) => {
         // Mark user as online
         onlineUsers[userId] = true;
         io.emit("userStatusUpdate", { userId, isOnline: true });
+        console.log({ connectedCustomers });
+        console.log({ connectedProviders });
+        console.log({ connectedAgent });
+        console.log({ onlineUsers });
         // Handle chat messages
         socket.on("chatMessage", (message) => __awaiter(void 0, void 0, void 0, function* () {
             const { toUserId, content } = message;
@@ -77,7 +81,7 @@ const initSocket = (server) => {
                     isRead,
                     timestamp: now,
                 });
-                // Update chat lists for both users  
+                // Update chat lists for both users
                 yield (0, chat_controller_1.updateChatList)(userId, toUserId, content, now);
                 yield (0, chat_controller_1.updateChatList)(toUserId, userId, content, now);
                 if (recipientSocketId) {
@@ -109,6 +113,44 @@ const initSocket = (server) => {
             }
             catch (error) {
                 console.error("Error marking messages as read:", error);
+            }
+        }));
+        // update fetch nearby service requests list when service is accepted
+        socket.on("updateNearbyServices", () => __awaiter(void 0, void 0, void 0, function* () {
+            try {
+                // console.log(`Fetching nearby service requests `);
+                const date = new Date();
+                // Send the event back to the client
+                io.to("ProvidersRoom").emit("nearbyServicesUpdate", {
+                    success: true,
+                    message: "Service list is need a update",
+                    date: date,
+                });
+            }
+            catch (error) {
+                socket.emit("nearbyServicesUpdate", {
+                    success: false,
+                    error: "Failed to fetch nearby services. Please try again.",
+                });
+            }
+        }));
+        // update fetch nearby service requests list when service is assigned
+        socket.on("serviceAssigned", () => __awaiter(void 0, void 0, void 0, function* () {
+            try {
+                // console.log(`Accepted service is assigned to field agent`);
+                const date = new Date();
+                // Send the event back to the client
+                io.to("ProvidersRoom").emit("jobListUpdate", {
+                    success: true,
+                    message: "Service list is need a update",
+                    date: date,
+                });
+            }
+            catch (error) {
+                socket.emit("jobListUpdate", {
+                    success: false,
+                    error: "Failed to assign field agent. Please try again.",
+                });
             }
         }));
         socket.on("disconnect", () => {

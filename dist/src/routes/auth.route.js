@@ -28,6 +28,7 @@ router.route("/get-place-details-by-id").post(googleapis_controller_1.getPlaceDe
 //forget-password
 router.route("/forget-password").post(auth_controller_1.forgetPassword);
 router.route("/reset-password").post(auth_controller_1.resetPassword);
+// router.route("/get ride-estimate").post(getRideEstimate);
 /***************************** secured routes *****************************/
 router.use(userAuth_1.VerifyJWTToken);
 //fetch autocolpete address

@@ -23,6 +23,7 @@ function formatDuration(seconds) {
     const secs = Math.floor(seconds % 60);
     return `${hrs}h ${mins}m ${secs}s`;
 }
+;
 exports.enableLocation = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     console.log("Api runs...: enableLocation");
@@ -99,7 +100,7 @@ exports.isLocationenabled = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
     var _a;
     console.log("Api runs...: isLocationenabled");
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-    console.log({ userId });
+    // console.log({ userId });
     if (!userId) {
         return (0, response_utils_1.handleResponse)(res, "error", 401, "", "Unauthorized: User not found");
     }
