@@ -11,7 +11,7 @@ function formatDuration(seconds: number): string {
   const secs = Math.floor(seconds % 60);
 
   return `${hrs}h ${mins}m ${secs}s`;
-}
+};
 
 export const enableLocation = asyncHandler(
   async (req: CustomRequest, res: Response) => {
@@ -137,7 +137,7 @@ export const isLocationenabled = asyncHandler(
     console.log("Api runs...: isLocationenabled");
 
     const userId = req.user?._id;
-    console.log({ userId });
+    // console.log({ userId });
 
     if (!userId) {
       return handleResponse(

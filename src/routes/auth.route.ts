@@ -11,7 +11,7 @@ import {
 } from "../controller/auth/auth.controller";
 import { sendMailController, verifyEmail } from "../../utils/sendEmail";
 import { sendOTP, verifyOTP } from "../controller/otp.controller";
-import { getNearbyPlaces, getPlaceDetailsById, getPlacesAutocomplete } from "../controller/googleapis.controller";
+import { getNearbyPlaces, getPlaceDetailsById, getPlacesAutocomplete,  } from "../controller/googleapis.controller";
 import { VerifyJWTToken } from "../middlewares/auth/userAuth";
 
 const router: Router = express.Router();
@@ -44,6 +44,8 @@ router.route("/get-place-details-by-id").post(getPlaceDetailsById);
 router.route("/forget-password").post(forgetPassword);
 
 router.route("/reset-password").post(resetPassword);
+
+// router.route("/get ride-estimate").post(getRideEstimate);
 
 /***************************** secured routes *****************************/
 router.use(VerifyJWTToken);

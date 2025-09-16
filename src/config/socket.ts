@@ -46,6 +46,11 @@ export const initSocket = (server: HttpServer) => {
     onlineUsers[userId] = true;
     io.emit("userStatusUpdate", { userId, isOnline: true });
 
+    console.log({ connectedCustomers });
+    console.log({ connectedProviders });
+    console.log({ connectedAgent });
+    console.log({ onlineUsers });
+
     // Handle chat messages
     socket.on(
       "chatMessage",
@@ -80,7 +85,7 @@ export const initSocket = (server: HttpServer) => {
             timestamp: now,
           });
 
-          // Update chat lists for both users  
+          // Update chat lists for both users
           await updateChatList(userId, toUserId, content, now);
           await updateChatList(toUserId, userId, content, now);
 
@@ -123,6 +128,47 @@ export const initSocket = (server: HttpServer) => {
         console.log(`Marked messages as read for conversation: ${userId} `);
       } catch (error) {
         console.error("Error marking messages as read:", error);
+      }
+    });
+
+    // update fetch nearby service requests list when service is accepted
+    socket.on("updateNearbyServices", async () => {
+      try {
+        // console.log(`Fetching nearby service requests `);
+        const date = new Date();
+
+        // Send the event back to the client
+        io.to("ProvidersRoom").emit("nearbyServicesUpdate", {
+          success: true,
+          message: "Service list is need a update",
+          date: date,
+        });
+      } catch (error) {
+        socket.emit("nearbyServicesUpdate", {
+          success: false,
+          error: "Failed to fetch nearby services. Please try again.",
+        });
+      }
+    });
+
+    // update fetch nearby service requests list when service is assigned
+    socket.on("serviceAssigned", async () => {
+      try {
+        // console.log(`Accepted service is assigned to field agent`);
+        const date = new Date();
+
+        // Send the event back to the client
+
+        io.to("ProvidersRoom").emit("jobListUpdate", {
+          success: true,
+          message: "Service list is need a update",
+          date: date,
+        });
+      } catch (error) {
+        socket.emit("jobListUpdate", {
+          success: false,
+          error: "Failed to assign field agent. Please try again.",
+        });
       }
     });
 

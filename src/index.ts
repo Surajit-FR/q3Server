@@ -1,22 +1,25 @@
-import { app } from './app';
-import connectDB from './db/db';
-import http from 'http';
+import { app } from "./app";
+import connectDB from "./db/db";
+import http from "http";
 import dotenv from "dotenv";
-import { initSocket } from './config/socket';
-dotenv.config({ path: './.env' });
-
-
+import { initSocket } from "./config/socket";
+dotenv.config({ path: "./.env" });
 
 const server = http.createServer(app);
-initSocket(server)
 
-connectDB().then(() => {
+// Initialize Socket.io with the HTTP server
+const socketServer = initSocket(server);
+
+connectDB()
+  .then(() => {
     server.on("error", (error) => {
-        console.log(`Server Connection Error: ${error}`);
+      console.log(`Server Connection Error: ${error}`);
     });
     server.listen(process.env.PORT || 9000, () => {
-        console.log(`⚙️  Server Connected On Port: ${process.env.PORT}\n`);
+      console.log(`⚙️  Server Connected On Port: ${process.env.PORT}\n`);
     });
-}).catch((err) => {
+    // socketServer.listen(9002);
+  })
+  .catch((err) => {
     console.log("MongoDB Connection Failed!!", err);
-});
+  });
