@@ -62,6 +62,9 @@ const towingServiceBookingSchema: Schema<ITowingServiceBookingSchema> =
         driverImage: {
           type: String,
         },
+        driverNumber: {
+          type: String,
+        },
       },
       serviceSpecificNotes: {
         type: String,

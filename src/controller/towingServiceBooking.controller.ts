@@ -8,8 +8,29 @@ import LocationSessionModel from "../models/locationSession.models";
 import mongoose from "mongoose";
 import axios from "axios";
 import { CancelServiceBySPModel } from "../models/canceledServiceBySP.model";
+import UserModel from "../models/user.model";
+import vehicleTypeModel from "../models/vehicleType.model";
 
 const apiKey = "AIzaSyDtPUxp_vFvbx9og_F-q0EBkJPAiCAbj8w";
+
+const isEligibleForBooking = async (customerId: string) => {
+  const prevBookedServices = await towingServiceBookingModel.aggregate([
+    {
+      $match: {
+        userId: new mongoose.Types.ObjectId(customerId),
+        $or: [
+          { serviceProgess: "Booked" },
+          { serviceProgess: "ServiceAccepted" },
+          { serviceProgess: "ServiceStarted" },
+          { serviceProgess: "ServiceCancelledBySP" },
+        ],
+      },
+    },
+  ]);
+  // console.log({ prevBookedServices });
+  const returnValue = prevBookedServices.length ? false : true;
+  return returnValue;
+};
 
 // addVehicleType controller
 export const bookTowingService = asyncHandler(
@@ -38,15 +59,25 @@ export const bookTowingService = asyncHandler(
       savedAddressId,
     } = req.body;
 
-    if (!vehicleTypeId)
-      return handleResponse(res, "error", 400, "vehicleTypeId is required.");
-    if (!disputedVehicleImage)
+    const check = await isEligibleForBooking(userId as string);
+    if (!check) {
       return handleResponse(
         res,
         "error",
         400,
-        "disputedVehicleImage is required."
+        "Previously booked service is pending now."
       );
+    }
+
+    if (!vehicleTypeId)
+      return handleResponse(res, "error", 400, "vehicleTypeId is required.");
+    // if (!disputedVehicleImage)
+    //   return handleResponse(
+    //     res,
+    //     "error",
+    //     400,
+    //     "disputedVehicleImage is required."
+    //   );
     // if (!serviceSpecificNotes)
     //   return handleResponse(
     //     res,
@@ -246,7 +277,7 @@ export const fetchTowingServiceRequest = asyncHandler(
           customer_name: "$customer_details.fullName",
           customer_avatar: "$customer_details.avatar",
           // distance: "$totalDistance",
-          towing_cost: "25",
+          towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
         },
       },
       {
@@ -315,6 +346,42 @@ export const declineServicerequest = asyncHandler(
   }
 );
 
+//cancel service request by customer
+export const cancelServiceRequestByCustomer = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: cancelServiceRequestByCustomer");
+
+    const userId = req.user?._id;
+    const { serviceId, serviceProgess = "ServiceCancelledByCustomer" } =
+      req.body;
+    if (!serviceId && !serviceProgess) {
+      return handleResponse(res, "error", 400, "", "Service ID is required");
+    }
+
+    const updateService = await towingServiceBookingModel.findOneAndUpdate(
+      {
+        _id: new mongoose.Types.ObjectId(serviceId),
+      },
+      {
+        serviceProgess,
+        updatedAt: Date.now(),
+      },
+      { new: true }
+    );
+
+    if (updateService) {
+      return handleResponse(
+        res,
+        "success",
+        200,
+        {},
+        "Service cancelled successfully"
+      );
+    }
+    return handleResponse(res, "error", 400, "", "Something went wrong");
+  }
+);
+
 //accept service requset by sp(required service state:"Booked","ServiceCancelledBySP")
 export const acceptServiceRequest = asyncHandler(
   async (req: CustomRequest, res: Response) => {
@@ -325,7 +392,7 @@ export const acceptServiceRequest = asyncHandler(
       serviceId,
       serviceProgess = "ServiceAccepted",
       serviceDistance,
-      providerVehicleDetails, 
+      providerVehicleDetails,
     } = req.body;
     if (!serviceId && !serviceProgess) {
       return handleResponse(
@@ -574,7 +641,7 @@ export const getUserServiceDetilsByState = asyncHandler(
         $addFields: {
           customer_fullName: "$customer_details.fullName",
           customer_avatar: "$customer_details.avatar",
-          towing_cost: "25",
+          towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
         },
       },
       {
@@ -592,11 +659,20 @@ export const getUserServiceDetilsByState = asyncHandler(
         },
       },
       {
+        $lookup: {
+          from: "ratings",
+          foreignField: "ratedTo",
+          localField: "serviceProviderId",
+          as: "sp_ratings",
+        },
+      },
+      {
         $addFields: {
           sp_fullName: "$sp_details.fullName",
           sp_avatar: "$sp_details.avatar",
           sp_phoneNumber: "$sp_details.phone",
           sp_email: "$sp_details.email",
+          sp_avg_rating: { $ifNull: [{ $avg: "$sp_ratings.rating" }, 0] },
         },
       },
       {
@@ -623,6 +699,7 @@ export const getUserServiceDetilsByState = asyncHandler(
       {
         $project: {
           customer_details: 0,
+          sp_ratings: 0,
           sp_details: 0,
           toeVehicle_details: 0,
           isCurrentLocationforPick: 0,
@@ -672,7 +749,7 @@ export const fetchTotalServiceByAdmin = asyncHandler(
         $addFields: {
           customer_fullName: "$customer_details.fullName",
           customer_avatar: "$customer_details.avatar",
-          towing_cost: "25",
+          towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
         },
       },
       {
@@ -741,14 +818,14 @@ export const fetchTotalServiceByAdmin = asyncHandler(
   }
 );
 
-export const fetchTotalServiceBySp = asyncHandler(
+export const fetchTotalServiceProgresswiseBySp = asyncHandler(
   async (req: CustomRequest, res: Response) => {
     const { serviceProgess } = req.body;
     const ServiceDetails = await towingServiceBookingModel.aggregate([
       {
         $match: {
           isDeleted: false,
-          // serviceProgess,
+          serviceProgess,
           // userId: customerId,
         },
       },
@@ -770,7 +847,7 @@ export const fetchTotalServiceBySp = asyncHandler(
         $addFields: {
           customer_fullName: "$customer_details.fullName",
           customer_avatar: "$customer_details.avatar",
-          towing_cost: "25",
+          towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
         },
       },
       {
@@ -868,7 +945,7 @@ export const fetchSingleService = asyncHandler(
           customer_fullName: "$customer_details.fullName",
           customer_avatar: "$customer_details.avatar",
           customer_phoneNumber: "$customer_details.phone",
-          towing_cost: "25",
+          towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
         },
       },
       {
@@ -950,6 +1027,7 @@ export const cancelServiceBySP = asyncHandler(
         $match: {
           _id: new mongoose.Types.ObjectId(serviceId),
           serviceProviderId: req.user?._id,
+          
         },
       },
     ]);
@@ -977,7 +1055,7 @@ export const cancelServiceBySP = asyncHandler(
         serviceId,
         progressBeforeCancel: serviceDetails[0]?.serviceProgess,
       };
-      await new CancelServiceBySPModel(cancelServiceBySP).save();
+      await new CancelServiceBySPModel(canceledService).save();
 
       return handleResponse(
         res,
@@ -988,5 +1066,65 @@ export const cancelServiceBySP = asyncHandler(
       );
     }
     return handleResponse(res, "error", 400, "", "Something went wrong");
+  }
+);
+
+export const previewTowingService = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: previewTowingService");
+
+    const userId = req.user?._id;
+
+    const { placeId_pickup, placeId_destination, vehicleTypeId } = req.body;
+
+    if (!vehicleTypeId)
+      return handleResponse(res, "error", 400, "vehicleTypeId is required.");
+
+    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=place_id:${placeId_pickup}&destinations=place_id:${placeId_destination}&key=${apiKey}`;
+
+    const response = await axios.get(url);
+
+    let distanceMeters = response.data.rows[0]?.elements[0]?.distance?.value;
+    const distance = distanceMeters ? distanceMeters / 1000 : 0; //km
+    const destination_addresses = response.data.destination_addresses as string;
+    const origin_addresses = response.data.origin_addresses;
+
+    const user = await UserModel.findById(userId).select(
+      "fullName email phone"
+    );
+
+    const vehicle = await vehicleTypeModel
+      .findById(vehicleTypeId)
+      .select("type totalSeat");
+
+    if (!vehicle) {
+      return handleResponse(res, "error", 400, "Invalid vehicleTypeId.");
+    }
+
+    const perKmRate = 5;
+    const towingCost = (distance * perKmRate).toFixed(2);
+
+    const previewData = {
+      user: {
+        name: user?.fullName,
+        email: user?.email,
+        phone: user?.phone,
+      },
+      date: new Date(),
+      pickupLocation: origin_addresses,
+      destinyLocation: destination_addresses,
+      distance,
+      vehicleType: vehicle?.type,
+      totalSeat: vehicle?.totalSeat,
+      towingCost,
+    };
+
+    return handleResponse(
+      res,
+      "success",
+      200,
+      previewData,
+      "Preview booking details"
+    );
   }
 );

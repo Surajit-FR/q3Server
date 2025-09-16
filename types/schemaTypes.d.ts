@@ -81,8 +81,9 @@ export interface IProviderVehicleDetails extends Document {
   type: string;
   number: string;
   modelName: string;
-  driverName?: string;
-  driverImage?: string;
+  driverName: string;
+  driverImage: string;
+  driverNumber: string;
 }
 
 export interface ITowingServiceBookingSchema extends Document {
