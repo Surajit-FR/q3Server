@@ -47,7 +47,7 @@ app.get("/ping", (req: Request, res: Response) => {
 //  Internal Server Error Handling
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.log(err);
-  res.status(500).json({
+  res.status(500).json({ 
     status: 500,
     message: "Server Error",
     error: err.message,
