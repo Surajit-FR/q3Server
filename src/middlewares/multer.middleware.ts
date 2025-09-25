@@ -46,4 +46,3 @@ export const deleteUploadedFiles = (filesMap: { [key: string]: Express.Multer.Fi
 };
 
 export const upload = multer({ storage: storage, fileFilter: fileFilter });
-

@@ -722,14 +722,32 @@ export const getUserServiceDetilsByState = asyncHandler(
 
 export const fetchTotalServiceByAdmin = asyncHandler(
   async (req: CustomRequest, res: Response) => {
-    const { serviceProgess } = req.body;
+    const { page = 1, limit = 10, query = "" } = req.query;
+
+    const pageNumber = parseInt(page as string, 10);
+    const limitNumber = parseInt(limit as string, 10);
+
+    const searchQuery = query
+      ? {
+          isDeleted: false,
+
+          $or: [
+            { sp_fullName: { $regex: query, $options: "i" } },
+            { customer_fullName: { $regex: query, $options: "i" } },
+            { sp_email: { $regex: query, $options: "i" } },
+          ],
+        }
+      : {};
+
+    const matchCriteria = {
+      ...searchQuery,
+    };
+
+    console.log({ matchCriteria });
+
     const ServiceDetails = await towingServiceBookingModel.aggregate([
       {
-        $match: {
-          isDeleted: false,
-          // serviceProgess,
-          // userId: customerId,
-        },
+        $match: { isDeleted: false },
       },
       {
         $lookup: {
@@ -806,13 +824,34 @@ export const fetchTotalServiceByAdmin = asyncHandler(
           __v: 0,
         },
       },
+      {
+        $match: matchCriteria,
+      },
+      { $sort: { createdAt: -1 } },
+      { $skip: (pageNumber - 1) * limitNumber },
+      { $limit: limitNumber },
     ]);
+
+    // const totalRecords = await towingServiceBookingModel.countDocuments(
+    //   matchCriteria
+    // );
+    const totalRecords = ServiceDetails.map((serviceData) => {
+      if(serviceData.customer_fullName === query||serviceData.sp_fullName === query)
+        return serviceData
+    });
 
     return handleResponse(
       res,
       "success",
       200,
-      ServiceDetails,
+      {
+        ServiceDetails,
+        pagination: {
+          total: totalRecords.length,
+          page: pageNumber,
+          limit: limitNumber,
+        },
+      },
       "Service requests fetched successfully"
     );
   }
@@ -1027,7 +1066,6 @@ export const cancelServiceBySP = asyncHandler(
         $match: {
           _id: new mongoose.Types.ObjectId(serviceId),
           serviceProviderId: req.user?._id,
-          
         },
       },
     ]);
@@ -1128,3 +1166,25 @@ export const previewTowingService = asyncHandler(
     );
   }
 );
+
+// Function to fetch associated customer with the service request
+export const fetchAssociatedCustomer = async (serviceId: string) => {
+  if (!serviceId) {
+    throw new Error("Service request ID is required.");
+  }
+
+  const serviceRequest = await towingServiceBookingModel.aggregate([
+    {
+      $match: {
+        isDeleted: false,
+        _id: new mongoose.Types.ObjectId(serviceId),
+      },
+    },
+  ]);
+
+  if (!serviceRequest || serviceRequest.length === 0) {
+    throw new Error("Service request not found.");
+  }
+
+  return serviceRequest[0].userId;
+};

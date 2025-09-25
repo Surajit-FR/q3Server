@@ -23,6 +23,20 @@ export const getSingleUser = asyncHandler(
         },
       },
       {
+        $lookup:{
+          from:"additionalinfos",
+          foreignField:"userId",
+          localField:"_id",
+          as:"sp_details"
+        }
+      },
+      {
+        $unwind:{
+          path:"$sp_details",
+          preserveNullAndEmptyArrays:true
+        }
+      },
+      {
         $project: {
           password: 0,
           stripeCustomerId: 0,
