@@ -23,18 +23,18 @@ export const getSingleUser = asyncHandler(
         },
       },
       {
-        $lookup: {
-          from: "additionalinfos",
-          foreignField: "userId",
-          localField: "_id",
-          as: "additionalInfo",
-        },
+        $lookup:{
+          from:"additionalinfos",
+          foreignField:"userId",
+          localField:"_id",
+          as:"sp_details"
+        }
       },
       {
-        $unwind: {
-          preserveNullAndEmptyArrays: true,
-          path: "$additionalInfo",
-        },
+        $unwind:{
+          path:"$sp_details",
+          preserveNullAndEmptyArrays:true
+        }
       },
       {
         $project: {

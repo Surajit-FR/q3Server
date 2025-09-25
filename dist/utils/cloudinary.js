@@ -24,6 +24,7 @@ cloudinary_1.v2.config({
 // Function to upload file in Cloudinary
 const uploadOnCloudinary = (localFilePath) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        console.log({ localFilePath });
         if (!localFilePath)
             return null;
         const response = yield cloudinary_1.v2.uploader.upload(localFilePath, {

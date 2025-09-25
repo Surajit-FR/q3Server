@@ -3,6 +3,7 @@ import { Server, Socket } from "socket.io";
 import { socketAuthMiddleware } from "../middlewares/socketAuth.middleware";
 import ChatModel from "../models/chat.model";
 import { saveChatMessage, updateChatList } from "../controller/chat.controller";
+import { fetchAssociatedCustomer } from "../controller/towingServiceBooking.controller";
 
 export const initSocket = (server: HttpServer) => {
   const io = new Server(server, {
@@ -37,7 +38,7 @@ export const initSocket = (server: HttpServer) => {
       connectedProviders[userId] = socket.id;
       const serviceProvidersRoom = "ProvidersRoom";
       socket.join(serviceProvidersRoom);
-      // console.log(`A Service Provider ${userId} joined to ${serviceProvidersRoom}`);
+      // console.log(`A Service Provider ${userId} joined to ${serviceProvidersRoom}`);+
     } else {
       connectedAgent[userId] = socket.id;
     }
@@ -136,7 +137,6 @@ export const initSocket = (server: HttpServer) => {
       try {
         // console.log(`Fetching nearby service requests `);
         const date = new Date();
-
         // Send the event back to the client
         io.to("ProvidersRoom").emit("nearbyServicesUpdate", {
           success: true,
@@ -151,14 +151,46 @@ export const initSocket = (server: HttpServer) => {
       }
     });
 
+    socket.on("acceptServiceRequest", async (requestId: string) => {
+      console.log(`Service provider with _id ${userId} accepted the request ${requestId}`);
+      io.emit("requestInactive", requestId);
+
+      //execute get single service request to get  associated userId
+      const customerId = await fetchAssociatedCustomer(requestId);
+
+      // Notify the customer that the service provider is on the way
+      // console.log(connectedCustomers);
+      if (customerId && connectedCustomers[customerId]) {
+        io.to(connectedCustomers[customerId]).emit("serviceProviderAccepted", {
+          message: `A service provider with userId ${userId} is on the way`,
+          requestId,
+        });
+      }
+
+      // Handle service provider's location updates and send them to the customer
+      socket.on(
+        "locationUpdate",
+        async (location: { latitude: number; longitude: number }) => {
+          if (customerId && connectedCustomers[customerId]) {
+            io.to(connectedCustomers[customerId]).emit(
+              "serviceProviderLocationUpdate",
+              {
+                latitude: location.latitude,
+                longitude: location.longitude,
+              }
+            );
+            // console.log("Service provider location update =>");
+          }
+        }
+      );
+    });
+
     // update fetch nearby service requests list when service is assigned
     socket.on("serviceAssigned", async () => {
       try {
         // console.log(`Accepted service is assigned to field agent`);
         const date = new Date();
-
         // Send the event back to the client
-
         io.to("ProvidersRoom").emit("jobListUpdate", {
           success: true,
           message: "Service list is need a update",

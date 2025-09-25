@@ -17,6 +17,7 @@ const socket_io_1 = require("socket.io");
 const socketAuth_middleware_1 = require("../middlewares/socketAuth.middleware");
 const chat_model_1 = __importDefault(require("../models/chat.model"));
 const chat_controller_1 = require("../controller/chat.controller");
+const towingServiceBooking_controller_1 = require("../controller/towingServiceBooking.controller");
 const initSocket = (server) => {
     const io = new socket_io_1.Server(server, {
         cors: {
@@ -42,7 +43,7 @@ const initSocket = (server) => {
             connectedProviders[userId] = socket.id;
             const serviceProvidersRoom = "ProvidersRoom";
             socket.join(serviceProvidersRoom);
-            // console.log(`A Service Provider ${userId} joined to ${serviceProvidersRoom}`);
+            // console.log(`A Service Provider ${userId} joined to ${serviceProvidersRoom}`);+
         }
         else {
             connectedAgent[userId] = socket.id;
@@ -133,6 +134,30 @@ const initSocket = (server) => {
                     error: "Failed to fetch nearby services. Please try again.",
                 });
             }
+        }));
+        socket.on("acceptServiceRequest", (requestId) => __awaiter(void 0, void 0, void 0, function* () {
+            console.log(`Service provider with _id ${userId} accepted the request ${requestId}`);
+            io.emit("requestInactive", requestId);
+            //execute get single service request to get  associated userId
+            const customerId = yield (0, towingServiceBooking_controller_1.fetchAssociatedCustomer)(requestId);
+            // Notify the customer that the service provider is on the way
+            // console.log(connectedCustomers);
+            if (customerId && connectedCustomers[customerId]) {
+                io.to(connectedCustomers[customerId]).emit("serviceProviderAccepted", {
+                    message: `A service provider with userId ${userId} is on the way`,
+                    requestId,
+                });
+            }
+            // Handle service provider's location updates and send them to the customer
+            socket.on("locationUpdate", (location) => __awaiter(void 0, void 0, void 0, function* () {
+                if (customerId && connectedCustomers[customerId]) {
+                    io.to(connectedCustomers[customerId]).emit("serviceProviderLocationUpdate", {
+                        latitude: location.latitude,
+                        longitude: location.longitude,
+                    });
+                    // console.log("Service provider location update =>");
+                }
+            }));
         }));
         // update fetch nearby service requests list when service is assigned
         socket.on("serviceAssigned", () => __awaiter(void 0, void 0, void 0, function* () {

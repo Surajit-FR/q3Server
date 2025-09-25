@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.previewTowingService = exports.cancelServiceBySP = exports.fetchSingleService = exports.fetchTotalServiceProgresswiseBySp = exports.fetchTotalServiceByAdmin = exports.getUserServiceDetilsByState = exports.getSavedDestination = exports.handleServiceRequestState = exports.acceptServiceRequest = exports.cancelServiceRequestByCustomer = exports.declineServicerequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
+exports.fetchAssociatedCustomer = exports.previewTowingService = exports.cancelServiceBySP = exports.fetchSingleService = exports.fetchTotalServiceProgresswiseBySp = exports.fetchTotalServiceByAdmin = exports.getUserServiceDetilsByState = exports.getSavedDestination = exports.handleServiceRequestState = exports.acceptServiceRequest = exports.cancelServiceRequestByCustomer = exports.declineServicerequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
 const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
 const response_utils_1 = require("../../utils/response.utils");
 const towingServiceBooking_model_1 = __importDefault(require("../models/towingServiceBooking.model"));
@@ -502,14 +502,24 @@ exports.getUserServiceDetilsByState = (0, asyncHandler_utils_1.asyncHandler)((re
     return (0, response_utils_1.handleResponse)(res, "success", 200, customerServiceDetails, "Service requests fetched successfully");
 }));
 exports.fetchTotalServiceByAdmin = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { serviceProgess } = req.body;
+    const { page = 1, limit = 10, query = "" } = req.query;
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    const searchQuery = query
+        ? {
+            isDeleted: false,
+            $or: [
+                { sp_fullName: { $regex: query, $options: "i" } },
+                { customer_fullName: { $regex: query, $options: "i" } },
+                { sp_email: { $regex: query, $options: "i" } },
+            ],
+        }
+        : {};
+    const matchCriteria = Object.assign({}, searchQuery);
+    console.log({ matchCriteria });
     const ServiceDetails = yield towingServiceBooking_model_1.default.aggregate([
         {
-            $match: {
-                isDeleted: false,
-                // serviceProgess,
-                // userId: customerId,
-            },
+            $match: { isDeleted: false },
         },
         {
             $lookup: {
@@ -586,8 +596,28 @@ exports.fetchTotalServiceByAdmin = (0, asyncHandler_utils_1.asyncHandler)((req, 
                 __v: 0,
             },
         },
+        {
+            $match: matchCriteria,
+        },
+        { $sort: { createdAt: -1 } },
+        { $skip: (pageNumber - 1) * limitNumber },
+        { $limit: limitNumber },
     ]);
-    return (0, response_utils_1.handleResponse)(res, "success", 200, ServiceDetails, "Service requests fetched successfully");
+    // const totalRecords = await towingServiceBookingModel.countDocuments(
+    //   matchCriteria
+    // );
+    const totalRecords = ServiceDetails.map((serviceData) => {
+        if (serviceData.customer_fullName === query || serviceData.sp_fullName === query)
+            return serviceData;
+    });
+    return (0, response_utils_1.handleResponse)(res, "success", 200, {
+        ServiceDetails,
+        pagination: {
+            total: totalRecords.length,
+            page: pageNumber,
+            limit: limitNumber,
+        },
+    }, "Service requests fetched successfully");
 }));
 exports.fetchTotalServiceProgresswiseBySp = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { serviceProgess } = req.body;
@@ -842,3 +872,22 @@ exports.previewTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res)
     };
     return (0, response_utils_1.handleResponse)(res, "success", 200, previewData, "Preview booking details");
 }));
+// Function to fetch associated customer with the service request
+const fetchAssociatedCustomer = (serviceId) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!serviceId) {
+        throw new Error("Service request ID is required.");
+    }
+    const serviceRequest = yield towingServiceBooking_model_1.default.aggregate([
+        {
+            $match: {
+                isDeleted: false,
+                _id: new mongoose_1.default.Types.ObjectId(serviceId),
+            },
+        },
+    ]);
+    if (!serviceRequest || serviceRequest.length === 0) {
+        throw new Error("Service request not found.");
+    }
+    return serviceRequest[0].userId;
+});
+exports.fetchAssociatedCustomer = fetchAssociatedCustomer;

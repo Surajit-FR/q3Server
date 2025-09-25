@@ -35,14 +35,14 @@ exports.getSingleUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __a
                 from: "additionalinfos",
                 foreignField: "userId",
                 localField: "_id",
-                as: "additionalInfo",
-            },
+                as: "sp_details"
+            }
         },
         {
             $unwind: {
-                preserveNullAndEmptyArrays: true,
-                path: "$additionalInfo",
-            },
+                path: "$sp_details",
+                preserveNullAndEmptyArrays: true
+            }
         },
         {
             $project: {
