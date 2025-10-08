@@ -136,15 +136,39 @@ const initSocket = (server) => {
             }
         }));
         socket.on("acceptServiceRequest", (requestId) => __awaiter(void 0, void 0, void 0, function* () {
+            console.log({ requestId });
             console.log(`Service provider with _id ${userId} accepted the request ${requestId}`);
-            io.emit("requestInactive", requestId);
             //execute get single service request to get  associated userId
             const customerId = yield (0, towingServiceBooking_controller_1.fetchAssociatedCustomer)(requestId);
             // Notify the customer that the service provider is on the way
-            // console.log(connectedCustomers);
             if (customerId && connectedCustomers[customerId]) {
                 io.to(connectedCustomers[customerId]).emit("serviceProviderAccepted", {
                     message: `A service provider with userId ${userId} is on the way`,
+                    requestId,
+                });
+            }
+            // Handle service provider's location updates and send them to the customer
+            socket.on("locationUpdate", (location) => __awaiter(void 0, void 0, void 0, function* () {
+                if (customerId && connectedCustomers[customerId]) {
+                    io.to(connectedCustomers[customerId]).emit("serviceProviderLocationUpdate", {
+                        latitude: location.latitude,
+                        longitude: location.longitude,
+                    });
+                    // console.log("Service provider location update =>");
+                }
+            }));
+        }));
+        //Declne service request by service provider
+        socket.on("declineServiceRequest", (requestId) => __awaiter(void 0, void 0, void 0, function* () {
+            console.log("socket on for declineServiceRequest");
+            console.log({ requestId });
+            console.log(`Service provider with _id ${userId} declined the request ${requestId}`);
+            //execute get single service request to get  associated userId
+            const customerId = yield (0, towingServiceBooking_controller_1.fetchAssociatedCustomer)(requestId);
+            // Notify the customer that the service provider is on the way
+            if (customerId && connectedCustomers[customerId]) {
+                io.to(connectedCustomers[customerId]).emit("serviceProviderDeclined", {
+                    message: `A service provider with userId ${userId}  declined the request.`,
                     requestId,
                 });
             }

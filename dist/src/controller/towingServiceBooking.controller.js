@@ -382,6 +382,7 @@ exports.handleServiceRequestState = (0, asyncHandler_utils_1.asyncHandler)((req,
 }));
 exports.getSavedDestination = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
+    console.log("Api runs...: getSavedDestination");
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const savedDestination = yield towingServiceBooking_model_1.default.aggregate([
         {
@@ -403,6 +404,7 @@ exports.getSavedDestination = (0, asyncHandler_utils_1.asyncHandler)((req, res) 
 }));
 exports.getUserServiceDetilsByState = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
+    console.log("Api runs...: getUserServiceDetilsByState");
     const customerId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const { serviceProgess } = req.body;
     const customerServiceDetails = yield towingServiceBooking_model_1.default.aggregate([
@@ -502,6 +504,7 @@ exports.getUserServiceDetilsByState = (0, asyncHandler_utils_1.asyncHandler)((re
     return (0, response_utils_1.handleResponse)(res, "success", 200, customerServiceDetails, "Service requests fetched successfully");
 }));
 exports.fetchTotalServiceByAdmin = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("Api runs...: fetchTotalServiceByAdmin");
     const { page = 1, limit = 10, query = "" } = req.query;
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
@@ -607,7 +610,8 @@ exports.fetchTotalServiceByAdmin = (0, asyncHandler_utils_1.asyncHandler)((req, 
     //   matchCriteria
     // );
     const totalRecords = ServiceDetails.map((serviceData) => {
-        if (serviceData.customer_fullName === query || serviceData.sp_fullName === query)
+        if (serviceData.customer_fullName === query ||
+            serviceData.sp_fullName === query)
             return serviceData;
     });
     return (0, response_utils_1.handleResponse)(res, "success", 200, {
@@ -620,6 +624,7 @@ exports.fetchTotalServiceByAdmin = (0, asyncHandler_utils_1.asyncHandler)((req, 
     }, "Service requests fetched successfully");
 }));
 exports.fetchTotalServiceProgresswiseBySp = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("Api runs...: fetchTotalServiceProgresswiseBySp");
     const { serviceProgess } = req.body;
     const ServiceDetails = yield towingServiceBooking_model_1.default.aggregate([
         {
@@ -708,6 +713,7 @@ exports.fetchTotalServiceProgresswiseBySp = (0, asyncHandler_utils_1.asyncHandle
     return (0, response_utils_1.handleResponse)(res, "success", 200, ServiceDetails, "Service requests fetched successfully");
 }));
 exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("Api runs...: fetchSingleService");
     const { serviceId } = req.params;
     const ServiceDetails = yield towingServiceBooking_model_1.default.aggregate([
         {
@@ -797,6 +803,7 @@ exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =
 }));
 exports.cancelServiceBySP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e, _f;
+    console.log("Api runs...: cancelServiceBySP");
     const SPId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const { serviceId } = req.body;
     if (!serviceId) {
@@ -874,6 +881,8 @@ exports.previewTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res)
 }));
 // Function to fetch associated customer with the service request
 const fetchAssociatedCustomer = (serviceId) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("Function runs...: fetchAssociatedCustomer");
+    console.log({ serviceId });
     if (!serviceId) {
         throw new Error("Service request ID is required.");
     }
