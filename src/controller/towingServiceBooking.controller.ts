@@ -584,6 +584,8 @@ export const handleServiceRequestState = asyncHandler(
 
 export const getSavedDestination = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: getSavedDestination");
+
     const userId = req.user?._id;
     const savedDestination = await towingServiceBookingModel.aggregate([
       {
@@ -613,6 +615,8 @@ export const getSavedDestination = asyncHandler(
 
 export const getUserServiceDetilsByState = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: getUserServiceDetilsByState");
+
     const customerId = req.user?._id;
     const { serviceProgess } = req.body;
     const customerServiceDetails = await towingServiceBookingModel.aggregate([
@@ -722,6 +726,8 @@ export const getUserServiceDetilsByState = asyncHandler(
 
 export const fetchTotalServiceByAdmin = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: fetchTotalServiceByAdmin");
+
     const { page = 1, limit = 10, query = "" } = req.query;
 
     const pageNumber = parseInt(page as string, 10);
@@ -836,8 +842,11 @@ export const fetchTotalServiceByAdmin = asyncHandler(
     //   matchCriteria
     // );
     const totalRecords = ServiceDetails.map((serviceData) => {
-      if(serviceData.customer_fullName === query||serviceData.sp_fullName === query)
-        return serviceData
+      if (
+        serviceData.customer_fullName === query ||
+        serviceData.sp_fullName === query
+      )
+        return serviceData;
     });
 
     return handleResponse(
@@ -859,6 +868,8 @@ export const fetchTotalServiceByAdmin = asyncHandler(
 
 export const fetchTotalServiceProgresswiseBySp = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: fetchTotalServiceProgresswiseBySp");
+
     const { serviceProgess } = req.body;
     const ServiceDetails = await towingServiceBookingModel.aggregate([
       {
@@ -957,6 +968,8 @@ export const fetchTotalServiceProgresswiseBySp = asyncHandler(
 
 export const fetchSingleService = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: fetchSingleService");
+
     const { serviceId } = req.params;
     const ServiceDetails = await towingServiceBookingModel.aggregate([
       {
@@ -1055,6 +1068,8 @@ export const fetchSingleService = asyncHandler(
 
 export const cancelServiceBySP = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: cancelServiceBySP");
+
     const SPId = req.user?._id;
     const { serviceId } = req.body;
     if (!serviceId) {
@@ -1169,6 +1184,10 @@ export const previewTowingService = asyncHandler(
 
 // Function to fetch associated customer with the service request
 export const fetchAssociatedCustomer = async (serviceId: string) => {
+  console.log("Function runs...: fetchAssociatedCustomer");
+
+  console.log({ serviceId });
+
   if (!serviceId) {
     throw new Error("Service request ID is required.");
   }
