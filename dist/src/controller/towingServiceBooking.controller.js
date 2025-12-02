@@ -23,6 +23,8 @@ const axios_1 = __importDefault(require("axios"));
 const canceledServiceBySP_model_1 = require("../models/canceledServiceBySP.model");
 const user_model_1 = __importDefault(require("../models/user.model"));
 const vehicleType_model_1 = __importDefault(require("../models/vehicleType.model"));
+const customPricingRule_model_1 = __importDefault(require("../models/customPricingRule.model"));
+const pricingRule_model_1 = __importDefault(require("../models/pricingRule.model"));
 const apiKey = "AIzaSyDtPUxp_vFvbx9og_F-q0EBkJPAiCAbj8w";
 const isEligibleForBooking = (customerId) => __awaiter(void 0, void 0, void 0, function* () {
     const prevBookedServices = yield towingServiceBooking_model_1.default.aggregate([
@@ -44,7 +46,7 @@ const isEligibleForBooking = (customerId) => __awaiter(void 0, void 0, void 0, f
 });
 // addVehicleType controller
 exports.bookTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
     console.log("Api runs...: bookTowingService");
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     let picklocation_derived, placeId_pickup_derived, placeId_destination_derived, picklocationString, distance_derived;
@@ -115,8 +117,7 @@ exports.bookTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
     console.log({ placeId_destination_derived });
     let distance = yield (0, googleapis_controller_1.getDistanceInKm)(placeId_pickup_derived, placeId_destination_derived);
     console.log({ distance });
-    // // Create and save the shift
-    const newBooking = yield towingServiceBooking_model_1.default.create({
+    let bookingDetails = {
         pickupLocation: picklocationString,
         placeId_pickup: placeId_pickup_derived,
         destinyLocation,
@@ -124,17 +125,51 @@ exports.bookTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
         vehicleTypeId,
         disputedVehicleImage,
         serviceSpecificNotes,
-        totalDistance: distance,
+        totalDistance: distance.toFixed(2),
         pickupLat,
         pickuplong,
         isCurrentLocationforPick,
         userId,
         picklocation: picklocation_derived,
+    };
+    const vehicleInfo = yield vehicleType_model_1.default.findById({
+        _id: new mongoose_1.default.Types.ObjectId(vehicleTypeId),
     });
+    let customResponseMsg = { message: "Booking Successfully" };
+    if ((vehicleInfo === null || vehicleInfo === void 0 ? void 0 : vehicleInfo.type) === "Truck") {
+        bookingDetails.isCustomPricing = true;
+        const contactAdmin = yield customPricingRule_model_1.default.find({});
+        customResponseMsg = {
+            message: "Call for heavy vehicle rates. Pricing varies depending on weight",
+            contactNo: contactAdmin[0].contactNumber,
+        };
+    }
+    else {
+        const pricingDeatils = yield pricingRule_model_1.default.find({});
+        console.log({ pricingDeatils });
+        const includedMiles = ((_j = pricingDeatils[0]) === null || _j === void 0 ? void 0 : _j.includedMiles) || 0;
+        const baseFee = ((_k = pricingDeatils[0]) === null || _k === void 0 ? void 0 : _k.baseFee) || 0;
+        const additionalFee = ((_l = pricingDeatils[0]) === null || _l === void 0 ? void 0 : _l.additionalFee) || 0;
+        let extraMiles = Math.floor(distance - includedMiles);
+        if (extraMiles < 0)
+            extraMiles = 0;
+        const costPerMile = Math.floor(((_m = pricingDeatils[0]) === null || _m === void 0 ? void 0 : _m.costPerMile) || 0) * extraMiles;
+        let PricingData = {
+            baseFee,
+            includedMiles,
+            extraMiles,
+            costPerMile,
+            additionalFee,
+            total: Math.floor(baseFee + costPerMile + additionalFee),
+        };
+        bookingDetails.pricing = PricingData;
+    }
+    // // Create and save the service
+    const newBooking = yield towingServiceBooking_model_1.default.create(bookingDetails);
     if (!newBooking) {
         return (0, response_utils_1.handleResponse)(res, "error", 500, "Something went wrong while booking.");
     }
-    return (0, response_utils_1.handleResponse)(res, "success", 201, newBooking, "Booking Successfully");
+    return (0, response_utils_1.handleResponse)(res, "success", 201, newBooking, customResponseMsg);
 }));
 //fetch near-by service request
 exports.fetchTowingServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -205,7 +240,26 @@ exports.fetchTowingServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req,
                 customer_name: "$customer_details.fullName",
                 customer_avatar: "$customer_details.avatar",
                 // distance: "$totalDistance",
-                towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
+                towing_cost: "$pricing.total",
+            },
+        },
+        {
+            $lookup: {
+                from: "vehicletypes",
+                foreignField: "_id",
+                localField: "vehicleTypeId",
+                as: "vehicletypes_details",
+            },
+        },
+        {
+            $unwind: {
+                preserveNullAndEmptyArrays: true,
+                path: "$vehicletypes_details",
+            },
+        },
+        {
+            $addFields: {
+                vehicleType: "$vehicletypes_details.type",
             },
         },
         {
@@ -226,7 +280,13 @@ exports.fetchTowingServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req,
                 towing_cost: 1,
             },
         },
+        {
+            $match: {
+                vehicleType: { $ne: "Truck" },
+            },
+        },
     ]);
+    console.log({ serviceRequests });
     if (!serviceRequests.length) {
         return (0, response_utils_1.handleResponse)(res, "success", 200, serviceRequests, "No nearby service request found");
     }
@@ -290,6 +350,7 @@ exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res)
         serviceProviderId: userId,
         providerVehicleDetails,
         updatedAt: Date.now(),
+        isReqAccepted: true,
     }, { new: true });
     if (updateService) {
         const acceptedServiceDetails = {
@@ -433,7 +494,7 @@ exports.getUserServiceDetilsByState = (0, asyncHandler_utils_1.asyncHandler)((re
             $addFields: {
                 customer_fullName: "$customer_details.fullName",
                 customer_avatar: "$customer_details.avatar",
-                towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
+                towing_cost: "$pricing.total",
             },
         },
         {
@@ -489,6 +550,31 @@ exports.getUserServiceDetilsByState = (0, asyncHandler_utils_1.asyncHandler)((re
             },
         },
         {
+            $lookup: {
+                from: "custompricings",
+                localField: "toeVehicle_type",
+                foreignField: "appliesToVehicleType",
+                as: "customPricingInfo",
+            },
+        },
+        {
+            $unwind: {
+                preserveNullAndEmptyArrays: true,
+                path: "$customPricingInfo",
+            },
+        },
+        {
+            $addFields: {
+                adminContact: {
+                    $cond: {
+                        if: { $eq: ["$toeVehicle_type", "Truck"] },
+                        then: "$customPricingInfo.contactNumber",
+                        else: null,
+                    },
+                },
+            },
+        },
+        {
             $project: {
                 customer_details: 0,
                 sp_ratings: 0,
@@ -497,6 +583,7 @@ exports.getUserServiceDetilsByState = (0, asyncHandler_utils_1.asyncHandler)((re
                 isCurrentLocationforPick: 0,
                 picklocation: 0,
                 customer_updatedAtdetails: 0,
+                // customPricingInfo: 0,
                 __v: 0,
             },
         },
@@ -542,7 +629,7 @@ exports.fetchTotalServiceByAdmin = (0, asyncHandler_utils_1.asyncHandler)((req, 
             $addFields: {
                 customer_fullName: "$customer_details.fullName",
                 customer_avatar: "$customer_details.avatar",
-                towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
+                towing_cost: "$pricing.total",
             },
         },
         {
@@ -652,7 +739,7 @@ exports.fetchTotalServiceProgresswiseBySp = (0, asyncHandler_utils_1.asyncHandle
             $addFields: {
                 customer_fullName: "$customer_details.fullName",
                 customer_avatar: "$customer_details.avatar",
-                towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
+                towing_cost: "$pricing.total",
             },
         },
         {
@@ -741,7 +828,7 @@ exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =
                 customer_fullName: "$customer_details.fullName",
                 customer_avatar: "$customer_details.avatar",
                 customer_phoneNumber: "$customer_details.phone",
-                towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
+                towing_cost: "$pricing.total",
             },
         },
         {
@@ -842,7 +929,7 @@ exports.cancelServiceBySP = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
     return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Something went wrong");
 }));
 exports.previewTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
     console.log("Api runs...: previewTowingService");
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const { placeId_pickup, placeId_destination, vehicleTypeId } = req.body;
@@ -861,8 +948,28 @@ exports.previewTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res)
     if (!vehicle) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "Invalid vehicleTypeId.");
     }
+    let towingCost = 0;
+    if ((vehicle === null || vehicle === void 0 ? void 0 : vehicle.type) !== "Truck") {
+        const pricingDeatils = yield pricingRule_model_1.default.find({});
+        console.log({ pricingDeatils });
+        const includedMiles = ((_e = pricingDeatils[0]) === null || _e === void 0 ? void 0 : _e.includedMiles) || 0;
+        const baseFee = ((_f = pricingDeatils[0]) === null || _f === void 0 ? void 0 : _f.baseFee) || 0;
+        const additionalFee = ((_g = pricingDeatils[0]) === null || _g === void 0 ? void 0 : _g.additionalFee) || 0;
+        let extraMiles = Math.floor(distance - includedMiles);
+        if (extraMiles < 0)
+            extraMiles = 0;
+        const costPerMile = Math.floor(((_h = pricingDeatils[0]) === null || _h === void 0 ? void 0 : _h.costPerMile) || 0) * extraMiles;
+        let PricingData = {
+            baseFee,
+            includedMiles,
+            extraMiles,
+            costPerMile,
+            additionalFee,
+            total: Math.floor(baseFee + costPerMile + additionalFee),
+        };
+        towingCost = PricingData.total;
+    }
     const perKmRate = 5;
-    const towingCost = (distance * perKmRate).toFixed(2);
     const previewData = {
         user: {
             name: user === null || user === void 0 ? void 0 : user.fullName,

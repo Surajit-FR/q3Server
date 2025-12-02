@@ -10,6 +10,9 @@ import axios from "axios";
 import { CancelServiceBySPModel } from "../models/canceledServiceBySP.model";
 import UserModel from "../models/user.model";
 import vehicleTypeModel from "../models/vehicleType.model";
+import CustomPricingModel from "../models/customPricingRule.model";
+import PricingRuleModel from "../models/pricingRule.model";
+import { log } from "console";
 
 const apiKey = "AIzaSyDtPUxp_vFvbx9og_F-q0EBkJPAiCAbj8w";
 
@@ -164,9 +167,7 @@ export const bookTowingService = asyncHandler(
       placeId_destination_derived
     );
     console.log({ distance });
-
-    // // Create and save the shift
-    const newBooking = await towingServiceBookingModel.create({
+    let bookingDetails: any = {
       pickupLocation: picklocationString,
       placeId_pickup: placeId_pickup_derived,
       destinyLocation,
@@ -174,13 +175,53 @@ export const bookTowingService = asyncHandler(
       vehicleTypeId,
       disputedVehicleImage,
       serviceSpecificNotes,
-      totalDistance: distance,
+      totalDistance: distance.toFixed(2),
       pickupLat,
       pickuplong,
       isCurrentLocationforPick,
       userId,
       picklocation: picklocation_derived,
+    };
+
+    const vehicleInfo = await vehicleTypeModel.findById({
+      _id: new mongoose.Types.ObjectId(vehicleTypeId),
     });
+    let customResponseMsg: any = { message: "Booking Successfully" };
+    if (vehicleInfo?.type === "Truck") {
+      bookingDetails.isCustomPricing = true;
+      const contactAdmin = await CustomPricingModel.find({});
+      customResponseMsg = {
+        message:
+          "Call for heavy vehicle rates. Pricing varies depending on weight",
+        contactNo: contactAdmin[0].contactNumber,
+      };
+    } else {
+      const pricingDeatils = await PricingRuleModel.find({});
+      console.log({ pricingDeatils });
+
+      const includedMiles = pricingDeatils[0]?.includedMiles || 0;
+      const baseFee = pricingDeatils[0]?.baseFee || 0;
+      const additionalFee = pricingDeatils[0]?.additionalFee || 0;
+
+      let extraMiles = Math.floor(distance - includedMiles);
+      if (extraMiles < 0) extraMiles = 0;
+
+      const costPerMile =
+        Math.floor(pricingDeatils[0]?.costPerMile || 0) * extraMiles;
+
+      let PricingData = {
+        baseFee,
+        includedMiles,
+        extraMiles,
+        costPerMile,
+        additionalFee,
+        total: Math.floor(baseFee + costPerMile + additionalFee),
+      };
+      bookingDetails.pricing = PricingData;
+    }
+
+    // // Create and save the service
+    const newBooking = await towingServiceBookingModel.create(bookingDetails);
 
     if (!newBooking) {
       return handleResponse(
@@ -191,13 +232,7 @@ export const bookTowingService = asyncHandler(
       );
     }
 
-    return handleResponse(
-      res,
-      "success",
-      201,
-      newBooking,
-      "Booking Successfully"
-    );
+    return handleResponse(res, "success", 201, newBooking, customResponseMsg);
   }
 );
 
@@ -277,7 +312,26 @@ export const fetchTowingServiceRequest = asyncHandler(
           customer_name: "$customer_details.fullName",
           customer_avatar: "$customer_details.avatar",
           // distance: "$totalDistance",
-          towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
+          towing_cost: "$pricing.total",
+        },
+      },
+      {
+        $lookup: {
+          from: "vehicletypes",
+          foreignField: "_id",
+          localField: "vehicleTypeId",
+          as: "vehicletypes_details",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$vehicletypes_details",
+        },
+      },
+      {
+        $addFields: {
+          vehicleType: "$vehicletypes_details.type",
         },
       },
       {
@@ -298,7 +352,15 @@ export const fetchTowingServiceRequest = asyncHandler(
           towing_cost: 1,
         },
       },
+      {
+        $match: {
+          vehicleType: { $ne: "Truck" },
+        },
+      },
     ]);
+    
+    console.log({serviceRequests});
+    
     if (!serviceRequests.length) {
       return handleResponse(
         res,
@@ -426,6 +488,7 @@ export const acceptServiceRequest = asyncHandler(
         serviceProviderId: userId,
         providerVehicleDetails,
         updatedAt: Date.now(),
+        isReqAccepted: true,
       },
       { new: true }
     );
@@ -645,7 +708,7 @@ export const getUserServiceDetilsByState = asyncHandler(
         $addFields: {
           customer_fullName: "$customer_details.fullName",
           customer_avatar: "$customer_details.avatar",
-          towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
+          towing_cost: "$pricing.total",
         },
       },
       {
@@ -701,6 +764,31 @@ export const getUserServiceDetilsByState = asyncHandler(
         },
       },
       {
+        $lookup: {
+          from: "custompricings",
+          localField: "toeVehicle_type",
+          foreignField: "appliesToVehicleType",
+          as: "customPricingInfo",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$customPricingInfo",
+        },
+      },
+      {
+        $addFields: {
+          adminContact: {
+            $cond: {
+              if: { $eq: ["$toeVehicle_type", "Truck"] },
+              then: "$customPricingInfo.contactNumber",
+              else: null,
+            },
+          },
+        },
+      },
+      {
         $project: {
           customer_details: 0,
           sp_ratings: 0,
@@ -709,6 +797,7 @@ export const getUserServiceDetilsByState = asyncHandler(
           isCurrentLocationforPick: 0,
           picklocation: 0,
           customer_updatedAtdetails: 0,
+          // customPricingInfo: 0,
           __v: 0,
         },
       },
@@ -773,7 +862,7 @@ export const fetchTotalServiceByAdmin = asyncHandler(
         $addFields: {
           customer_fullName: "$customer_details.fullName",
           customer_avatar: "$customer_details.avatar",
-          towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
+          towing_cost: "$pricing.total",
         },
       },
       {
@@ -897,7 +986,7 @@ export const fetchTotalServiceProgresswiseBySp = asyncHandler(
         $addFields: {
           customer_fullName: "$customer_details.fullName",
           customer_avatar: "$customer_details.avatar",
-          towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
+          towing_cost: "$pricing.total",
         },
       },
       {
@@ -997,7 +1086,7 @@ export const fetchSingleService = asyncHandler(
           customer_fullName: "$customer_details.fullName",
           customer_avatar: "$customer_details.avatar",
           customer_phoneNumber: "$customer_details.phone",
-          towing_cost: { $multiply: [{ $toDouble: "$totalDistance" }, 5] },
+          towing_cost: "$pricing.total",
         },
       },
       {
@@ -1153,9 +1242,34 @@ export const previewTowingService = asyncHandler(
     if (!vehicle) {
       return handleResponse(res, "error", 400, "Invalid vehicleTypeId.");
     }
+    let towingCost = 0;
+
+    if (vehicle?.type !== "Truck") {
+      const pricingDeatils = await PricingRuleModel.find({});
+      console.log({ pricingDeatils });
+
+      const includedMiles = pricingDeatils[0]?.includedMiles || 0;
+      const baseFee = pricingDeatils[0]?.baseFee || 0;
+      const additionalFee = pricingDeatils[0]?.additionalFee || 0;
+
+      let extraMiles = Math.floor(distance - includedMiles);
+      if (extraMiles < 0) extraMiles = 0;
+
+      const costPerMile =
+        Math.floor(pricingDeatils[0]?.costPerMile || 0) * extraMiles;
+
+      let PricingData = {
+        baseFee,
+        includedMiles,
+        extraMiles,
+        costPerMile,
+        additionalFee,
+        total: Math.floor(baseFee + costPerMile + additionalFee),
+      };
+      towingCost = PricingData.total;
+    }
 
     const perKmRate = 5;
-    const towingCost = (distance * perKmRate).toFixed(2);
 
     const previewData = {
       user: {

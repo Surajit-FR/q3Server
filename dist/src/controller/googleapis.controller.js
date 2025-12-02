@@ -75,18 +75,15 @@ destinationPlaceId //placeId
         var _a, _b, _c;
         console.log("function runs...: getDistanceInKm");
         const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=place_id:${originPlaceId}&destinations=place_id:${destinationPlaceId}&key=${GOOGLE_API_KEY}`;
-        // const url = "https://maps.googleapis.com/maps/api/distancematrix/json";
         const response = yield axios_1.default.get(url);
-        console.log({ response });
         let distanceMeters = (_c = (_b = (_a = response.data.rows[0]) === null || _a === void 0 ? void 0 : _a.elements[0]) === null || _b === void 0 ? void 0 : _b.distance) === null || _c === void 0 ? void 0 : _c.value;
+        // convert meters → miles
+        const miles = distanceMeters ? distanceMeters * 0.000621371 : 0;
         const destination_addresses = response.data.destination_addresses;
         const origin_addresses = response.data.origin_addresses;
-        const distance = distanceMeters ? distanceMeters / 1000 : 0; //km
-        console.log({ distance });
-        return distance;
+        return miles;
     });
 }
-;
 exports.getPlacesAutocomplete = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     console.log("Api runs...: getPlacesAutocomplete");
@@ -129,7 +126,7 @@ exports.getPlacesAutocomplete = (0, asyncHandler_utils_1.asyncHandler)((req, res
         error_message: response.data.error_message || null,
     });
 }));
-// getDistanceInKm("ChIJd8BlQ2BZwokRAFUEcm_qrcA", "ChIJ6R0bZgB1AjoRFNzbjnJxiTM");
+getDistanceInKm("ChIJgVkkYQB5AjoRU4-S9R-kIzM", "ChIJ8yrBIq91AjoRE_CdzZ6pfrk");
 exports.getPlaceDetailsById = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     console.log("Api runs...: getPlaceDetailsById");

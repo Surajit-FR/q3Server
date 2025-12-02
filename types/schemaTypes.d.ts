@@ -99,13 +99,16 @@ export interface ITowingServiceBookingSchema extends Document {
   vehicleTypeId: ObjectId;
   disputedVehicleImage: string;
   serviceSpecificNotes: string;
-  providerVehicleDetails: IProviderVehicleDetails;//providerVehicleDetails
+  providerVehicleDetails: IProviderVehicleDetails; //providerVehicleDetails
   isReqAccepted: boolean;
   serviceProviderId: ObjectId;
   serviceProgess: string;
   startedAt: Date;
   completedAt: Date;
   declinedBy: Array<String>;
+  isCustomPricing: boolean;
+  pricing: object;
+  isPaymentComplete: boolean;
   isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -165,6 +168,23 @@ interface ICanceledServiceBySP extends Document {
   serviceId: mongoose.Types.ObjectId;
   progressBeforeCancel: string;
   reason: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+interface IServicePricingRule extends Document {
+  baseFee: number;
+  includedMiles: number;
+  costPerMile: number;
+  additionalFee: number;
+  isDeleted?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+interface IServiceCustomPricingRule extends Document {
+  appliesToVehicleType: string;
+  instructions: string;
+  contactNumber: string;
+  isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

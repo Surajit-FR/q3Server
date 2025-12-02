@@ -78,19 +78,14 @@ export async function getDistanceInKm(
 
   const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=place_id:${originPlaceId}&destinations=place_id:${destinationPlaceId}&key=${GOOGLE_API_KEY}`;
 
-  // const url = "https://maps.googleapis.com/maps/api/distancematrix/json";
   const response = await axios.get(url);
-
-  console.log({ response });
-
   let distanceMeters = response.data.rows[0]?.elements[0]?.distance?.value;
+  // convert meters → miles
+  const miles = distanceMeters ? distanceMeters * 0.000621371 : 0;
   const destination_addresses = response.data.destination_addresses as string;
   const origin_addresses = response.data.origin_addresses;
-  const distance = distanceMeters ? distanceMeters / 1000 : 0; //km
-  console.log({ distance });
-
-  return distance;
-};
+  return miles;
+}
 
 export const getPlacesAutocomplete = asyncHandler(
   async (req: CustomRequest, res: Response) => {
@@ -144,7 +139,7 @@ export const getPlacesAutocomplete = asyncHandler(
     });
   }
 );
-// getDistanceInKm("ChIJd8BlQ2BZwokRAFUEcm_qrcA", "ChIJ6R0bZgB1AjoRFNzbjnJxiTM");
+getDistanceInKm("ChIJgVkkYQB5AjoRU4-S9R-kIzM", "ChIJ8yrBIq91AjoRE_CdzZ6pfrk");
 
 export const getPlaceDetailsById = asyncHandler(
   async (req: Request, res: Response) => {

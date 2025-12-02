@@ -15,6 +15,8 @@ const vehicleType_route_1 = __importDefault(require("./routes/vehicleType.route"
 const towingServiceBooking_route_1 = __importDefault(require("./routes/towingServiceBooking.route"));
 const locationSession_route_1 = __importDefault(require("./routes/locationSession.route"));
 const user_route_1 = __importDefault(require("./routes/user.route"));
+const pricing_route_1 = __importDefault(require("./routes/pricing.route"));
+const stripe_routes_1 = __importDefault(require("./routes/stripe.routes"));
 const app = (0, express_1.default)();
 exports.app = app;
 //  CORS Middleware
@@ -33,10 +35,13 @@ app.use(express_1.default.json({ limit: constants_1.EXPRESS_CONFIG_LIMIT })); //
 app.use(express_1.default.urlencoded({ extended: true, limit: constants_1.EXPRESS_CONFIG_LIMIT }));
 app.use(express_1.default.static("public"));
 app.use((0, cookie_parser_1.default)());
+//Stripe routes
+app.use("/api/v1/stripe", stripe_routes_1.default);
 //API routes
 app.use("/api/v1/auth", auth_route_1.default);
 app.use("/api/v1/", upload_routes_1.default);
 app.use("/api/v1/vehicle-type", vehicleType_route_1.default);
+app.use("/api/v1/pricing-rule", pricing_route_1.default);
 app.use("/api/v1/service", towingServiceBooking_route_1.default);
 app.use("/api/v1/location-session", locationSession_route_1.default);
 app.use("/api/v1/user", user_route_1.default);

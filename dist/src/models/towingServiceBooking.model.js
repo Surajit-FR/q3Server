@@ -138,6 +138,40 @@ const towingServiceBookingSchema = new mongoose_1.Schema({
         type: Boolean,
         default: false,
     },
+    isCustomPricing: {
+        type: Boolean,
+        default: false,
+    },
+    pricing: {
+        type: {
+            baseFee: {
+                type: Number,
+                required: true,
+            },
+            includedMiles: {
+                type: Number,
+                required: true,
+            },
+            extraMiles: {
+                type: Number,
+            },
+            costPerMile: {
+                type: Number,
+            },
+            additionalFee: {
+                type: Number,
+                default: 0,
+            },
+            total: {
+                type: Number,
+                default: 0,
+            },
+        },
+    },
+    isPaymentComplete: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamps: true });
 //adding geospatial index
 towingServiceBookingSchema.index({ picklocation: "2dsphere" });
