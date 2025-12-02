@@ -9,6 +9,8 @@ import vehicleTypeRouter from "./routes/vehicleType.route";
 import towingServiceBookingRouter from "./routes/towingServiceBooking.route";
 import locationSessionRouter from "./routes/locationSession.route";
 import userRouter from "./routes/user.route";
+import pricingRuleRouter from "./routes/pricing.route";
+import stripeRouter from "./routes/stripe.routes";
 
 const app = express();
 
@@ -31,10 +33,14 @@ app.use(express.urlencoded({ extended: true, limit: EXPRESS_CONFIG_LIMIT }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
+//Stripe routes
+app.use("/api/v1/stripe", stripeRouter);
+
 //API routes
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/", imageRouter);
 app.use("/api/v1/vehicle-type", vehicleTypeRouter);
+app.use("/api/v1/pricing-rule", pricingRuleRouter);
 app.use("/api/v1/service", towingServiceBookingRouter);
 app.use("/api/v1/location-session", locationSessionRouter);
 app.use("/api/v1/user", userRouter);
@@ -47,7 +53,7 @@ app.get("/ping", (req: Request, res: Response) => {
 //  Internal Server Error Handling
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.log(err);
-  res.status(500).json({ 
+  res.status(500).json({
     status: 500,
     message: "Server Error",
     error: err.message,
