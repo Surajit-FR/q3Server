@@ -137,10 +137,13 @@ const towingServiceBookingSchema: Schema<ITowingServiceBookingSchema> =
           },
         },
       },
-      isPaymentComplete:{
-        type:Boolean,
-        default:false
-      }
+      isPaymentComplete: {
+        type: Boolean,
+        default: false,
+      },
+      paymentIntentId: {
+        type: String,
+      },
     },
     { timestamps: true }
   );

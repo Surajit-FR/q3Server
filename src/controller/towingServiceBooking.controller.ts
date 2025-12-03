@@ -358,9 +358,9 @@ export const fetchTowingServiceRequest = asyncHandler(
         },
       },
     ]);
-    
-    console.log({serviceRequests});
-    
+
+    console.log({ serviceRequests });
+
     if (!serviceRequests.length) {
       return handleResponse(
         res,
@@ -589,13 +589,17 @@ export const handleServiceRequestState = asyncHandler(
     if (serviceProgess === "ServiceStarted") {
       updateFields.startedAt = new Date();
     }
+    let filterCondition: any = {
+      _id: new mongoose.Types.ObjectId(serviceId),
+    };
     if (serviceProgess === "ServiceCompleted") {
       updateFields.completedAt = new Date();
+      filterCondition.isPaymentComplete = true;
     }
 
     // Update service booking
     const updatedService = await towingServiceBookingModel.findOneAndUpdate(
-      { _id: new mongoose.Types.ObjectId(serviceId) },
+      filterCondition,
       { $set: updateFields },
       { new: true }
     );

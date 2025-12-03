@@ -109,6 +109,7 @@ export interface ITowingServiceBookingSchema extends Document {
   isCustomPricing: boolean;
   pricing: object;
   isPaymentComplete: boolean;
+  paymentIntentId: string;
   isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
