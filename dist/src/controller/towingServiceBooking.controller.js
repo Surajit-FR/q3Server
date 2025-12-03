@@ -411,11 +411,15 @@ exports.handleServiceRequestState = (0, asyncHandler_utils_1.asyncHandler)((req,
     if (serviceProgess === "ServiceStarted") {
         updateFields.startedAt = new Date();
     }
+    let filterCondition = {
+        _id: new mongoose_1.default.Types.ObjectId(serviceId),
+    };
     if (serviceProgess === "ServiceCompleted") {
         updateFields.completedAt = new Date();
+        filterCondition.isPaymentComplete = true;
     }
     // Update service booking
-    const updatedService = yield towingServiceBooking_model_1.default.findOneAndUpdate({ _id: new mongoose_1.default.Types.ObjectId(serviceId) }, { $set: updateFields }, { new: true });
+    const updatedService = yield towingServiceBooking_model_1.default.findOneAndUpdate(filterCondition, { $set: updateFields }, { new: true });
     if (!updatedService) {
         return (0, response_utils_1.handleResponse)(res, "error", 500, "", "Failed to update service");
     }

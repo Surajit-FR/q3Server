@@ -170,8 +170,11 @@ const towingServiceBookingSchema = new mongoose_1.Schema({
     },
     isPaymentComplete: {
         type: Boolean,
-        default: false
-    }
+        default: false,
+    },
+    paymentIntentId: {
+        type: String,
+    },
 }, { timestamps: true });
 //adding geospatial index
 towingServiceBookingSchema.index({ picklocation: "2dsphere" });
