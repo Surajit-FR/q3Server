@@ -36,7 +36,7 @@ const generateVerificationCode = (length) => {
 exports.generateVerificationCode = generateVerificationCode;
 exports.sendOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("Api runs...: sendOTP");
-    const { phoneNumber, purpose, userType } = req.body; //phone number with country code
+    const { countryCode, phoneNumber, purpose, userType } = req.body; //phone number with country code
     console.log(req.body);
     if (!phoneNumber) {
         return res
@@ -47,18 +47,14 @@ exports.sendOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter
     if (purpose === "service") {
         stepDuration = 24 * 60 * 60;
     }
+    console.log(/^\+\d{1,3}\d{7,15}$/.test(`${countryCode}${phoneNumber}`), "phone");
     // Validate phone number format
-    if (!/^\+\d{1,3}\d{7,15}$/.test(phoneNumber)) {
-        return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Invalid phone number format");
-    }
+    // if (!/^\+\d{1,3}\d{7,15}$/.test(`${countryCode}${phoneNumber}`)) {
+    //   return handleResponse(res, "error", 400, "", "Invalid phone number format");
+    // }
     const otpLength = 5;
     const otp = (0, exports.generateVerificationCode)(otpLength);
     const expiredAt = new Date(Date.now() + stepDuration * 1000);
-    const message = yield client.messages.create({
-        body: `Your OTP code is ${otp}`,
-        from: config_1.TWILIO_PHONE_NUMBER,
-        to: phoneNumber,
-    });
     if (purpose !== "verifyPhone") {
         const user = yield user_model_1.default.findOne({
             phone: phoneNumber,
@@ -86,6 +82,11 @@ exports.sendOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter
         });
         yield otpEntry.save();
     }
+    const message = yield client.messages.create({
+        body: `Your OTP code is ${otp}`,
+        from: config_1.TWILIO_PHONE_NUMBER,
+        to: `${countryCode}${phoneNumber}`,
+    });
     return (0, response_utils_1.handleResponse)(res, "success", 201, "", "Otp sent successfully");
 }));
 exports.verifyOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {

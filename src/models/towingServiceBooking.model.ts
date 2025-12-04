@@ -144,6 +144,9 @@ const towingServiceBookingSchema: Schema<ITowingServiceBookingSchema> =
       paymentIntentId: {
         type: String,
       },
+      serviceCode: {
+        type: Number,
+      },
     },
     { timestamps: true }
   );

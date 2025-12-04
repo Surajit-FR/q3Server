@@ -35,6 +35,20 @@ const isEligibleForBooking = async (customerId: string) => {
   return returnValue;
 };
 
+const generateUniqueCode = async () => {
+  let code;
+  let exists = true;
+
+  while (exists) {
+    code = Math.floor(10000 + Math.random() * 90000);
+
+    const found = await towingServiceBookingModel.findOne({ code });
+    exists = Boolean(found);
+  }
+
+  return code;
+};
+
 // addVehicleType controller
 export const bookTowingService = asyncHandler(
   async (req: CustomRequest, res: Response) => {
@@ -219,6 +233,9 @@ export const bookTowingService = asyncHandler(
       };
       bookingDetails.pricing = PricingData;
     }
+
+    const uniqueServiceCode = await generateUniqueCode();
+    bookingDetails.serviceCode = uniqueServiceCode;
 
     // // Create and save the service
     const newBooking = await towingServiceBookingModel.create(bookingDetails);
@@ -1324,4 +1341,55 @@ export const fetchAssociatedCustomer = async (serviceId: string) => {
   }
 
   return serviceRequest[0].userId;
+};
+
+export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
+  try {
+    const { serviceId, code } = req.body;
+    const spId = req.user?._id;
+
+    if (!serviceId || !code) {
+      return handleResponse(
+        res,
+        "error",
+        400,
+        "",
+        "Service ID and code are required"
+      );
+    }
+
+    // 1. Find the service
+    const service = await towingServiceBookingModel.findById(serviceId);
+    if (!service) {
+      return handleResponse(res, "error", 404, "", "Service not found");
+    }
+
+    // 2. Verify SP is assigned to this service
+    if (service.serviceProviderId.toString() !== spId) {
+      return handleResponse(
+        res,
+        "error",
+        403,
+        "",
+        "Not authorized for this service"
+      );
+    } 
+
+    // 3. Verify the code
+    if (service.serviceCode !== Number(code)) {
+      return handleResponse(res, "error", 400, "", "Invalid verification code");
+    }
+    await service.save();
+
+    return handleResponse(
+      res,
+      "success",
+      200,
+      service,
+      "Service verified successfully"
+    );
+  } catch (error) {
+    console.error("Verification error:", error);
+    return handleResponse(res, "error", 500, "", "Server error");
+  }
 };

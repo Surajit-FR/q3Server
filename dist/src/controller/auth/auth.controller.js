@@ -83,7 +83,8 @@ exports.startRegistration = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
     console.log("Api runs...: startRegistration");
     const userData = req.body;
     let newUser;
-    const { fullName, email, phone, userType, avatar, driverLicense, driverLicenseImage, insuranceNumber, insuranceImage, } = userData;
+    const { fullName, email, countryCode, phone, userType, avatar, driverLicense, driverLicenseImage, insuranceNumber, insuranceImage, } = userData;
+    console.log({ userData });
     if (phone) {
         const existingPhone = yield user_model_1.default.findOne({ phone, userType });
         if (existingPhone) {
@@ -100,6 +101,7 @@ exports.startRegistration = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
         newUser = yield user_model_1.default.create({
             fullName,
             email,
+            countryCode,
             phone,
             userType,
             avatar,
@@ -121,6 +123,7 @@ exports.startRegistration = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
         newUser = yield user_model_1.default.create({
             fullName,
             email,
+            countryCode,
             phone,
             userType,
             avatar,
@@ -396,7 +399,7 @@ exports.forgetPassword = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __
                 userId: user._id,
             }, {
                 otp,
-                phoneNumber: input
+                phoneNumber: input,
             }, {
                 upsert: true,
                 new: true,

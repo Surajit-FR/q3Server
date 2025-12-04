@@ -91,7 +91,8 @@ exports.getPlacesAutocomplete = (0, asyncHandler_utils_1.asyncHandler)((req, res
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const userDetails = yield user_model_1.default.findById(userId);
     const userPhoneNumber = userDetails === null || userDetails === void 0 ? void 0 : userDetails.phone;
-    const userCountry = (0, libphonenumber_js_1.parsePhoneNumberWithError)(userPhoneNumber).country;
+    const userCountryCode = userDetails === null || userDetails === void 0 ? void 0 : userDetails.countryCode;
+    const userCountry = (0, libphonenumber_js_1.parsePhoneNumberWithError)(`${userCountryCode}${userPhoneNumber}`).country;
     if (!input) {
         return res
             .status(400)

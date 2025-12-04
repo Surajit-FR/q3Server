@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchAssociatedCustomer = exports.previewTowingService = exports.cancelServiceBySP = exports.fetchSingleService = exports.fetchTotalServiceProgresswiseBySp = exports.fetchTotalServiceByAdmin = exports.getUserServiceDetilsByState = exports.getSavedDestination = exports.handleServiceRequestState = exports.acceptServiceRequest = exports.cancelServiceRequestByCustomer = exports.declineServicerequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
+exports.verifyServiceCode = exports.fetchAssociatedCustomer = exports.previewTowingService = exports.cancelServiceBySP = exports.fetchSingleService = exports.fetchTotalServiceProgresswiseBySp = exports.fetchTotalServiceByAdmin = exports.getUserServiceDetilsByState = exports.getSavedDestination = exports.handleServiceRequestState = exports.acceptServiceRequest = exports.cancelServiceRequestByCustomer = exports.declineServicerequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
 const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
 const response_utils_1 = require("../../utils/response.utils");
 const towingServiceBooking_model_1 = __importDefault(require("../models/towingServiceBooking.model"));
@@ -43,6 +43,16 @@ const isEligibleForBooking = (customerId) => __awaiter(void 0, void 0, void 0, f
     // console.log({ prevBookedServices });
     const returnValue = prevBookedServices.length ? false : true;
     return returnValue;
+});
+const generateUniqueCode = () => __awaiter(void 0, void 0, void 0, function* () {
+    let code;
+    let exists = true;
+    while (exists) {
+        code = Math.floor(10000 + Math.random() * 90000);
+        const found = yield towingServiceBooking_model_1.default.findOne({ code });
+        exists = Boolean(found);
+    }
+    return code;
 });
 // addVehicleType controller
 exports.bookTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -164,6 +174,8 @@ exports.bookTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
         };
         bookingDetails.pricing = PricingData;
     }
+    const uniqueServiceCode = yield generateUniqueCode();
+    bookingDetails.serviceCode = uniqueServiceCode;
     // // Create and save the service
     const newBooking = yield towingServiceBooking_model_1.default.create(bookingDetails);
     if (!newBooking) {
@@ -1011,3 +1023,33 @@ const fetchAssociatedCustomer = (serviceId) => __awaiter(void 0, void 0, void 0,
     return serviceRequest[0].userId;
 });
 exports.fetchAssociatedCustomer = fetchAssociatedCustomer;
+const verifyServiceCode = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const { serviceId, code } = req.body;
+        const spId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+        if (!serviceId || !code) {
+            return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Service ID and code are required");
+        }
+        // 1. Find the service
+        const service = yield towingServiceBooking_model_1.default.findById(serviceId);
+        if (!service) {
+            return (0, response_utils_1.handleResponse)(res, "error", 404, "", "Service not found");
+        }
+        // 2. Verify SP is assigned to this service
+        if (service.serviceProviderId.toString() !== spId) {
+            return (0, response_utils_1.handleResponse)(res, "error", 403, "", "Not authorized for this service");
+        }
+        // 3. Verify the code
+        if (service.serviceCode !== Number(code)) {
+            return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Invalid verification code");
+        }
+        yield service.save();
+        return (0, response_utils_1.handleResponse)(res, "success", 200, service, "Service verified successfully");
+    }
+    catch (error) {
+        console.error("Verification error:", error);
+        return (0, response_utils_1.handleResponse)(res, "error", 500, "", "Server error");
+    }
+});
+exports.verifyServiceCode = verifyServiceCode;

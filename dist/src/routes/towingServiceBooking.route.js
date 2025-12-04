@@ -22,6 +22,9 @@ router
     .route("/accept-service-request")
     .post((0, userAuth_1.verifyUserType)(["ServiceProvider"]), towingServiceBooking_controller_1.acceptServiceRequest);
 router
+    .route("/verify-service-code")
+    .post((0, userAuth_1.verifyUserType)(["ServiceProvider"]), towingServiceBooking_controller_1.verifyServiceCode);
+router
     .route("/fetch-customer-request-progresswise")
     .post((0, userAuth_1.verifyUserType)(["Customer"]), towingServiceBooking_controller_1.getUserServiceDetilsByState);
 router

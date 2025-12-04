@@ -19,6 +19,9 @@ const UserSchema: Schema<IUser> = new Schema({
         lowercase: true,
         default: ""
     },
+    countryCode:{
+        type:String
+    },
     phone: {
         type: String,
         default: "",
@@ -52,7 +55,7 @@ const UserSchema: Schema<IUser> = new Schema({
     },
     isVerified: {
         type: Boolean,
-        default: false
+        default: true
     },
     isOTPVerified: {
         type: Boolean,

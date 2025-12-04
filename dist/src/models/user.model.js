@@ -61,6 +61,9 @@ const UserSchema = new mongoose_1.Schema({
         lowercase: true,
         default: ""
     },
+    countryCode: {
+        type: String
+    },
     phone: {
         type: String,
         default: "",
@@ -94,7 +97,7 @@ const UserSchema = new mongoose_1.Schema({
     },
     isVerified: {
         type: Boolean,
-        default: false
+        default: true
     },
     isOTPVerified: {
         type: Boolean,
