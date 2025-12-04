@@ -90,6 +90,7 @@ export const startRegistration = asyncHandler(
     const {
       fullName,
       email,
+      countryCode,
       phone,
       userType,
       avatar,
@@ -98,6 +99,8 @@ export const startRegistration = asyncHandler(
       insuranceNumber,
       insuranceImage,
     } = userData;
+    console.log({userData});
+    
     if (phone) {
       const existingPhone = await UserModel.findOne({ phone, userType });
       if (existingPhone) {
@@ -128,6 +131,7 @@ export const startRegistration = asyncHandler(
       newUser = await UserModel.create({
         fullName,
         email,
+        countryCode,
         phone,
         userType,
         avatar,
@@ -148,6 +152,7 @@ export const startRegistration = asyncHandler(
       newUser = await UserModel.create({
         fullName,
         email,
+        countryCode,
         phone,
         userType,
         avatar,
@@ -223,7 +228,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     fcmToken,
     isAdminPanel,
   }: IUser & { isAdminPanel?: boolean; userType: Array<string> } = req.body;
-  if (!userType || (!email && !phone)) { 
+  if (!userType || (!email && !phone)) {
     return handleResponse(
       res,
       "error",
@@ -561,7 +566,7 @@ export const forgetPassword = asyncHandler(
           },
           {
             otp,
-            phoneNumber:input
+            phoneNumber: input,
           },
           {
             upsert: true,

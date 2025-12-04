@@ -30,7 +30,7 @@ export const generateVerificationCode = (length: number): number => {
 export const sendOTP = asyncHandler(async (req: Request, res: Response) => {
   console.log("Api runs...: sendOTP");
 
-  const { phoneNumber, purpose, userType } = req.body; //phone number with country code
+  const { countryCode, phoneNumber, purpose, userType } = req.body; //phone number with country code
   console.log(req.body);
 
   if (!phoneNumber) {
@@ -44,21 +44,20 @@ export const sendOTP = asyncHandler(async (req: Request, res: Response) => {
     stepDuration = 24 * 60 * 60;
   }
 
+  console.log(
+    /^\+\d{1,3}\d{7,15}$/.test(`${countryCode}${phoneNumber}`),
+    "phone"
+  );
+
   // Validate phone number format
-  if (!/^\+\d{1,3}\d{7,15}$/.test(phoneNumber)) {
-    return handleResponse(res, "error", 400, "", "Invalid phone number format");
-  }
+  // if (!/^\+\d{1,3}\d{7,15}$/.test(`${countryCode}${phoneNumber}`)) {
+  //   return handleResponse(res, "error", 400, "", "Invalid phone number format");
+  // }
 
   const otpLength = 5;
   const otp = generateVerificationCode(otpLength);
 
   const expiredAt = new Date(Date.now() + stepDuration * 1000);
-
-  const message = await client.messages.create({
-    body: `Your OTP code is ${otp}`,
-    from: TWILIO_PHONE_NUMBER,
-    to: phoneNumber,
-  });
 
   if (purpose !== "verifyPhone") {
     const user = await UserModel.findOne({
@@ -87,6 +86,12 @@ export const sendOTP = asyncHandler(async (req: Request, res: Response) => {
     await otpEntry.save();
   }
 
+  const message = await client.messages.create({
+    body: `Your OTP code is ${otp}`,
+    from: TWILIO_PHONE_NUMBER,
+    to: `${countryCode}${phoneNumber}`,
+  });
+
   return handleResponse(res, "success", 201, "", "Otp sent successfully");
 });
 
@@ -109,8 +114,8 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
   // Set default OTP for testing in non-production environments
   const defaultOtp = "00000";
 
-  // const isOtpValid = otpEntry?.otp.toString() === otp  //this is for live mode
-  const isOtpValid = defaultOtp === otp;
+  const isOtpValid = otpEntry?.otp.toString() === otp; //this is for live mode
+  // const isOtpValid = defaultOtp === otp;
   console.log({ isOtpValid });
   console.log({ otpEntry });
   console.log({ otp });

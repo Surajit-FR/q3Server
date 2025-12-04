@@ -8,6 +8,7 @@ export interface IUser extends Document {
   _id: string | ObjectId;
   fullName: string;
   email: string;
+  countryCode: string;
   phone: string;
   password: string;
   dob: Date;
@@ -110,6 +111,7 @@ export interface ITowingServiceBookingSchema extends Document {
   pricing: object;
   isPaymentComplete: boolean;
   paymentIntentId: string;
+  serviceCode: number;
   isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;

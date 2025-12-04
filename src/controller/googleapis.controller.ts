@@ -95,8 +95,9 @@ export const getPlacesAutocomplete = asyncHandler(
     const userId = req.user?._id;
     const userDetails = await UserModel.findById(userId);
     const userPhoneNumber = userDetails?.phone;
+    const userCountryCode = userDetails?.countryCode;
     const userCountry = parsePhoneNumberWithError(
-      userPhoneNumber as string
+      `${userCountryCode}${userPhoneNumber}` as string
     ).country;
 
     if (!input) {
