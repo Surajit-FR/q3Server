@@ -43,6 +43,8 @@ export const getSingleUser = asyncHandler(
           accessToken: 0,
           fcmToken: 0,
           __v: 0,
+          dob: 0,
+          "additionalInfo.__v": 0,
         },
       },
     ]);
@@ -99,6 +101,7 @@ export const getAllCustomer = asyncHandler(
       {
         $match: matchCriteria,
       },
+
       {
         $project: {
           password: 0,

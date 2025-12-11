@@ -21,6 +21,7 @@ app.use(
       process.env.CORS_ORIGIN as string,
       "http://localhost:9000",
       "http://localhost:5173",
+      "http://3.110.157.24",
     ],
     credentials: true,
   })
@@ -46,7 +47,7 @@ app.use("/api/v1/location-session", locationSessionRouter);
 app.use("/api/v1/user", userRouter);
 
 //  Ping Route for Health Check
-app.get("/ping", (req: Request, res: Response) => {
+app.get("/api/v1/ping", (req: Request, res: Response) => {
   res.send("Hi!...I am server, Happy to see you boss...");
 });
 
