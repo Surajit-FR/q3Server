@@ -3,16 +3,14 @@ import Stripe from "stripe";
 import { STRIPE_SECRET_KEY } from "../config/config";
 import { CustomRequest } from "../../types/commonType";
 import UserModel from "../models/user.model";
+import QRCode from "qrcode";
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
   apiVersion: "2024-09-30.acacia" as any,
 });
 
 //session for towing service payment payment
-export const createCheckoutsession = async (
-  req: CustomRequest,
-  res:any
-) => {
+export const createCheckoutsession = async (req: CustomRequest, res: any) => {
   try {
     const { amount, serviceId } = req.body;
     const userId = req.user?._id;
@@ -74,6 +72,10 @@ export const createCheckoutsession = async (
     } as Stripe.Checkout.SessionCreateParams);
     console.log({ Incentivesession: session });
 
-    res.json({ url: session.url });
+    const paymentUrl = session.url || "";    
+    
+    const paymentQR = await QRCode.toDataURL(paymentUrl);
+
+    res.json({paymentQR });
   } catch (error) {}
 };

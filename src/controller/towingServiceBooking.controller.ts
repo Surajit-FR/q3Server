@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { asyncHandler } from "../../utils/asyncHandler.utils";
 import { CustomRequest } from "../../types/commonType";
 import { handleResponse } from "../../utils/response.utils";
@@ -12,7 +12,6 @@ import UserModel from "../models/user.model";
 import vehicleTypeModel from "../models/vehicleType.model";
 import CustomPricingModel from "../models/customPricingRule.model";
 import PricingRuleModel from "../models/pricingRule.model";
-import { log } from "console";
 
 const apiKey = "AIzaSyDtPUxp_vFvbx9og_F-q0EBkJPAiCAbj8w";
 
@@ -1347,6 +1346,7 @@ export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
   try {
     const { serviceId, code } = req.body;
     const spId = req.user?._id;
+    console.log(req.user?._id);
 
     if (!serviceId || !code) {
       return handleResponse(
@@ -1363,9 +1363,10 @@ export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
     if (!service) {
       return handleResponse(res, "error", 404, "", "Service not found");
     }
+    console.log("from service", service.serviceProviderId.toString());
 
     // 2. Verify SP is assigned to this service
-    if (service.serviceProviderId.toString() !== spId) {
+    if (service.serviceProviderId.toString() !== spId.toString()) {
       return handleResponse(
         res,
         "error",
@@ -1373,13 +1374,23 @@ export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
         "",
         "Not authorized for this service"
       );
-    } 
+    }
 
     // 3. Verify the code
     if (service.serviceCode !== Number(code)) {
       return handleResponse(res, "error", 400, "", "Invalid verification code");
     }
-    await service.save();
+    await towingServiceBookingModel.updateOne(
+      {
+        _id: serviceId,
+      },
+      {
+        $set: { serviceProgess: "ServiceStarted", isServiceCodeVerified: true },
+      },
+      {
+        new: true,
+      }
+    );
 
     return handleResponse(
       res,

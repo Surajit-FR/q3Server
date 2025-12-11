@@ -13,6 +13,7 @@ export interface IUser extends Document {
   password: string;
   dob: Date;
   avatar: string;
+  vehicleRegistrationNumber: string;
   isVerified: boolean;
   isOTPVerified: boolean;
   isEmailVerified: boolean;
@@ -112,6 +113,7 @@ export interface ITowingServiceBookingSchema extends Document {
   isPaymentComplete: boolean;
   paymentIntentId: string;
   serviceCode: number;
+  isServiceCodeVerified: boolean;
   isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -187,6 +189,19 @@ interface IServiceCustomPricingRule extends Document {
   appliesToVehicleType: string;
   instructions: string;
   contactNumber: string;
+  isDeleted?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+interface ILocationPointSchema extends Document {
+  lat: number;
+  lng: number;
+  timestamp: Date;
+}
+interface ISPLocationTrackingSchema extends Document {
+  spId: ObjectId;
+  serviceId: ObjectId;
+  lastLocations: ILocationPointSchema[];
   isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;

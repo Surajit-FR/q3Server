@@ -147,6 +147,11 @@ const towingServiceBookingSchema: Schema<ITowingServiceBookingSchema> =
       serviceCode: {
         type: Number,
       },
+      isServiceCodeVerified:{
+        type:Boolean,
+        default:false
+        
+      }
     },
     { timestamps: true }
   );

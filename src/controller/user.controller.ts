@@ -64,7 +64,7 @@ export const getAllCustomer = asyncHandler(
   async (req: Request, res: Response) => {
     console.log("Api runs...: getAllCustomer");
     const {
-      page = 1,
+      page = 1,        
       limit = 10,
       query = "",
       sortBy = "createdAt",
