@@ -1342,6 +1342,8 @@ export const fetchAssociatedCustomer = async (serviceId: string) => {
   return serviceRequest[0].userId;
 };
 
+
+
 export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
   try {
     const { serviceId, code } = req.body;

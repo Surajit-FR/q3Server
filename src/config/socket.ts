@@ -60,7 +60,7 @@ export const initSocket = (server: HttpServer) => {
         if (!toUserId || !content) {
           return socket.emit("error", {
             error: "Invalid payload: toUserId and content are required.",
-          });
+          });   
         }
         const now = new Date();
         try {

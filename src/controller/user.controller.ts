@@ -23,18 +23,72 @@ export const getSingleUser = asyncHandler(
         },
       },
       {
-        $lookup:{
-          from:"additionalinfos",
-          foreignField:"userId",
-          localField:"_id",
-          as:"sp_details"
-        }
+        $lookup: {
+          from: "locationsessions",
+          foreignField: "userId",
+          localField: "_id",
+          as: "sp_location_details",
+          pipeline: [
+            {
+              $match: {
+                isActive: true,
+              },
+            },
+          ],
+        },
       },
       {
-        $unwind:{
-          path:"$sp_details",
-          preserveNullAndEmptyArrays:true
-        }
+        $unwind: {
+          path: "$sp_location_details",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "additionalinfos",
+          foreignField: "userId",
+          localField: "_id",
+          as: "sp_details",
+        },
+      },
+      {
+        $unwind: {
+          path: "$sp_details",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "towingservicebookings",
+          foreignField: "serviceProviderId",
+          localField: "_id",
+          as: "sp_engagement_details",
+          pipeline: [
+            {
+              $match: {
+                serviceProgess: {
+                  $nin: [
+                    "ServiceCompleted",
+                    "ServiceCancelledBySP",
+                    "ServiceCancelledByCustomer",
+                  ],
+                },
+              },
+            },
+          ],
+        },
+      },
+      // {
+      //   $unwind: {
+      //     path: "$sp_engagement_details",
+      //     preserveNullAndEmptyArrays: true,
+      //   },
+      // },
+      {
+        $addFields: {
+          isOnline: { $ifNull: ["$sp_location_details", false] }, 
+          isEngaged: { $ifNull: ["$sp_engagement_details", false] },
+        },
       },
       {
         $project: {
@@ -45,6 +99,7 @@ export const getSingleUser = asyncHandler(
           __v: 0,
           dob: 0,
           "additionalInfo.__v": 0,
+          "sp_engagement_details": 0,
         },
       },
     ]);
@@ -66,7 +121,7 @@ export const getAllCustomer = asyncHandler(
   async (req: Request, res: Response) => {
     console.log("Api runs...: getAllCustomer");
     const {
-      page = 1,        
+      page = 1,
       limit = 10,
       query = "",
       sortBy = "createdAt",
@@ -277,3 +332,5 @@ export const giveRating = asyncHandler(
     );
   }
 );
+
+//update sp data

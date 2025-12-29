@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import UserModel from "../../models/user.model";
 import { IUser } from "../../../types/schemaTypes";
-import { ObjectId } from "mongoose";
+import mongoose, { ObjectId } from "mongoose";
 import { asyncHandler } from "../../../utils/asyncHandler.utils";
 import { handleResponse } from "../../../utils/response.utils";
 import { generateAccessToken } from "../../../utils/createToken.utils";
@@ -21,6 +21,7 @@ import {
   TWILIO_PHONE_NUMBER,
 } from "../../config/config";
 import OTPModel from "../../models/otp.model";
+import additionalInfoModel from "../../models/additionalInfo.model";
 const accountSid = TWILIO_ACCOUNT_SID;
 const authToken = TWILIO_AUTH_TOKEN;
 let client = twilio(accountSid, authToken);
@@ -100,8 +101,8 @@ export const startRegistration = asyncHandler(
       insuranceNumber,
       insuranceImage,
     } = userData;
-    console.log({userData});
-    
+    console.log({ userData });
+
     if (phone) {
       const existingPhone = await UserModel.findOne({ phone, userType });
       if (existingPhone) {
@@ -242,12 +243,11 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
   if (!password) {
     return handleResponse(res, "error", 400, "", "password is required");
   }
-console.log({email});
-console.log({phone});
-
+  console.log({ email });
+  console.log({ phone });
 
   const user = await UserModel.findOne({
-    $or: [{email},{phone}],
+    $or: [{ email }, { phone }],
     userType,
     isDeleted: false,
   });
@@ -257,7 +257,8 @@ console.log({phone});
   // console.log(user);
   // console.log(user.isOTPVerified);
 
-  if (!user.isOTPVerified 
+  if (
+    !user.isOTPVerified
     // || !user.isVerified
   ) {
     return handleResponse(
@@ -628,5 +629,45 @@ export const resetPassword = asyncHandler(
       {},
       "Password reset successfull"
     );
+  }
+);
+
+// verifyServiceProvider controller
+export const verifyServiceProvider = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { serviceProviderId } = req.params;
+    const { isVerified }: { isVerified: boolean } = req.body;
+
+    if (!serviceProviderId) {
+      return handleResponse(
+        res,
+        "error",
+        400,
+        "Service Provider ID is required."
+      );
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(serviceProviderId)) {
+      return handleResponse(res, "error", 400, "Invalid Service Provider ID.");
+    }
+
+    const results = await UserModel.findByIdAndUpdate(
+      serviceProviderId,
+      { $set: { isVerified } },
+      { new: true }
+    ).select("-password -refreshToken -__V");
+
+    if (!results) {
+      return handleResponse(res, "error", 400, "Service Provider not found.");
+    }
+
+    const additionalInfo = await additionalInfoModel.findOne({
+      userId: serviceProviderId,
+    });
+    const message = isVerified
+      ? "Service Provider profile verified successfully."
+      : "Service Provider profile made unverified.";
+
+    return handleResponse(res,"success", 200, {}, message);
   }
 );

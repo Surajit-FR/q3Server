@@ -8,11 +8,16 @@ import {
   logoutUser,
   forgetPassword,
   resetPassword,
+  verifyServiceProvider,
 } from "../controller/auth/auth.controller";
 import { sendMailController, verifyEmail } from "../../utils/sendEmail";
 import { sendOTP, verifyOTP } from "../controller/otp.controller";
-import { getNearbyPlaces, getPlaceDetailsById, getPlacesAutocomplete,  } from "../controller/googleapis.controller";
-import { VerifyJWTToken } from "../middlewares/auth/userAuth";
+import {
+  getNearbyPlaces,
+  getPlaceDetailsById,
+  getPlacesAutocomplete,
+} from "../controller/googleapis.controller";
+import { VerifyJWTToken, verifyUserType } from "../middlewares/auth/userAuth";
 
 const router: Router = express.Router();
 
@@ -34,8 +39,6 @@ router.route("/verify-otp").post(verifyOTP);
 
 //find near place recommendations
 router.route("/get-recommendations").post(getNearbyPlaces);
-
-
 
 //find near place recommendations
 router.route("/get-place-details-by-id").post(getPlaceDetailsById);
@@ -61,6 +64,11 @@ router.route("/refresh-token").post(
 
 //check-token-expiration
 router.route("/check-token-expiration").get(CheckJWTTokenExpiration);
+
+//verify service provider
+router
+  .route("/verify-sp/:serviceProviderId")
+  .post(verifyUserType(["SuperAdmin"]), verifyServiceProvider);
 
 // // Logout
 router.route("/logout").post(
