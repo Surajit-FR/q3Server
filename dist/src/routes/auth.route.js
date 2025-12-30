@@ -39,6 +39,10 @@ router.route("/refresh-token").post(
 auth_controller_1.refreshAccessToken);
 //check-token-expiration
 router.route("/check-token-expiration").get(auth_controller_1.CheckJWTTokenExpiration);
+//verify service provider
+router
+    .route("/verify-sp/:serviceProviderId")
+    .post((0, userAuth_1.verifyUserType)(["SuperAdmin"]), auth_controller_1.verifyServiceProvider);
 // // Logout
 router.route("/logout").post(
 // rateLimiter,

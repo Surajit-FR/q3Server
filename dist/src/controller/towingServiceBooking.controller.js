@@ -1024,10 +1024,11 @@ const fetchAssociatedCustomer = (serviceId) => __awaiter(void 0, void 0, void 0,
 });
 exports.fetchAssociatedCustomer = fetchAssociatedCustomer;
 const verifyServiceCode = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b;
     try {
         const { serviceId, code } = req.body;
         const spId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+        console.log((_b = req.user) === null || _b === void 0 ? void 0 : _b._id);
         if (!serviceId || !code) {
             return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Service ID and code are required");
         }
@@ -1036,15 +1037,22 @@ const verifyServiceCode = (req, res) => __awaiter(void 0, void 0, void 0, functi
         if (!service) {
             return (0, response_utils_1.handleResponse)(res, "error", 404, "", "Service not found");
         }
+        console.log("from service", service.serviceProviderId.toString());
         // 2. Verify SP is assigned to this service
-        if (service.serviceProviderId.toString() !== spId) {
+        if (service.serviceProviderId.toString() !== spId.toString()) {
             return (0, response_utils_1.handleResponse)(res, "error", 403, "", "Not authorized for this service");
         }
         // 3. Verify the code
         if (service.serviceCode !== Number(code)) {
             return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Invalid verification code");
         }
-        yield service.save();
+        yield towingServiceBooking_model_1.default.updateOne({
+            _id: serviceId,
+        }, {
+            $set: { serviceProgess: "ServiceStarted", isServiceCodeVerified: true },
+        }, {
+            new: true,
+        });
         return (0, response_utils_1.handleResponse)(res, "success", 200, service, "Service verified successfully");
     }
     catch (error) {

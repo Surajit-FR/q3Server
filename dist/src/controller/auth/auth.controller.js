@@ -12,8 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgetPassword = exports.logoutUser = exports.refreshAccessToken = exports.CheckJWTTokenExpiration = exports.loginUser = exports.completeRegistration = exports.startRegistration = exports.cookieOption = exports.fetchUserData = void 0;
+exports.verifyServiceProvider = exports.resetPassword = exports.forgetPassword = exports.logoutUser = exports.refreshAccessToken = exports.CheckJWTTokenExpiration = exports.loginUser = exports.completeRegistration = exports.startRegistration = exports.cookieOption = exports.fetchUserData = void 0;
 const user_model_1 = __importDefault(require("../../models/user.model"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const asyncHandler_utils_1 = require("../../../utils/asyncHandler.utils");
 const response_utils_1 = require("../../../utils/response.utils");
 const createToken_utils_1 = require("../../../utils/createToken.utils");
@@ -28,6 +29,7 @@ const emailCode_model_1 = __importDefault(require("../../models/emailCode.model"
 const twilio_1 = __importDefault(require("twilio"));
 const config_1 = require("../../config/config");
 const otp_model_1 = __importDefault(require("../../models/otp.model"));
+const additionalInfo_model_2 = __importDefault(require("../../models/additionalInfo.model"));
 const accountSid = config_1.TWILIO_ACCOUNT_SID;
 const authToken = config_1.TWILIO_AUTH_TOKEN;
 let client = (0, twilio_1.default)(accountSid, authToken);
@@ -83,7 +85,7 @@ exports.startRegistration = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
     console.log("Api runs...: startRegistration");
     const userData = req.body;
     let newUser;
-    const { fullName, email, countryCode, phone, userType, avatar, driverLicense, driverLicenseImage, insuranceNumber, insuranceImage, } = userData;
+    const { fullName, email, countryCode, phone, userType, avatar, vehicleRegistrationNumber, driverLicense, driverLicenseImage, insuranceNumber, insuranceImage, } = userData;
     console.log({ userData });
     if (phone) {
         const existingPhone = yield user_model_1.default.findOne({ phone, userType });
@@ -105,6 +107,7 @@ exports.startRegistration = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
             phone,
             userType,
             avatar,
+            vehicleRegistrationNumber,
             driverLicense,
             driverLicenseImage,
             insuranceNumber,
@@ -427,4 +430,26 @@ exports.resetPassword = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __a
     userDetails.password = req.body.password;
     yield userDetails.save();
     return (0, response_utils_1.handleResponse)(res, "success", 200, {}, "Password reset successfull");
+}));
+// verifyServiceProvider controller
+exports.verifyServiceProvider = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { serviceProviderId } = req.params;
+    const { isVerified } = req.body;
+    if (!serviceProviderId) {
+        return (0, response_utils_1.handleResponse)(res, "error", 400, "Service Provider ID is required.");
+    }
+    if (!mongoose_1.default.Types.ObjectId.isValid(serviceProviderId)) {
+        return (0, response_utils_1.handleResponse)(res, "error", 400, "Invalid Service Provider ID.");
+    }
+    const results = yield user_model_1.default.findByIdAndUpdate(serviceProviderId, { $set: { isVerified } }, { new: true }).select("-password -refreshToken -__V");
+    if (!results) {
+        return (0, response_utils_1.handleResponse)(res, "error", 400, "Service Provider not found.");
+    }
+    const additionalInfo = yield additionalInfo_model_2.default.findOne({
+        userId: serviceProviderId,
+    });
+    const message = isVerified
+        ? "Service Provider profile verified successfully."
+        : "Service Provider profile made unverified.";
+    return (0, response_utils_1.handleResponse)(res, "success", 200, {}, message);
 }));

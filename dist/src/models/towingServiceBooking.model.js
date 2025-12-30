@@ -178,6 +178,10 @@ const towingServiceBookingSchema = new mongoose_1.Schema({
     serviceCode: {
         type: Number,
     },
+    isServiceCodeVerified: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamps: true });
 //adding geospatial index
 towingServiceBookingSchema.index({ picklocation: "2dsphere" });

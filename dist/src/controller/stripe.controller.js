@@ -16,6 +16,7 @@ exports.createCheckoutsession = void 0;
 const stripe_1 = __importDefault(require("stripe"));
 const config_1 = require("../config/config");
 const user_model_1 = __importDefault(require("../models/user.model"));
+const qrcode_1 = __importDefault(require("qrcode"));
 const stripe = new stripe_1.default(config_1.STRIPE_SECRET_KEY, {
     apiVersion: "2024-09-30.acacia",
 });
@@ -75,7 +76,9 @@ const createCheckoutsession = (req, res) => __awaiter(void 0, void 0, void 0, fu
             cancel_url: "https://frontend.theassure.co.uk/payment-error",
         });
         console.log({ Incentivesession: session });
-        res.json({ url: session.url });
+        const paymentUrl = session.url || "";
+        const paymentQR = yield qrcode_1.default.toDataURL(paymentUrl);
+        res.json({ paymentQR });
     }
     catch (error) { }
 });

@@ -59,10 +59,10 @@ const UserSchema = new mongoose_1.Schema({
         type: String,
         // unique: true,
         lowercase: true,
-        default: ""
+        default: "",
     },
     countryCode: {
-        type: String
+        type: String,
     },
     phone: {
         type: String,
@@ -72,7 +72,7 @@ const UserSchema = new mongoose_1.Schema({
     },
     dob: {
         type: Date,
-        default: null
+        default: null,
     },
     password: {
         type: String,
@@ -86,26 +86,38 @@ const UserSchema = new mongoose_1.Schema({
         default: "",
         required: false,
     },
+    vehicleRegistrationNumber: {
+        type: String,
+        default: null,
+    },
     userType: {
         type: String,
-        enum: ["SuperAdmin", "ServiceProvider", "Customer", "FieldAgent", "TeamLead", "Admin", "Finance"],
-        default: ""
+        enum: [
+            "SuperAdmin",
+            "ServiceProvider",
+            "Customer",
+            "FieldAgent",
+            "TeamLead",
+            "Admin",
+            "Finance",
+        ],
+        default: "",
     },
     isRegistered: {
         type: Boolean,
-        default: false
+        default: false,
     },
     isVerified: {
         type: Boolean,
-        default: true
+        default: true,
     },
     isOTPVerified: {
         type: Boolean,
-        default: false
+        default: false,
     },
     stripeCustomerId: {
         type: String,
-        default: ""
+        default: "",
     },
     paymentMethodId: {
         type: String,
@@ -166,7 +178,7 @@ UserSchema.methods.generateAccessToken = function () {
 };
 UserSchema.methods.generateRefreshToken = function () {
     return jsonwebtoken_1.default.sign({
-        _id: this._id
+        _id: this._id,
     }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: 864000 });
 };
 const UserModel = mongoose_1.default.model("user", UserSchema);

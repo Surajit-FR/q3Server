@@ -32,17 +32,71 @@ exports.getSingleUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __a
         },
         {
             $lookup: {
+                from: "locationsessions",
+                foreignField: "userId",
+                localField: "_id",
+                as: "sp_location_details",
+                pipeline: [
+                    {
+                        $match: {
+                            isActive: true,
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $unwind: {
+                path: "$sp_location_details",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
                 from: "additionalinfos",
                 foreignField: "userId",
                 localField: "_id",
-                as: "sp_details"
-            }
+                as: "sp_details",
+            },
         },
         {
             $unwind: {
                 path: "$sp_details",
-                preserveNullAndEmptyArrays: true
-            }
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "towingservicebookings",
+                foreignField: "serviceProviderId",
+                localField: "_id",
+                as: "sp_engagement_details",
+                pipeline: [
+                    {
+                        $match: {
+                            serviceProgess: {
+                                $nin: [
+                                    "ServiceCompleted",
+                                    "ServiceCancelledBySP",
+                                    "ServiceCancelledByCustomer",
+                                ],
+                            },
+                        },
+                    },
+                ],
+            },
+        },
+        // {
+        //   $unwind: {
+        //     path: "$sp_engagement_details",
+        //     preserveNullAndEmptyArrays: true,
+        //   },
+        // },
+        {
+            $addFields: {
+                isOnline: { $ifNull: ["$sp_location_details", false] },
+                isEngaged: { $ifNull: ["$sp_engagement_details", false] },
+            },
         },
         {
             $project: {
@@ -53,6 +107,7 @@ exports.getSingleUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __a
                 __v: 0,
                 dob: 0,
                 "additionalInfo.__v": 0,
+                "sp_engagement_details": 0,
             },
         },
     ]);
@@ -193,3 +248,4 @@ exports.giveRating = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awai
     }
     return (0, response_utils_1.handleResponse)(res, "success", 201, savedRating, "Error in add rating");
 }));
+//update sp data
