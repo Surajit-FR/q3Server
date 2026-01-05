@@ -13,6 +13,8 @@ router.route("/fetch-customers").get(user_controller_1.getAllCustomer);
 router.route("/fetch-poviders").get(user_controller_1.getAllProviders);
 router.use(userAuth_1.VerifyJWTToken);
 router.route("/give-rating").post((0, userAuth_1.verifyUserType)(["Customer"]), user_controller_1.giveRating);
+router.route("/update-sp").post((0, userAuth_1.verifyUserType)(["ServiceProvider"]), user_controller_1.updateSp);
+router.route("/update-customer").post((0, userAuth_1.verifyUserType)(["Customer"]), user_controller_1.updateCustomer);
 router
     .route("/fetch-saved-destinations")
     .get((0, userAuth_1.verifyUserType)(["Customer"]), towingServiceBooking_controller_1.getSavedDestination);

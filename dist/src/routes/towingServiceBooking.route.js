@@ -34,7 +34,7 @@ router
     .route("/fetch-request-progresswise-bysp")
     .post((0, userAuth_1.verifyUserType)(["ServiceProvider"]), towingServiceBooking_controller_1.fetchTotalServiceProgresswiseBySp);
 router
-    .route("/fetch-single-request/:serviceId")
+    .route("/fetch-single-request")
     .get((0, userAuth_1.verifyUserType)(["ServiceProvider", "SuperAdmin", "Customer"]), towingServiceBooking_controller_1.fetchSingleService);
 router
     .route("/cancel-service-bysp")

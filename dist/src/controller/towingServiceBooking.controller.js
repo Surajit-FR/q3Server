@@ -817,7 +817,7 @@ exports.fetchTotalServiceProgresswiseBySp = (0, asyncHandler_utils_1.asyncHandle
 }));
 exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("Api runs...: fetchSingleService");
-    const { serviceId } = req.params;
+    const { serviceId } = req.query;
     const ServiceDetails = yield towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
@@ -843,6 +843,8 @@ exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =
             $addFields: {
                 customer_fullName: "$customer_details.fullName",
                 customer_avatar: "$customer_details.avatar",
+                customer_email: "$customer_details.email",
+                customer_countryCode: "$customer_details.countryCode",
                 customer_phoneNumber: "$customer_details.phone",
                 towing_cost: "$pricing.total",
             },
@@ -862,11 +864,34 @@ exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =
             },
         },
         {
+            $lookup: {
+                from: "additionalinfos",
+                foreignField: "userId",
+                localField: "serviceProviderId",
+                as: "sp_additional_details",
+            },
+        },
+        {
+            $unwind: {
+                preserveNullAndEmptyArrays: true,
+                path: "$sp_additional_details",
+            },
+        },
+        {
+            $addFields: {
+                sp_drivingLicense: "$sp_additional_details.driverLicense",
+                sp_insuranceNumber: "$sp_additional_details.insuranceNumber",
+            },
+        },
+        {
             $addFields: {
                 sp_fullName: "$sp_details.fullName",
                 sp_avatar: "$sp_details.avatar",
+                sp_countryCode: "$sp_details.countryCode",
                 sp_phoneNumber: "$sp_details.phone",
                 sp_email: "$sp_details.email",
+                // sp_drivingLicense: "$sp_details.sp_drivingLicense",
+                // sp_insuranceNumber: "$sp_details.sp_insuranceNumber",
             },
         },
         {
@@ -894,6 +919,7 @@ exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =
             $project: {
                 customer_details: 0,
                 sp_details: 0,
+                sp_additional_details: 0,
                 toeVehicle_details: 0,
                 isCurrentLocationforPick: 0,
                 picklocation: 0,

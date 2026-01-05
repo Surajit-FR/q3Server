@@ -12,12 +12,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.giveRating = exports.getAllProviders = exports.getAllCustomer = exports.getSingleUser = void 0;
+exports.updateCustomer = exports.updateSp = exports.giveRating = exports.getAllProviders = exports.getAllCustomer = exports.getSingleUser = void 0;
 const user_model_1 = __importDefault(require("../models/user.model"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
 const response_utils_1 = require("../../utils/response.utils");
 const spRatings_model_1 = __importDefault(require("../models/spRatings.model"));
+const towingServiceBooking_model_1 = __importDefault(require("../models/towingServiceBooking.model"));
+const additionalInfo_model_1 = __importDefault(require("../models/additionalInfo.model"));
 exports.getSingleUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("Api runs...: getSingleUser");
     const { userId } = req.query;
@@ -107,7 +109,7 @@ exports.getSingleUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __a
                 __v: 0,
                 dob: 0,
                 "additionalInfo.__v": 0,
-                "sp_engagement_details": 0,
+                sp_engagement_details: 0,
             },
         },
     ]);
@@ -249,3 +251,63 @@ exports.giveRating = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awai
     return (0, response_utils_1.handleResponse)(res, "success", 201, savedRating, "Error in add rating");
 }));
 //update sp data
+exports.updateSp = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    console.log("Api runs...: updateSp");
+    const spId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+    const ongoingServices = yield towingServiceBooking_model_1.default.aggregate([
+        {
+            $match: {
+                serviceProviderId: spId,
+                serviceProgess: {
+                    $nin: [
+                        "ServiceCompleted",
+                        "ServiceCancelledBySP",
+                        "ServiceCancelledByCustomer",
+                    ],
+                },
+            },
+        },
+    ]);
+    if (ongoingServices.length > 0) {
+        return (0, response_utils_1.handleResponse)(res, "error", 400, "Cannot update while performing the service");
+    }
+    const { fullName, avatar, driverLicense, driverLicenseImage, insuranceNumber, insuranceImage, } = req.body;
+    let isUpdated = false;
+    if (fullName || avatar) {
+        const userUpdate = yield user_model_1.default.findByIdAndUpdate(spId, {
+            $set: Object.assign(Object.assign({}, (fullName && { fullName })), (avatar && { avatar })),
+        }, { runValidators: true });
+        if (userUpdate)
+            isUpdated = true;
+    }
+    if (driverLicense ||
+        driverLicenseImage ||
+        insuranceNumber ||
+        insuranceImage) {
+        const additionalUpdate = yield additionalInfo_model_1.default.updateOne({ serviceProviderId: spId }, {
+            $set: Object.assign(Object.assign(Object.assign(Object.assign({}, (driverLicense && { driverLicense })), (driverLicenseImage && { driverLicenseImage })), (insuranceNumber && { insuranceNumber })), (insuranceImage && { insuranceImage })),
+        }, { runValidators: true });
+        if (additionalUpdate.modifiedCount > 0)
+            isUpdated = true;
+    }
+    if (isUpdated) {
+        yield user_model_1.default.updateOne({ _id: spId }, { $set: { isVerified: false } });
+    }
+    return (0, response_utils_1.handleResponse)(res, "success", 200, "Service provider updated successfully");
+}));
+exports.updateCustomer = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    console.log("Api runs...: updateSp");
+    const { fullName, avatar } = req.body;
+    const updateCustomer = yield user_model_1.default.findOneAndUpdate({
+        _id: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id
+    }, {
+        $set: {
+            fullName, avatar
+        }
+    }, {
+        new: true
+    });
+    return (0, response_utils_1.handleResponse)(res, "success", 200, "User updated successfully");
+}));
