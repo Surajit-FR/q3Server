@@ -5,6 +5,8 @@ import { asyncHandler } from "../../utils/asyncHandler.utils";
 import { handleResponse } from "../../utils/response.utils";
 import { CustomRequest } from "../../types/commonType";
 import RatingModel from "../models/spRatings.model";
+import towingServiceBookingModel from "../models/towingServiceBooking.model";
+import AdditionalInfoModel from "../models/additionalInfo.model";
 
 export const getSingleUser = asyncHandler(
   async (req: Request, res: Response) => {
@@ -86,7 +88,7 @@ export const getSingleUser = asyncHandler(
       // },
       {
         $addFields: {
-          isOnline: { $ifNull: ["$sp_location_details", false] }, 
+          isOnline: { $ifNull: ["$sp_location_details", false] },
           isEngaged: { $ifNull: ["$sp_engagement_details", false] },
         },
       },
@@ -99,7 +101,7 @@ export const getSingleUser = asyncHandler(
           __v: 0,
           dob: 0,
           "additionalInfo.__v": 0,
-          "sp_engagement_details": 0,
+          sp_engagement_details: 0,
         },
       },
     ]);
@@ -334,3 +336,119 @@ export const giveRating = asyncHandler(
 );
 
 //update sp data
+export const updateSp = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: updateSp");
+
+    const spId = req.user?._id;
+
+    const ongoingServices = await towingServiceBookingModel.aggregate([
+      {
+        $match: {
+          serviceProviderId: spId,
+          serviceProgess: {
+            $nin: [
+              "ServiceCompleted",
+              "ServiceCancelledBySP",
+              "ServiceCancelledByCustomer",
+            ],
+          },
+        },
+      },
+    ]);
+
+    if (ongoingServices.length > 0) {
+      return handleResponse(
+        res,
+        "error",
+        400,
+        "Cannot update while performing the service"
+      );
+    }
+
+    const {
+      fullName,
+      avatar,
+      driverLicense,
+      driverLicenseImage,
+      insuranceNumber,
+      insuranceImage,
+    } = req.body;
+
+    let isUpdated = false;
+
+    if (fullName || avatar) {
+      const userUpdate = await UserModel.findByIdAndUpdate(
+        spId,
+        {
+          $set: {
+            ...(fullName && { fullName }),
+            ...(avatar && { avatar }),
+          },
+        },
+        { runValidators: true }
+      );
+
+      if (userUpdate) isUpdated = true;
+    }
+
+    if (
+      driverLicense ||
+      driverLicenseImage ||
+      insuranceNumber ||
+      insuranceImage
+    ) {
+      const additionalUpdate = await AdditionalInfoModel.updateOne(
+        { serviceProviderId: spId },
+        {
+          $set: {
+            ...(driverLicense && { driverLicense }),
+            ...(driverLicenseImage && { driverLicenseImage }),
+            ...(insuranceNumber && { insuranceNumber }),
+            ...(insuranceImage && { insuranceImage }),
+          },
+        },
+        { runValidators: true }
+      );
+
+      if (additionalUpdate.modifiedCount > 0) isUpdated = true;
+    }
+
+    if (isUpdated) {
+      await UserModel.updateOne({ _id: spId }, { $set: { isVerified: false } });
+    }
+
+    return handleResponse(
+      res,
+      "success",
+      200,
+      "Service provider updated successfully"
+    );
+  }
+);
+
+export const updateCustomer = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: updateSp");
+    const {fullName,avatar} = req.body;
+    const updateCustomer = await UserModel.findOneAndUpdate(
+      {
+        _id:req.user?._id
+      },
+      {
+        $set:{
+          fullName,avatar
+        }
+      },
+      {
+        new:true
+      }
+    )
+    return handleResponse(
+      res,
+      "success",
+      200,
+      "User updated successfully"
+    );
+  }
+);

@@ -4,6 +4,8 @@ import {
   getAllCustomer,
   getAllProviders,
   giveRating,
+  updateSp,
+  updateCustomer,
 } from "../controller/user.controller";
 import { VerifyJWTToken, verifyUserType } from "../middlewares/auth/userAuth";
 import { getSavedDestination } from "../controller/towingServiceBooking.controller";
@@ -17,6 +19,8 @@ router.route("/fetch-poviders").get(getAllProviders);
 router.use(VerifyJWTToken);
 
 router.route("/give-rating").post(verifyUserType(["Customer"]), giveRating);
+router.route("/update-sp").post(verifyUserType(["ServiceProvider"]), updateSp);
+router.route("/update-customer").post(verifyUserType(["Customer"]), updateCustomer);
 
 router
   .route("/fetch-saved-destinations")

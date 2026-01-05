@@ -1079,11 +1079,11 @@ export const fetchSingleService = asyncHandler(
   async (req: CustomRequest, res: Response) => {
     console.log("Api runs...: fetchSingleService");
 
-    const { serviceId } = req.params;
+    const { serviceId } = req.query;
     const ServiceDetails = await towingServiceBookingModel.aggregate([
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(serviceId),
+          _id: new mongoose.Types.ObjectId(serviceId as string),
           isDeleted: false,
         },
       },
@@ -1105,6 +1105,8 @@ export const fetchSingleService = asyncHandler(
         $addFields: {
           customer_fullName: "$customer_details.fullName",
           customer_avatar: "$customer_details.avatar",
+          customer_email: "$customer_details.email",
+          customer_countryCode: "$customer_details.countryCode",
           customer_phoneNumber: "$customer_details.phone",
           towing_cost: "$pricing.total",
         },
@@ -1123,12 +1125,37 @@ export const fetchSingleService = asyncHandler(
           path: "$sp_details",
         },
       },
+
+      {
+        $lookup: {
+          from: "additionalinfos",
+          foreignField: "userId",
+          localField: "serviceProviderId",
+          as: "sp_additional_details",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$sp_additional_details",
+        },
+      },
+      {
+        $addFields: {
+          sp_drivingLicense: "$sp_additional_details.driverLicense",
+          sp_insuranceNumber: "$sp_additional_details.insuranceNumber",
+        },
+      },
+
       {
         $addFields: {
           sp_fullName: "$sp_details.fullName",
           sp_avatar: "$sp_details.avatar",
+          sp_countryCode: "$sp_details.countryCode",
           sp_phoneNumber: "$sp_details.phone",
           sp_email: "$sp_details.email",
+          // sp_drivingLicense: "$sp_details.sp_drivingLicense",
+          // sp_insuranceNumber: "$sp_details.sp_insuranceNumber",
         },
       },
       {
@@ -1156,6 +1183,7 @@ export const fetchSingleService = asyncHandler(
         $project: {
           customer_details: 0,
           sp_details: 0,
+          sp_additional_details:0,
           toeVehicle_details: 0,
           isCurrentLocationforPick: 0,
           picklocation: 0,
@@ -1341,8 +1369,6 @@ export const fetchAssociatedCustomer = async (serviceId: string) => {
 
   return serviceRequest[0].userId;
 };
-
-
 
 export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
   try {

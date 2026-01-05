@@ -53,7 +53,7 @@ router
   .post(verifyUserType(["ServiceProvider"]), fetchTotalServiceProgresswiseBySp);
 
 router
-  .route("/fetch-single-request/:serviceId")
+  .route("/fetch-single-request")
   .get(
     verifyUserType(["ServiceProvider", "SuperAdmin", "Customer"]),
     fetchSingleService

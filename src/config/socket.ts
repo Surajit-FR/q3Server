@@ -60,7 +60,7 @@ export const initSocket = (server: HttpServer) => {
         if (!toUserId || !content) {
           return socket.emit("error", {
             error: "Invalid payload: toUserId and content are required.",
-          });   
+          });
         }
         const now = new Date();
         try {
@@ -185,10 +185,9 @@ export const initSocket = (server: HttpServer) => {
       );
     });
 
-    
     //Declne service request by service provider
     socket.on("declineServiceRequest", async (requestId: string) => {
-      console.log("socket on for declineServiceRequest")
+      console.log("socket on for declineServiceRequest");
       console.log({ requestId });
 
       console.log(
@@ -201,7 +200,7 @@ export const initSocket = (server: HttpServer) => {
         io.to(connectedCustomers[customerId]).emit("serviceProviderDeclined", {
           message: `A service provider with userId ${userId}  declined the request.`,
           requestId,
-        });        
+        });
       }
 
       // Handle service provider's location updates and send them to the customer
