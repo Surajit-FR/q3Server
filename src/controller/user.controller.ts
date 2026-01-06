@@ -7,6 +7,7 @@ import { CustomRequest } from "../../types/commonType";
 import RatingModel from "../models/spRatings.model";
 import towingServiceBookingModel from "../models/towingServiceBooking.model";
 import AdditionalInfoModel from "../models/additionalInfo.model";
+import LocationSessionModel from "../models/locationSession.models";
 
 export const getSingleUser = asyncHandler(
   async (req: Request, res: Response) => {
@@ -453,6 +454,25 @@ export const updateCustomer = asyncHandler(
 
 export const getCardValue = asyncHandler(
   async (req: CustomRequest, res: Response) => {
-    const totalCustomer = await UserModel.find();
+    const totalCustomer = await UserModel.find({
+      userType: "Customer",
+    }).countDocuments();
+    const totalSps = await UserModel.find({
+      userType: "ServiceProvider",
+    }).countDocuments();
+    const totalServices = await towingServiceBookingModel
+      .find({})
+      .countDocuments();
+    const totalActiveSps = await LocationSessionModel.find({
+      isActive: true,
+    }).countDocuments();
+
+    return handleResponse(
+      res,
+      "success",
+      200,
+      { totalCustomer, totalSps, totalServices, totalActiveSps },
+      "KPI card values fetched successfully"
+    );
   }
 );

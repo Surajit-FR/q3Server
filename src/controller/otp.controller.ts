@@ -157,3 +157,42 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
       return handleResponse(res, "error", 400, "", "Invalid purpose");
   }
 });
+
+export const sendSMS = async (to: string, countryCode: string, sms: string) => {
+  try {
+    console.log("function runs:...sendSMS");
+    
+    const message = await client.messages.create({
+      body: sms,
+      from: TWILIO_PHONE_NUMBER,
+      to: `${countryCode}${to}`,
+    });
+  } catch (err: any) {
+    console.log("OTP Controller Error:", err);
+
+    if (err.code === 20404) {
+      return handleResponse(
+        "",
+        "error",
+        400,
+        {},
+        "Phone number not found or invalid."
+      );
+    } else if (err.code === 20003) {
+      return handleResponse(
+        "",
+        "error",
+        400,
+        "",
+        "Something went wrong... please try again later."
+      );
+    }
+    return handleResponse(
+      "",
+      "error",
+      500,
+      {},
+      "Phone lookup failed. Please try again."
+    );
+  }
+};
