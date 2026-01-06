@@ -18,6 +18,7 @@ import {
   getPlacesAutocomplete,
 } from "../controller/googleapis.controller";
 import { VerifyJWTToken, verifyUserType } from "../middlewares/auth/userAuth";
+import { getCardValue } from "../controller/user.controller";
 
 const router: Router = express.Router();
 
@@ -82,5 +83,11 @@ router.route("/logout").post(
 //     [VerifyJWTToken],
 //     saveFcmToken
 // );
+
+router.route('/get-card-value').get(
+    [VerifyJWTToken],
+    verifyUserType(["SuperAdmin"]),
+    getCardValue
+);
 
 export default router;

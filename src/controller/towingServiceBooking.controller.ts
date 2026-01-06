@@ -12,6 +12,7 @@ import UserModel from "../models/user.model";
 import vehicleTypeModel from "../models/vehicleType.model";
 import CustomPricingModel from "../models/customPricingRule.model";
 import PricingRuleModel from "../models/pricingRule.model";
+import { sendSMS } from "./otp.controller";
 
 const apiKey = "AIzaSyDtPUxp_vFvbx9og_F-q0EBkJPAiCAbj8w";
 
@@ -247,6 +248,12 @@ export const bookTowingService = asyncHandler(
         "Something went wrong while booking."
       );
     }
+    const customerDetails = await UserModel.findOne({ _id: userId });
+    sendSMS(
+      customerDetails?.phone as string,
+      customerDetails?.countryCode as string,
+      `Thank You for booking service from Q3 app, Your one time service verification code is ${uniqueServiceCode}`
+    );
 
     return handleResponse(res, "success", 201, newBooking, customResponseMsg);
   }
@@ -540,6 +547,13 @@ export const acceptServiceRequest = asyncHandler(
           { new: true }
         );
       }
+      const customerDetails = await UserModel.findOne({_id:updateResult?.userId})
+
+      sendSMS(
+        customerDetails?.phone as string,
+        customerDetails?.countryCode as string,
+        `Your service is accepted by our service provider.`
+      );
 
       return handleResponse(
         res,
@@ -1183,7 +1197,7 @@ export const fetchSingleService = asyncHandler(
         $project: {
           customer_details: 0,
           sp_details: 0,
-          sp_additional_details:0,
+          sp_additional_details: 0,
           toeVehicle_details: 0,
           isCurrentLocationforPick: 0,
           picklocation: 0,
@@ -1408,7 +1422,7 @@ export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
     if (service.serviceCode !== Number(code)) {
       return handleResponse(res, "error", 400, "", "Invalid verification code");
     }
-    await towingServiceBookingModel.updateOne(
+    const updateService = await towingServiceBookingModel.updateOne(
       {
         _id: serviceId,
       },
@@ -1418,6 +1432,14 @@ export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
       {
         new: true,
       }
+    );
+
+   const customerDetails = await UserModel.findOne({_id:service?.userId})
+
+    sendSMS(
+      customerDetails?.phone as string,
+      customerDetails?.countryCode as string,
+      `Your booked service is marked started by assigned service provider`
     );
 
     return handleResponse(

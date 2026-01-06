@@ -4,6 +4,7 @@ import { STRIPE_SECRET_KEY } from "../config/config";
 import { CustomRequest } from "../../types/commonType";
 import UserModel from "../models/user.model";
 import QRCode from "qrcode";
+import towingServiceBookingModel from "../models/towingServiceBooking.model";
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
   apiVersion: "2024-09-30.acacia" as any,
@@ -72,10 +73,16 @@ export const createCheckoutsession = async (req: CustomRequest, res: any) => {
     } as Stripe.Checkout.SessionCreateParams);
     console.log({ Incentivesession: session });
 
-    const paymentUrl = session.url || "";    
-    
+    const paymentUrl = session.url || "";
+
     const paymentQR = await QRCode.toDataURL(paymentUrl);
 
-    res.json({paymentQR });
+    await towingServiceBookingModel.findByIdAndUpdate(serviceId, {
+      isPaymentComplete: true,
+      paymentIntentId: session.payment_intent,
+      serviceProgess:"ServiceCompleted"
+    });
+
+    res.json({ paymentQR });
   } catch (error) {}
 };
