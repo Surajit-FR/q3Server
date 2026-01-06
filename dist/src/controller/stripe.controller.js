@@ -17,6 +17,7 @@ const stripe_1 = __importDefault(require("stripe"));
 const config_1 = require("../config/config");
 const user_model_1 = __importDefault(require("../models/user.model"));
 const qrcode_1 = __importDefault(require("qrcode"));
+const towingServiceBooking_model_1 = __importDefault(require("../models/towingServiceBooking.model"));
 const stripe = new stripe_1.default(config_1.STRIPE_SECRET_KEY, {
     apiVersion: "2024-09-30.acacia",
 });
@@ -78,6 +79,11 @@ const createCheckoutsession = (req, res) => __awaiter(void 0, void 0, void 0, fu
         console.log({ Incentivesession: session });
         const paymentUrl = session.url || "";
         const paymentQR = yield qrcode_1.default.toDataURL(paymentUrl);
+        yield towingServiceBooking_model_1.default.findByIdAndUpdate(serviceId, {
+            isPaymentComplete: true,
+            paymentIntentId: session.payment_intent,
+            serviceProgess: "ServiceCompleted"
+        });
         res.json({ paymentQR });
     }
     catch (error) { }

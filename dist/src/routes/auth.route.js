@@ -9,6 +9,7 @@ const sendEmail_1 = require("../../utils/sendEmail");
 const otp_controller_1 = require("../controller/otp.controller");
 const googleapis_controller_1 = require("../controller/googleapis.controller");
 const userAuth_1 = require("../middlewares/auth/userAuth");
+const user_controller_1 = require("../controller/user.controller");
 const router = express_1.default.Router();
 //sign-up
 router.route("/start-registration").post(auth_controller_1.startRegistration);
@@ -52,4 +53,5 @@ router.route("/logout").post(
 //     [VerifyJWTToken],
 //     saveFcmToken
 // );
+router.route('/get-card-value').get([userAuth_1.VerifyJWTToken], (0, userAuth_1.verifyUserType)(["SuperAdmin"]), user_controller_1.getCardValue);
 exports.default = router;

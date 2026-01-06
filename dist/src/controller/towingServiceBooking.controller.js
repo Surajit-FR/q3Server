@@ -25,6 +25,7 @@ const user_model_1 = __importDefault(require("../models/user.model"));
 const vehicleType_model_1 = __importDefault(require("../models/vehicleType.model"));
 const customPricingRule_model_1 = __importDefault(require("../models/customPricingRule.model"));
 const pricingRule_model_1 = __importDefault(require("../models/pricingRule.model"));
+const otp_controller_1 = require("./otp.controller");
 const apiKey = "AIzaSyDtPUxp_vFvbx9og_F-q0EBkJPAiCAbj8w";
 const isEligibleForBooking = (customerId) => __awaiter(void 0, void 0, void 0, function* () {
     const prevBookedServices = yield towingServiceBooking_model_1.default.aggregate([
@@ -181,6 +182,8 @@ exports.bookTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
     if (!newBooking) {
         return (0, response_utils_1.handleResponse)(res, "error", 500, "Something went wrong while booking.");
     }
+    const customerDetails = yield user_model_1.default.findOne({ _id: userId });
+    (0, otp_controller_1.sendSMS)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.phone, customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.countryCode, `Thank You for booking service from Q3 app, Your one time service verification code is ${uniqueServiceCode}`);
     return (0, response_utils_1.handleResponse)(res, "success", 201, newBooking, customResponseMsg);
 }));
 //fetch near-by service request
@@ -386,6 +389,8 @@ exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res)
                 },
             }, { new: true });
         }
+        const customerDetails = yield user_model_1.default.findOne({ _id: updateResult === null || updateResult === void 0 ? void 0 : updateResult.userId });
+        (0, otp_controller_1.sendSMS)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.phone, customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.countryCode, `Your service is accepted by our service provider.`);
         return (0, response_utils_1.handleResponse)(res, "success", 200, updateService, "Service Accepted Successfully");
     }
     return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Something went wrong");
@@ -1072,13 +1077,15 @@ const verifyServiceCode = (req, res) => __awaiter(void 0, void 0, void 0, functi
         if (service.serviceCode !== Number(code)) {
             return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Invalid verification code");
         }
-        yield towingServiceBooking_model_1.default.updateOne({
+        const updateService = yield towingServiceBooking_model_1.default.updateOne({
             _id: serviceId,
         }, {
             $set: { serviceProgess: "ServiceStarted", isServiceCodeVerified: true },
         }, {
             new: true,
         });
+        const customerDetails = yield user_model_1.default.findOne({ _id: service === null || service === void 0 ? void 0 : service.userId });
+        (0, otp_controller_1.sendSMS)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.phone, customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.countryCode, `Your booked service is marked started by assigned service provider`);
         return (0, response_utils_1.handleResponse)(res, "success", 200, service, "Service verified successfully");
     }
     catch (error) {

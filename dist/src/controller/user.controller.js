@@ -20,6 +20,7 @@ const response_utils_1 = require("../../utils/response.utils");
 const spRatings_model_1 = __importDefault(require("../models/spRatings.model"));
 const towingServiceBooking_model_1 = __importDefault(require("../models/towingServiceBooking.model"));
 const additionalInfo_model_1 = __importDefault(require("../models/additionalInfo.model"));
+const locationSession_models_1 = __importDefault(require("../models/locationSession.models"));
 exports.getSingleUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("Api runs...: getSingleUser");
     const { userId } = req.query;
@@ -313,5 +314,17 @@ exports.updateCustomer = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __
     return (0, response_utils_1.handleResponse)(res, "success", 200, "User updated successfully");
 }));
 exports.getCardValue = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const totalCustomer = yield user_model_1.default.find();
+    const totalCustomer = yield user_model_1.default.find({
+        userType: "Customer",
+    }).countDocuments();
+    const totalSps = yield user_model_1.default.find({
+        userType: "ServiceProvider",
+    }).countDocuments();
+    const totalServices = yield towingServiceBooking_model_1.default
+        .find({})
+        .countDocuments();
+    const totalActiveSps = yield locationSession_models_1.default.find({
+        isActive: true,
+    }).countDocuments();
+    return (0, response_utils_1.handleResponse)(res, "success", 200, { totalCustomer, totalSps, totalServices, totalActiveSps }, "KPI card values fetched successfully");
 }));

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyOTP = exports.sendOTP = exports.generateVerificationCode = void 0;
+exports.sendSMS = exports.verifyOTP = exports.sendOTP = exports.generateVerificationCode = void 0;
 const twilio_1 = __importDefault(require("twilio"));
 const otp_model_1 = __importDefault(require("../models/otp.model"));
 const user_model_1 = __importDefault(require("../models/user.model"));
@@ -122,3 +122,24 @@ exports.verifyOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __await
             return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Invalid purpose");
     }
 }));
+const sendSMS = (to, countryCode, sms) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        console.log("function runs:...sendSMS");
+        const message = yield client.messages.create({
+            body: sms,
+            from: config_1.TWILIO_PHONE_NUMBER,
+            to: `${countryCode}${to}`,
+        });
+    }
+    catch (err) {
+        console.log("OTP Controller Error:", err);
+        if (err.code === 20404) {
+            return (0, response_utils_1.handleResponse)("", "error", 400, {}, "Phone number not found or invalid.");
+        }
+        else if (err.code === 20003) {
+            return (0, response_utils_1.handleResponse)("", "error", 400, "", "Something went wrong... please try again later.");
+        }
+        return (0, response_utils_1.handleResponse)("", "error", 500, {}, "Phone lookup failed. Please try again.");
+    }
+});
+exports.sendSMS = sendSMS;
