@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateCustomer = exports.updateSp = exports.giveRating = exports.getAllProviders = exports.getAllCustomer = exports.getSingleUser = void 0;
+exports.getCardValue = exports.updateCustomer = exports.updateSp = exports.giveRating = exports.getAllProviders = exports.getAllCustomer = exports.getSingleUser = void 0;
 const user_model_1 = __importDefault(require("../models/user.model"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
@@ -270,7 +270,7 @@ exports.updateSp = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaite
         },
     ]);
     if (ongoingServices.length > 0) {
-        return (0, response_utils_1.handleResponse)(res, "error", 400, "Cannot update while performing the service");
+        return (0, response_utils_1.handleResponse)(res, "error", 400, {}, "Cannot update while performing the service");
     }
     const { fullName, avatar, driverLicense, driverLicenseImage, insuranceNumber, insuranceImage, } = req.body;
     let isUpdated = false;
@@ -294,20 +294,24 @@ exports.updateSp = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaite
     if (isUpdated) {
         yield user_model_1.default.updateOne({ _id: spId }, { $set: { isVerified: false } });
     }
-    return (0, response_utils_1.handleResponse)(res, "success", 200, "Service provider updated successfully");
+    return (0, response_utils_1.handleResponse)(res, "success", 200, {}, "Service provider updated successfully");
 }));
 exports.updateCustomer = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     console.log("Api runs...: updateSp");
     const { fullName, avatar } = req.body;
     const updateCustomer = yield user_model_1.default.findOneAndUpdate({
-        _id: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id
+        _id: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
     }, {
         $set: {
-            fullName, avatar
-        }
+            fullName,
+            avatar,
+        },
     }, {
-        new: true
+        new: true,
     });
     return (0, response_utils_1.handleResponse)(res, "success", 200, "User updated successfully");
+}));
+exports.getCardValue = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const totalCustomer = yield user_model_1.default.find();
 }));
