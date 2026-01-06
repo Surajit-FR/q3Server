@@ -362,6 +362,7 @@ export const updateSp = asyncHandler(
         res,
         "error",
         400,
+        {},
         "Cannot update while performing the service"
       );
     }
@@ -422,6 +423,7 @@ export const updateSp = asyncHandler(
       res,
       "success",
       200,
+      {},
       "Service provider updated successfully"
     );
   }
@@ -430,25 +432,27 @@ export const updateSp = asyncHandler(
 export const updateCustomer = asyncHandler(
   async (req: CustomRequest, res: Response) => {
     console.log("Api runs...: updateSp");
-    const {fullName,avatar} = req.body;
+    const { fullName, avatar } = req.body;
     const updateCustomer = await UserModel.findOneAndUpdate(
       {
-        _id:req.user?._id
+        _id: req.user?._id,
       },
       {
-        $set:{
-          fullName,avatar
-        }
+        $set: {
+          fullName,
+          avatar,
+        },
       },
       {
-        new:true
+        new: true,
       }
-    )
-    return handleResponse(
-      res,
-      "success",
-      200,
-      "User updated successfully"
     );
+    return handleResponse(res, "success", 200, "User updated successfully");
+  }
+);
+
+export const getCardValue = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    const totalCustomer = await UserModel.find();
   }
 );
