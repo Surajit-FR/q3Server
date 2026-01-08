@@ -10,7 +10,10 @@ const otp_controller_1 = require("../controller/otp.controller");
 const googleapis_controller_1 = require("../controller/googleapis.controller");
 const userAuth_1 = require("../middlewares/auth/userAuth");
 const user_controller_1 = require("../controller/user.controller");
+const sendPushNotification_utils_1 = require("../../utils/sendPushNotification.utils");
 const router = express_1.default.Router();
+//save-fcm
+router.route("/store-fcm-token").post(sendPushNotification_utils_1.storeFcmToken);
 //sign-up
 router.route("/start-registration").post(auth_controller_1.startRegistration);
 router.route("/complete-registration").post(auth_controller_1.completeRegistration);

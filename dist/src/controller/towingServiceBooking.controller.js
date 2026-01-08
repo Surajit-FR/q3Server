@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyServiceCode = exports.fetchAssociatedCustomer = exports.previewTowingService = exports.cancelServiceBySP = exports.fetchSingleService = exports.fetchTotalServiceProgresswiseBySp = exports.fetchTotalServiceByAdmin = exports.getUserServiceDetilsByState = exports.getSavedDestination = exports.handleServiceRequestState = exports.acceptServiceRequest = exports.cancelServiceRequestByCustomer = exports.declineServicerequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
+exports.fetchCustomersTotalServices = exports.verifyServiceCode = exports.fetchAssociatedCustomer = exports.previewTowingService = exports.cancelServiceBySP = exports.fetchSingleService = exports.fetchTotalServiceProgresswiseBySp = exports.fetchTotalServiceByAdmin = exports.getUserServiceDetilsByState = exports.getSavedDestination = exports.handleServiceRequestState = exports.acceptServiceRequest = exports.cancelServiceRequestByCustomer = exports.declineServicerequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
 const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
 const response_utils_1 = require("../../utils/response.utils");
 const towingServiceBooking_model_1 = __importDefault(require("../models/towingServiceBooking.model"));
@@ -26,6 +26,7 @@ const vehicleType_model_1 = __importDefault(require("../models/vehicleType.model
 const customPricingRule_model_1 = __importDefault(require("../models/customPricingRule.model"));
 const pricingRule_model_1 = __importDefault(require("../models/pricingRule.model"));
 const otp_controller_1 = require("./otp.controller");
+const sendPushNotification_utils_1 = require("../../utils/sendPushNotification.utils");
 const apiKey = "AIzaSyDtPUxp_vFvbx9og_F-q0EBkJPAiCAbj8w";
 const isEligibleForBooking = (customerId) => __awaiter(void 0, void 0, void 0, function* () {
     const prevBookedServices = yield towingServiceBooking_model_1.default.aggregate([
@@ -184,6 +185,7 @@ exports.bookTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
     }
     const customerDetails = yield user_model_1.default.findOne({ _id: userId });
     (0, otp_controller_1.sendSMS)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.phone, customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.countryCode, `Thank You for booking service from Q3 app, Your one time service verification code is ${uniqueServiceCode}`);
+    (0, sendPushNotification_utils_1.sendPushNotification)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails._id, "Your service is booked", "Thank you for choosing Q3!");
     return (0, response_utils_1.handleResponse)(res, "success", 201, newBooking, customResponseMsg);
 }));
 //fetch near-by service request
@@ -389,8 +391,11 @@ exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res)
                 },
             }, { new: true });
         }
-        const customerDetails = yield user_model_1.default.findOne({ _id: updateResult === null || updateResult === void 0 ? void 0 : updateResult.userId });
+        const customerDetails = yield user_model_1.default.findOne({
+            _id: updateResult === null || updateResult === void 0 ? void 0 : updateResult.userId,
+        });
         (0, otp_controller_1.sendSMS)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.phone, customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.countryCode, `Your service is accepted by our service provider.`);
+        (0, sendPushNotification_utils_1.sendPushNotification)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails._id, "Your service is accepted by our service provider.", "");
         return (0, response_utils_1.handleResponse)(res, "success", 200, updateService, "Service Accepted Successfully");
     }
     return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Something went wrong");
@@ -1055,7 +1060,7 @@ const fetchAssociatedCustomer = (serviceId) => __awaiter(void 0, void 0, void 0,
 });
 exports.fetchAssociatedCustomer = fetchAssociatedCustomer;
 const verifyServiceCode = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c;
     try {
         const { serviceId, code } = req.body;
         const spId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
@@ -1085,7 +1090,9 @@ const verifyServiceCode = (req, res) => __awaiter(void 0, void 0, void 0, functi
             new: true,
         });
         const customerDetails = yield user_model_1.default.findOne({ _id: service === null || service === void 0 ? void 0 : service.userId });
+        const spDetails = yield user_model_1.default.findOne({ _id: (_c = req.user) === null || _c === void 0 ? void 0 : _c._id });
         (0, otp_controller_1.sendSMS)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.phone, customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.countryCode, `Your booked service is marked started by assigned service provider`);
+        (0, sendPushNotification_utils_1.sendPushNotification)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails._id, "Your service code is verified.", `Your service is performed by  our service provider ${spDetails === null || spDetails === void 0 ? void 0 : spDetails.fullName}! `);
         return (0, response_utils_1.handleResponse)(res, "success", 200, service, "Service verified successfully");
     }
     catch (error) {
@@ -1094,3 +1101,125 @@ const verifyServiceCode = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.verifyServiceCode = verifyServiceCode;
+exports.fetchCustomersTotalServices = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const serviceDetails = yield towingServiceBooking_model_1.default.aggregate([
+        {
+            $match: {
+                userId: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                foreignField: "_id",
+                localField: "userId",
+                as: "customer_details",
+            },
+        },
+        {
+            $unwind: {
+                preserveNullAndEmptyArrays: true,
+                path: "$customer_details",
+            },
+        },
+        {
+            $addFields: {
+                customer_fullName: "$customer_details.fullName",
+                customer_avatar: "$customer_details.avatar",
+                towing_cost: "$pricing.total",
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                foreignField: "_id",
+                localField: "serviceProviderId",
+                as: "sp_details",
+            },
+        },
+        {
+            $unwind: {
+                preserveNullAndEmptyArrays: true,
+                path: "$sp_details",
+            },
+        },
+        {
+            $lookup: {
+                from: "ratings",
+                foreignField: "ratedTo",
+                localField: "serviceProviderId",
+                as: "sp_ratings",
+            },
+        },
+        {
+            $addFields: {
+                sp_fullName: "$sp_details.fullName",
+                sp_avatar: "$sp_details.avatar",
+                sp_phoneNumber: "$sp_details.phone",
+                sp_email: "$sp_details.email",
+                sp_avg_rating: { $ifNull: [{ $avg: "$sp_ratings.rating" }, 0] },
+            },
+        },
+        {
+            $lookup: {
+                from: "vehicletypes",
+                foreignField: "_id",
+                localField: "vehicleTypeId",
+                as: "toeVehicle_details",
+            },
+        },
+        {
+            $unwind: {
+                preserveNullAndEmptyArrays: true,
+                path: "$toeVehicle_details",
+            },
+        },
+        {
+            $addFields: {
+                toeVehicle_type: "$toeVehicle_details.type",
+                toeVehicle_image: "$toeVehicle_details.image",
+                toeVehicle_totalSeat: "$toeVehicle_details.totalSeat",
+            },
+        },
+        {
+            $lookup: {
+                from: "custompricings",
+                localField: "toeVehicle_type",
+                foreignField: "appliesToVehicleType",
+                as: "customPricingInfo",
+            },
+        },
+        {
+            $unwind: {
+                preserveNullAndEmptyArrays: true,
+                path: "$customPricingInfo",
+            },
+        },
+        {
+            $addFields: {
+                adminContact: {
+                    $cond: {
+                        if: { $eq: ["$toeVehicle_type", "Truck"] },
+                        then: "$customPricingInfo.contactNumber",
+                        else: null,
+                    },
+                },
+            },
+        },
+        {
+            $project: {
+                customer_details: 0,
+                sp_ratings: 0,
+                sp_details: 0,
+                toeVehicle_details: 0,
+                isCurrentLocationforPick: 0,
+                picklocation: 0,
+                customer_updatedAtdetails: 0,
+                // customPricingInfo: 0,
+                __v: 0,
+            },
+        },
+    ]);
+    return (0, response_utils_1.handleResponse)(res, "success", 200, serviceDetails, "Service requests fetched successfully");
+}));

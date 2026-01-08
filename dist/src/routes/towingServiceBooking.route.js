@@ -28,6 +28,9 @@ router
     .route("/fetch-customer-request-progresswise")
     .post((0, userAuth_1.verifyUserType)(["Customer"]), towingServiceBooking_controller_1.getUserServiceDetilsByState);
 router
+    .route("/fetch-customer-total-service")
+    .get((0, userAuth_1.verifyUserType)(["Customer"]), towingServiceBooking_controller_1.fetchCustomersTotalServices);
+router
     .route("/fetch-all-request")
     .get((0, userAuth_1.verifyUserType)(["SuperAdmin"]), towingServiceBooking_controller_1.fetchTotalServiceByAdmin);
 router
