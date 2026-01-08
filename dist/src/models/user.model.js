@@ -109,7 +109,7 @@ const UserSchema = new mongoose_1.Schema({
     },
     isVerified: {
         type: Boolean,
-        default: true,
+        default: false,
     },
     isOTPVerified: {
         type: Boolean,
