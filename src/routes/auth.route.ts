@@ -19,8 +19,13 @@ import {
 } from "../controller/googleapis.controller";
 import { VerifyJWTToken, verifyUserType } from "../middlewares/auth/userAuth";
 import { getCardValue } from "../controller/user.controller";
+import { storeFcmToken } from "../../utils/sendPushNotification.utils";
 
 const router: Router = express.Router();
+
+//save-fcm
+router.route("/store-fcm-token").post(storeFcmToken);
+
 
 //sign-up
 router.route("/start-registration").post(startRegistration);

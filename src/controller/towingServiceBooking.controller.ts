@@ -13,6 +13,7 @@ import vehicleTypeModel from "../models/vehicleType.model";
 import CustomPricingModel from "../models/customPricingRule.model";
 import PricingRuleModel from "../models/pricingRule.model";
 import { sendSMS } from "./otp.controller";
+import { sendPushNotification } from "../../utils/sendPushNotification.utils";
 
 const apiKey = "AIzaSyDtPUxp_vFvbx9og_F-q0EBkJPAiCAbj8w";
 
@@ -255,6 +256,12 @@ export const bookTowingService = asyncHandler(
       `Thank You for booking service from Q3 app, Your one time service verification code is ${uniqueServiceCode}`
     );
 
+    sendPushNotification(
+      customerDetails?._id as string,
+      "Your service is booked",
+      "Thank you for choosing Q3!"
+    );
+
     return handleResponse(res, "success", 201, newBooking, customResponseMsg);
   }
 );
@@ -454,7 +461,7 @@ export const cancelServiceRequestByCustomer = asyncHandler(
       { new: true }
     );
 
-    if (updateService) {
+    if (updateService) {     
       return handleResponse(
         res,
         "success",
@@ -547,12 +554,19 @@ export const acceptServiceRequest = asyncHandler(
           { new: true }
         );
       }
-      const customerDetails = await UserModel.findOne({_id:updateResult?.userId})
+      const customerDetails = await UserModel.findOne({
+        _id: updateResult?.userId,
+      });
 
       sendSMS(
         customerDetails?.phone as string,
         customerDetails?.countryCode as string,
         `Your service is accepted by our service provider.`
+      );
+      sendPushNotification(
+        customerDetails?._id as string,
+        "Your service is accepted by our service provider.",
+        ""
       );
 
       return handleResponse(
@@ -1434,12 +1448,18 @@ export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
       }
     );
 
-   const customerDetails = await UserModel.findOne({_id:service?.userId})
+    const customerDetails = await UserModel.findOne({ _id: service?.userId });
+    const spDetails = await UserModel.findOne({ _id: req.user?._id });
 
     sendSMS(
       customerDetails?.phone as string,
       customerDetails?.countryCode as string,
       `Your booked service is marked started by assigned service provider`
+    );
+    sendPushNotification(
+      customerDetails?._id as string,
+      "Your service code is verified.",
+      `Your service is performed by  our service provider ${spDetails?.fullName}! `
     );
 
     return handleResponse(
@@ -1454,3 +1474,133 @@ export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
     return handleResponse(res, "error", 500, "", "Server error");
   }
 };
+
+export const fetchCustomersTotalServices = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    const serviceDetails = await towingServiceBookingModel.aggregate([
+      {
+        $match: {
+          userId: req.user?._id,
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          foreignField: "_id",
+          localField: "userId",
+          as: "customer_details",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$customer_details",
+        },
+      },
+      {
+        $addFields: {
+          customer_fullName: "$customer_details.fullName",
+          customer_avatar: "$customer_details.avatar",
+          towing_cost: "$pricing.total",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          foreignField: "_id",
+          localField: "serviceProviderId",
+          as: "sp_details",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$sp_details",
+        },
+      },
+      {
+        $lookup: {
+          from: "ratings",
+          foreignField: "ratedTo",
+          localField: "serviceProviderId",
+          as: "sp_ratings",
+        },
+      },
+      {
+        $addFields: {
+          sp_fullName: "$sp_details.fullName",
+          sp_avatar: "$sp_details.avatar",
+          sp_phoneNumber: "$sp_details.phone",
+          sp_email: "$sp_details.email",
+          sp_avg_rating: { $ifNull: [{ $avg: "$sp_ratings.rating" }, 0] },
+        },
+      },
+      {
+        $lookup: {
+          from: "vehicletypes",
+          foreignField: "_id",
+          localField: "vehicleTypeId",
+          as: "toeVehicle_details",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$toeVehicle_details",
+        },
+      },
+      {
+        $addFields: {
+          toeVehicle_type: "$toeVehicle_details.type",
+          toeVehicle_image: "$toeVehicle_details.image",
+          toeVehicle_totalSeat: "$toeVehicle_details.totalSeat",
+        },
+      },
+      {
+        $lookup: {
+          from: "custompricings",
+          localField: "toeVehicle_type",
+          foreignField: "appliesToVehicleType",
+          as: "customPricingInfo",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$customPricingInfo",
+        },
+      },
+      {
+        $addFields: {
+          adminContact: {
+            $cond: {
+              if: { $eq: ["$toeVehicle_type", "Truck"] },
+              then: "$customPricingInfo.contactNumber",
+              else: null,
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          customer_details: 0,
+          sp_ratings: 0,
+          sp_details: 0,
+          toeVehicle_details: 0,
+          isCurrentLocationforPick: 0,
+          picklocation: 0,
+          customer_updatedAtdetails: 0,
+          // customPricingInfo: 0,
+          __v: 0,
+        },
+      },
+    ]);
+    return handleResponse(
+      res,
+      "success",
+      200,
+      serviceDetails,
+      "Service requests fetched successfully"
+    );
+  }
+);

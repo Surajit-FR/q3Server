@@ -20,7 +20,9 @@ router.use(VerifyJWTToken);
 
 router.route("/give-rating").post(verifyUserType(["Customer"]), giveRating);
 router.route("/update-sp").post(verifyUserType(["ServiceProvider"]), updateSp);
-router.route("/update-customer").post(verifyUserType(["Customer"]), updateCustomer);
+router
+  .route("/update-customer")
+  .post(verifyUserType(["Customer"]), updateCustomer);
 
 router
   .route("/fetch-saved-destinations")
