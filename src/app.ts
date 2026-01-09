@@ -28,7 +28,7 @@ app.use(
   })
 );
 
-app.use("/api/v1", express.raw({ type: "application/json" }), webhookRouter);
+app.use("/api/v1/payment", express.raw({ type: "application/json" }), webhookRouter);
 
 
 // General Middleware
