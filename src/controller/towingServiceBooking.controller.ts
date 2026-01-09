@@ -554,9 +554,13 @@ export const acceptServiceRequest = asyncHandler(
           { new: true }
         );
       }
-      const customerDetails = await UserModel.findOne({
-        _id: updateResult?.userId,
+      const serviceData = await towingServiceBookingModel.findOne({
+        _id: serviceId,
       });
+      const customerDetails = await UserModel.findOne({
+        _id: serviceData?.userId,
+      });
+      console.log({ customerDetails });
 
       sendSMS(
         customerDetails?.phone as string,
@@ -1454,12 +1458,12 @@ export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
     sendSMS(
       customerDetails?.phone as string,
       customerDetails?.countryCode as string,
-      `Your booked service is marked started by assigned service provider`
+      `Your booked service is marked started by ${spDetails?.fullName}`
     );
     sendPushNotification(
       customerDetails?._id as string,
       "Your service code is verified.",
-      `Your service is performed by  our service provider ${spDetails?.fullName}! `
+      `Your service is performed by  ${spDetails?.fullName}! `
     );
 
     return handleResponse(
@@ -1619,7 +1623,7 @@ export const fetchOngoingServices = asyncHandler(
           ],
         },
       },
-            {
+      {
         $lookup: {
           from: "users",
           foreignField: "_id",
@@ -1731,7 +1735,7 @@ export const fetchOngoingServices = asyncHandler(
         },
       },
     ]);
-     return handleResponse(
+    return handleResponse(
       res,
       "success",
       200,
