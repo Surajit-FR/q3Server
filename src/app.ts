@@ -11,6 +11,7 @@ import locationSessionRouter from "./routes/locationSession.route";
 import userRouter from "./routes/user.route";
 import pricingRuleRouter from "./routes/pricing.route";
 import stripeRouter from "./routes/stripe.routes";
+import webhookRouter from "./routes/webhook.route"
 
 const app = express();
 
@@ -26,6 +27,9 @@ app.use(
     credentials: true,
   })
 );
+
+app.use("/api/v1/stripe", express.raw({ type: "application/json" }), webhookRouter);
+
 
 // General Middleware
 app.use(morgan("dev"));
