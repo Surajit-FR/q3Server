@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchCustomersTotalServices = exports.verifyServiceCode = exports.fetchAssociatedCustomer = exports.previewTowingService = exports.cancelServiceBySP = exports.fetchSingleService = exports.fetchTotalServiceProgresswiseBySp = exports.fetchTotalServiceByAdmin = exports.getUserServiceDetilsByState = exports.getSavedDestination = exports.handleServiceRequestState = exports.acceptServiceRequest = exports.cancelServiceRequestByCustomer = exports.declineServicerequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
+exports.fetchOngoingServices = exports.fetchCustomersTotalServices = exports.verifyServiceCode = exports.fetchAssociatedCustomer = exports.previewTowingService = exports.cancelServiceBySP = exports.fetchSingleService = exports.fetchTotalServiceProgresswiseBySp = exports.fetchTotalServiceByAdmin = exports.getUserServiceDetilsByState = exports.getSavedDestination = exports.handleServiceRequestState = exports.acceptServiceRequest = exports.cancelServiceRequestByCustomer = exports.declineServicerequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
 const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
 const response_utils_1 = require("../../utils/response.utils");
 const towingServiceBooking_model_1 = __importDefault(require("../models/towingServiceBooking.model"));
@@ -932,7 +932,7 @@ exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =
                 sp_additional_details: 0,
                 toeVehicle_details: 0,
                 isCurrentLocationforPick: 0,
-                picklocation: 0,
+                // picklocation: 0,
                 customer_updatedAtdetails: 0,
                 __v: 0,
             },
@@ -1222,4 +1222,132 @@ exports.fetchCustomersTotalServices = (0, asyncHandler_utils_1.asyncHandler)((re
         },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, serviceDetails, "Service requests fetched successfully");
+}));
+exports.fetchOngoingServices = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const customerId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+    const totalOngoingServices = yield towingServiceBooking_model_1.default.aggregate([
+        {
+            $match: {
+                userId: customerId,
+                $or: [
+                    { serviceProgess: "Booked" },
+                    { serviceProgess: "ServiceAccepted" },
+                    { serviceProgess: "ServiceStarted" },
+                ],
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                foreignField: "_id",
+                localField: "userId",
+                as: "customer_details",
+            },
+        },
+        {
+            $unwind: {
+                preserveNullAndEmptyArrays: true,
+                path: "$customer_details",
+            },
+        },
+        {
+            $addFields: {
+                customer_fullName: "$customer_details.fullName",
+                customer_avatar: "$customer_details.avatar",
+                towing_cost: "$pricing.total",
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                foreignField: "_id",
+                localField: "serviceProviderId",
+                as: "sp_details",
+            },
+        },
+        {
+            $unwind: {
+                preserveNullAndEmptyArrays: true,
+                path: "$sp_details",
+            },
+        },
+        {
+            $lookup: {
+                from: "ratings",
+                foreignField: "ratedTo",
+                localField: "serviceProviderId",
+                as: "sp_ratings",
+            },
+        },
+        {
+            $addFields: {
+                sp_fullName: "$sp_details.fullName",
+                sp_avatar: "$sp_details.avatar",
+                sp_phoneNumber: "$sp_details.phone",
+                sp_email: "$sp_details.email",
+                sp_avg_rating: { $ifNull: [{ $avg: "$sp_ratings.rating" }, 0] },
+            },
+        },
+        {
+            $lookup: {
+                from: "vehicletypes",
+                foreignField: "_id",
+                localField: "vehicleTypeId",
+                as: "toeVehicle_details",
+            },
+        },
+        {
+            $unwind: {
+                preserveNullAndEmptyArrays: true,
+                path: "$toeVehicle_details",
+            },
+        },
+        {
+            $addFields: {
+                toeVehicle_type: "$toeVehicle_details.type",
+                toeVehicle_image: "$toeVehicle_details.image",
+                toeVehicle_totalSeat: "$toeVehicle_details.totalSeat",
+            },
+        },
+        {
+            $lookup: {
+                from: "custompricings",
+                localField: "toeVehicle_type",
+                foreignField: "appliesToVehicleType",
+                as: "customPricingInfo",
+            },
+        },
+        {
+            $unwind: {
+                preserveNullAndEmptyArrays: true,
+                path: "$customPricingInfo",
+            },
+        },
+        {
+            $addFields: {
+                adminContact: {
+                    $cond: {
+                        if: { $eq: ["$toeVehicle_type", "Truck"] },
+                        then: "$customPricingInfo.contactNumber",
+                        else: null,
+                    },
+                },
+            },
+        },
+        {
+            $project: {
+                customer_details: 0,
+                sp_ratings: 0,
+                sp_details: 0,
+                toeVehicle_details: 0,
+                isCurrentLocationforPick: 0,
+                picklocation: 0,
+                customer_updatedAtdetails: 0,
+                // customPricingInfo: 0,
+                __v: 0,
+            },
+        },
+    ]);
+    return (0, response_utils_1.handleResponse)(res, "success", 200, totalOngoingServices, "Service requests fetched successfully");
 }));

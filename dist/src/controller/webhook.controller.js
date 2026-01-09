@@ -49,6 +49,7 @@ function handleSuccess(session) {
         yield towingServiceBooking_model_1.default.findByIdAndUpdate(serviceId, {
             isPaymentComplete: true,
             paymentIntentId: session.payment_intent,
+            serviceProgess: "ServiceCompleted"
         });
     });
 }
