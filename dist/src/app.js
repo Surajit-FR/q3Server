@@ -17,6 +17,7 @@ const locationSession_route_1 = __importDefault(require("./routes/locationSessio
 const user_route_1 = __importDefault(require("./routes/user.route"));
 const pricing_route_1 = __importDefault(require("./routes/pricing.route"));
 const stripe_routes_1 = __importDefault(require("./routes/stripe.routes"));
+const webhook_route_1 = __importDefault(require("./routes/webhook.route"));
 const app = (0, express_1.default)();
 exports.app = app;
 //  CORS Middleware
@@ -29,6 +30,7 @@ app.use((0, cors_1.default)({
     ],
     credentials: true,
 }));
+app.use("/api/v1/stripe", express_1.default.raw({ type: "application/json" }), webhook_route_1.default);
 // General Middleware
 app.use((0, morgan_1.default)("dev"));
 app.use(express_1.default.json({ limit: constants_1.EXPRESS_CONFIG_LIMIT })); // JSON Parsing for Other Routes
