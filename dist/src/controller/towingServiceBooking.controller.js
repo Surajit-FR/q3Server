@@ -391,9 +391,13 @@ exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res)
                 },
             }, { new: true });
         }
-        const customerDetails = yield user_model_1.default.findOne({
-            _id: updateResult === null || updateResult === void 0 ? void 0 : updateResult.userId,
+        const serviceData = yield towingServiceBooking_model_1.default.findOne({
+            _id: serviceId,
         });
+        const customerDetails = yield user_model_1.default.findOne({
+            _id: serviceData === null || serviceData === void 0 ? void 0 : serviceData.userId,
+        });
+        console.log({ customerDetails });
         (0, otp_controller_1.sendSMS)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.phone, customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.countryCode, `Your service is accepted by our service provider.`);
         (0, sendPushNotification_utils_1.sendPushNotification)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails._id, "Your service is accepted by our service provider.", "");
         return (0, response_utils_1.handleResponse)(res, "success", 200, updateService, "Service Accepted Successfully");
@@ -1091,8 +1095,8 @@ const verifyServiceCode = (req, res) => __awaiter(void 0, void 0, void 0, functi
         });
         const customerDetails = yield user_model_1.default.findOne({ _id: service === null || service === void 0 ? void 0 : service.userId });
         const spDetails = yield user_model_1.default.findOne({ _id: (_c = req.user) === null || _c === void 0 ? void 0 : _c._id });
-        (0, otp_controller_1.sendSMS)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.phone, customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.countryCode, `Your booked service is marked started by assigned service provider`);
-        (0, sendPushNotification_utils_1.sendPushNotification)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails._id, "Your service code is verified.", `Your service is performed by  our service provider ${spDetails === null || spDetails === void 0 ? void 0 : spDetails.fullName}! `);
+        (0, otp_controller_1.sendSMS)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.phone, customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.countryCode, `Your booked service is marked started by ${spDetails === null || spDetails === void 0 ? void 0 : spDetails.fullName}`);
+        (0, sendPushNotification_utils_1.sendPushNotification)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails._id, "Your service code is verified.", `Your service is performed by  ${spDetails === null || spDetails === void 0 ? void 0 : spDetails.fullName}! `);
         return (0, response_utils_1.handleResponse)(res, "success", 200, service, "Service verified successfully");
     }
     catch (error) {
