@@ -13,6 +13,7 @@ import {
   fetchTotalServiceProgresswiseBySp,
   verifyServiceCode,
   fetchCustomersTotalServices,
+  fetchOngoingServices,
 } from "../controller/towingServiceBooking.controller";
 import { VerifyJWTToken, verifyUserType } from "../middlewares/auth/userAuth";
 
@@ -47,6 +48,9 @@ router
 router
   .route("/fetch-customer-total-service")
   .get(verifyUserType(["Customer"]), fetchCustomersTotalServices);
+router
+  .route("/fetch-customer-ongoing-service")
+  .get(verifyUserType(["Customer"]), fetchOngoingServices);
 
 router
   .route("/fetch-all-request")

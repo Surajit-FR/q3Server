@@ -461,7 +461,7 @@ export const cancelServiceRequestByCustomer = asyncHandler(
       { new: true }
     );
 
-    if (updateService) {     
+    if (updateService) {
       return handleResponse(
         res,
         "success",
@@ -1214,7 +1214,7 @@ export const fetchSingleService = asyncHandler(
           sp_additional_details: 0,
           toeVehicle_details: 0,
           isCurrentLocationforPick: 0,
-          picklocation: 0,
+          // picklocation: 0,
           customer_updatedAtdetails: 0,
           __v: 0,
         },
@@ -1600,6 +1600,142 @@ export const fetchCustomersTotalServices = asyncHandler(
       "success",
       200,
       serviceDetails,
+      "Service requests fetched successfully"
+    );
+  }
+);
+
+export const fetchOngoingServices = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    const customerId = req.user?._id;
+    const totalOngoingServices = await towingServiceBookingModel.aggregate([
+      {
+        $match: {
+          userId: customerId,
+          $or: [
+            { serviceProgess: "Booked" },
+            { serviceProgess: "ServiceAccepted" },
+            { serviceProgess: "ServiceStarted" },
+          ],
+        },
+      },
+            {
+        $lookup: {
+          from: "users",
+          foreignField: "_id",
+          localField: "userId",
+          as: "customer_details",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$customer_details",
+        },
+      },
+      {
+        $addFields: {
+          customer_fullName: "$customer_details.fullName",
+          customer_avatar: "$customer_details.avatar",
+          towing_cost: "$pricing.total",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          foreignField: "_id",
+          localField: "serviceProviderId",
+          as: "sp_details",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$sp_details",
+        },
+      },
+      {
+        $lookup: {
+          from: "ratings",
+          foreignField: "ratedTo",
+          localField: "serviceProviderId",
+          as: "sp_ratings",
+        },
+      },
+      {
+        $addFields: {
+          sp_fullName: "$sp_details.fullName",
+          sp_avatar: "$sp_details.avatar",
+          sp_phoneNumber: "$sp_details.phone",
+          sp_email: "$sp_details.email",
+          sp_avg_rating: { $ifNull: [{ $avg: "$sp_ratings.rating" }, 0] },
+        },
+      },
+      {
+        $lookup: {
+          from: "vehicletypes",
+          foreignField: "_id",
+          localField: "vehicleTypeId",
+          as: "toeVehicle_details",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$toeVehicle_details",
+        },
+      },
+      {
+        $addFields: {
+          toeVehicle_type: "$toeVehicle_details.type",
+          toeVehicle_image: "$toeVehicle_details.image",
+          toeVehicle_totalSeat: "$toeVehicle_details.totalSeat",
+        },
+      },
+      {
+        $lookup: {
+          from: "custompricings",
+          localField: "toeVehicle_type",
+          foreignField: "appliesToVehicleType",
+          as: "customPricingInfo",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$customPricingInfo",
+        },
+      },
+      {
+        $addFields: {
+          adminContact: {
+            $cond: {
+              if: { $eq: ["$toeVehicle_type", "Truck"] },
+              then: "$customPricingInfo.contactNumber",
+              else: null,
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          customer_details: 0,
+          sp_ratings: 0,
+          sp_details: 0,
+          toeVehicle_details: 0,
+          isCurrentLocationforPick: 0,
+          picklocation: 0,
+          customer_updatedAtdetails: 0,
+          // customPricingInfo: 0,
+          __v: 0,
+        },
+      },
+    ]);
+     return handleResponse(
+      res,
+      "success",
+      200,
+      totalOngoingServices,
       "Service requests fetched successfully"
     );
   }

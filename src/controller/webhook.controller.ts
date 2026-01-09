@@ -46,6 +46,7 @@ async function handleSuccess(session: any) {
   await towingServiceBookingModel.findByIdAndUpdate(serviceId, {
     isPaymentComplete: true,
     paymentIntentId: session.payment_intent,
+    serviceProgess:"ServiceCompleted"
   });
 }
 

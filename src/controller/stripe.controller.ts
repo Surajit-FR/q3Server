@@ -77,11 +77,11 @@ export const createCheckoutsession = async (req: CustomRequest, res: any) => {
 
     const paymentQR = await QRCode.toDataURL(paymentUrl);
 
-    await towingServiceBookingModel.findByIdAndUpdate(serviceId, {
-      isPaymentComplete: true,
-      paymentIntentId: session.payment_intent,
-      serviceProgess:"ServiceCompleted"
-    });
+    // await towingServiceBookingModel.findByIdAndUpdate(serviceId, {
+    //   isPaymentComplete: true,
+    //   paymentIntentId: session.payment_intent,
+    //   serviceProgess:"ServiceCompleted"
+    // });
 
     res.json({ paymentQR });
   } catch (error) {}
