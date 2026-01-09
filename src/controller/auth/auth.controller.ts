@@ -259,7 +259,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
 
   if (
     !user.isOTPVerified
-    // || !user.isVerified
+    || !user.isVerified
   ) {
     return handleResponse(
       res,
