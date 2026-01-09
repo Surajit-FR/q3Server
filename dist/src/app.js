@@ -30,7 +30,7 @@ app.use((0, cors_1.default)({
     ],
     credentials: true,
 }));
-app.use("/api/v1/stripe", express_1.default.raw({ type: "application/json" }), webhook_route_1.default);
+app.use("/api/v1", express_1.default.raw({ type: "application/json" }), webhook_route_1.default);
 // General Middleware
 app.use((0, morgan_1.default)("dev"));
 app.use(express_1.default.json({ limit: constants_1.EXPRESS_CONFIG_LIMIT })); // JSON Parsing for Other Routes
