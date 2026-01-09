@@ -33,7 +33,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
     res.json({ received: true });
   } catch (error: any) {
     console.error("Webhook Error:", error.message);
-    return res.status(400).send(`Webhook Error: ${error.message}`);
+     res.status(400).send(`Webhook Error: ${error.message}`);
   }
 };
 
