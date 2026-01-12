@@ -1744,3 +1744,77 @@ export const fetchOngoingServices = asyncHandler(
     );
   }
 );
+
+export const fetchTransactions = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    const totalTransactions = await towingServiceBookingModel.aggregate([
+      {
+        $match: {
+          serviceProgess: "ServiceCompleted",
+          isPaymentComplete: true,
+          paymentIntentId: { $ne: null },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          foreignField: "_id",
+          localField: "userId",
+          as: "customer_details",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$customer_details",
+        },
+      },
+      {
+        $addFields: {
+          customer_fullName: "$customer_details.fullName",
+          customer_avatar: "$customer_details.avatar",
+          towing_cost: "$pricing.total",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          foreignField: "_id",
+          localField: "serviceProviderId",
+          as: "sp_details",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$sp_details",
+        },
+      },
+      {
+        $addFields: {
+          sp_fullName: "$sp_details.fullName",
+          sp_avatar: "$sp_details.avatar",
+          sp_phoneNumber: "$sp_details.phone",
+          sp_email: "$sp_details.email",
+        },
+      },
+      {
+        $project: {
+          paymentIntentId: 1,
+          paidBy: "$customer_fullName",
+          receivedBy: "$sp_fullName",
+          towing_cost: 1,
+          paidAt:"$updatedAt",
+          // customer_fullName: 1,
+        },
+      },
+    ]);
+    return handleResponse(
+      res,
+      "success",
+      200,
+      totalTransactions,
+      "Total transactions fetched successfully"
+    );
+  }
+);
