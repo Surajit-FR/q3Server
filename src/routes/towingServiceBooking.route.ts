@@ -14,6 +14,7 @@ import {
   verifyServiceCode,
   fetchCustomersTotalServices,
   fetchOngoingServices,
+  fetchTransactions,
 } from "../controller/towingServiceBooking.controller";
 import { VerifyJWTToken, verifyUserType } from "../middlewares/auth/userAuth";
 
@@ -69,5 +70,11 @@ router
 router
   .route("/cancel-service-bysp")
   .post(verifyUserType(["ServiceProvider"]), cancelServiceBySP);
+
+router
+  .route("/fetch-transactions")
+  .get(verifyUserType(["SuperAdmin"]), fetchTransactions);
+
+
 
 export default router;
