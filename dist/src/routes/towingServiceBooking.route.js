@@ -45,4 +45,7 @@ router
 router
     .route("/cancel-service-bysp")
     .post((0, userAuth_1.verifyUserType)(["ServiceProvider"]), towingServiceBooking_controller_1.cancelServiceBySP);
+router
+    .route("/fetch-transactions")
+    .get((0, userAuth_1.verifyUserType)(["SuperAdmin"]), towingServiceBooking_controller_1.fetchTransactions);
 exports.default = router;

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchOngoingServices = exports.fetchCustomersTotalServices = exports.verifyServiceCode = exports.fetchAssociatedCustomer = exports.previewTowingService = exports.cancelServiceBySP = exports.fetchSingleService = exports.fetchTotalServiceProgresswiseBySp = exports.fetchTotalServiceByAdmin = exports.getUserServiceDetilsByState = exports.getSavedDestination = exports.handleServiceRequestState = exports.acceptServiceRequest = exports.cancelServiceRequestByCustomer = exports.declineServicerequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
+exports.fetchTransactions = exports.fetchOngoingServices = exports.fetchCustomersTotalServices = exports.verifyServiceCode = exports.fetchAssociatedCustomer = exports.previewTowingService = exports.cancelServiceBySP = exports.fetchSingleService = exports.fetchTotalServiceProgresswiseBySp = exports.fetchTotalServiceByAdmin = exports.getUserServiceDetilsByState = exports.getSavedDestination = exports.handleServiceRequestState = exports.acceptServiceRequest = exports.cancelServiceRequestByCustomer = exports.declineServicerequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
 const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
 const response_utils_1 = require("../../utils/response.utils");
 const towingServiceBooking_model_1 = __importDefault(require("../models/towingServiceBooking.model"));
@@ -1354,4 +1354,69 @@ exports.fetchOngoingServices = (0, asyncHandler_utils_1.asyncHandler)((req, res)
         },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, totalOngoingServices, "Service requests fetched successfully");
+}));
+exports.fetchTransactions = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const totalTransactions = yield towingServiceBooking_model_1.default.aggregate([
+        {
+            $match: {
+                serviceProgess: "ServiceCompleted",
+                isPaymentComplete: true,
+                paymentIntentId: { $ne: null },
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                foreignField: "_id",
+                localField: "userId",
+                as: "customer_details",
+            },
+        },
+        {
+            $unwind: {
+                preserveNullAndEmptyArrays: true,
+                path: "$customer_details",
+            },
+        },
+        {
+            $addFields: {
+                customer_fullName: "$customer_details.fullName",
+                customer_avatar: "$customer_details.avatar",
+                towing_cost: "$pricing.total",
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                foreignField: "_id",
+                localField: "serviceProviderId",
+                as: "sp_details",
+            },
+        },
+        {
+            $unwind: {
+                preserveNullAndEmptyArrays: true,
+                path: "$sp_details",
+            },
+        },
+        {
+            $addFields: {
+                sp_fullName: "$sp_details.fullName",
+                sp_avatar: "$sp_details.avatar",
+                sp_phoneNumber: "$sp_details.phone",
+                sp_email: "$sp_details.email",
+            },
+        },
+        {
+            $project: {
+                paymentIntentId: 1,
+                paidBy: "$customer_fullName",
+                receivedBy: "$sp_fullName",
+                towing_cost: 1,
+                paidAt: "$updatedAt",
+                // customer_fullName: 1,
+            },
+        },
+    ]);
+    return (0, response_utils_1.handleResponse)(res, "success", 200, totalTransactions, "Total transactions fetched successfully");
 }));
