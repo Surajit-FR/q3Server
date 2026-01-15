@@ -1,5 +1,5 @@
 import express, { Router } from "express";
-import { stripeWebhook } from "../controller/webhook.controller";
+import { squareWebhook } from "../controller/squareWebhook.controller";
 
 const router: Router = express.Router();
 
@@ -7,7 +7,7 @@ const router: Router = express.Router();
 
 //STRIPE WEBHOOK ROUTE
 
-router.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+router.post("/webhook", express.raw({ type: "application/json" }), squareWebhook);
 
 
 
