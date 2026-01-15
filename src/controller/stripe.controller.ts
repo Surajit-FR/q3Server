@@ -5,6 +5,7 @@ import { CustomRequest } from "../../types/commonType";
 import UserModel from "../models/user.model";
 import QRCode from "qrcode";
 import towingServiceBookingModel from "../models/towingServiceBooking.model";
+import { getLocations } from "../config/square";
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
   apiVersion: "2024-09-30.acacia" as any,
@@ -86,3 +87,5 @@ export const createCheckoutsession = async (req: CustomRequest, res: any) => {
     res.json({ paymentQR });
   } catch (error) {}
 };
+
+getLocations();

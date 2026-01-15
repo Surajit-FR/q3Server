@@ -159,10 +159,24 @@ export const getAllCustomer = asyncHandler(
       {
         $match: matchCriteria,
       },
+      {
+        $lookup:{
+          from:"towingservicebookings",
+          foreignField:"userId",
+          localField:"_id",
+          as:"bookedService"
+        }
+      },
+      {
+        $addFields:{
+          totalBookedServices:{$size:"$bookedService"}
+        }
+      },
 
       {
         $project: {
           password: 0,
+          bookedService: 0,
           stripeCustomerId: 0,
           accessToken: 0,
           fcmToken: 0,
@@ -239,6 +253,19 @@ export const getAllProviders = asyncHandler(
       {
         $match: matchCriteria,
       },
+       {
+        $lookup:{
+          from:"towingservicebookings",
+          foreignField:"serviceProviderId",
+          localField:"_id",
+          as:"bookedService"
+        }
+      },
+      {
+        $addFields:{
+          totalBookedServices:{$size:"$bookedService"}
+        }
+      },
       {
         $lookup: {
           from: "additionalinfos",
@@ -261,6 +288,7 @@ export const getAllProviders = asyncHandler(
           fcmToken: 0,
           __v: 0,
           "additionalInfo.__v": 0,
+          bookedService: 0,
         },
       },
       { $sort: sortCriteria },
@@ -476,3 +504,7 @@ export const getCardValue = asyncHandler(
     );
   }
 );
+
+
+
+

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <title>Receipt</title>
+</head>
+<style>
+    body{margin-top:20px;
+background-color: rgba(235, 238, 255, 1) !important;
+}
+
+.invoice-aside {
+    background-color: #ededed;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    padding: 50px 33px;
+    min-width: 300px
+}
+
+@media (max-width: 575.98px) {
+    .invoice-aside {
+        padding:25px
+    }
+}
+
+.invoice-logo {
+    height: 39px;
+    min-width: 233px;
+    background-image: url(../img/logo-inv-2x.png);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-position: 0;
+    margin: 0 auto 115px
+}
+
+@media (max-width: 575.98px) {
+    .invoice-logo {
+        height:20px;
+        min-width: 133px;
+        width: 133px;
+        margin: 0 auto 57.5px;
+        float: none;
+        min-width: auto
+    }
+}
+
+.invoice-person {
+    text-align: center
+}
+
+.invoice-person .name {
+    font-size: 1.53846rem;
+    font-weight: 600
+}
+
+@media (max-width: 575.98px) {
+    .invoice-person .name {
+        font-size:1.07692rem
+    }
+}
+
+.invoice-person .position {
+    font-size: 1.23077rem
+}
+
+@media (max-width: 575.98px) {
+    .invoice-person .position {
+        font-size:1rem
+    }
+}
+
+.invoice-person span {
+    font-size: 1.23077rem;
+    line-height: 1.78;
+    display: block;
+    font-weight: 300
+}
+
+@media (max-width: 575.98px) {
+    .invoice-person span {
+        font-size:1rem
+    }
+}
+
+.invoice-payment-direction {
+    text-align: center;
+    margin: 89px 0
+}
+
+@media (max-width: 575.98px) {
+    .invoice-payment-direction {
+        margin:44.5px 0
+    }
+}
+
+.invoice-payment-direction .icon {
+    font-size: 4.23077rem;
+    line-height: 1
+}
+
+@media (max-width: 767.98px) {
+    .invoice-payment-direction .icon {
+        font-size:1.92308rem
+    }
+}
+
+.invoice-company-info {
+    margin-top: 100px
+}
+
+@media (max-width: 575.98px) {
+    .invoice-company-info {
+        margin-top:50px;
+        text-align: center
+    }
+}
+
+.invoice-company-info .summary {
+    font-size: 1.077rem;
+    line-height: 1.3
+}
+
+@media (max-width: 575.98px) {
+    .invoice-company-info .summary {
+        font-size:1rem
+    }
+}
+
+.invoice-company-info .summary .title {
+    display: block;
+    font-size: 1.38462rem;
+    line-height: 1;
+    font-weight: 600;
+    margin-bottom: 1.38462rem
+}
+
+@media (max-width: 575.98px) {
+    .invoice-company-info .summary .title {
+        font-size:1.07692rem
+    }
+}
+
+.invoice-company-info .email li,.invoice-company-info .phone li {
+    font-size: 1.077rem;
+    line-height: 1.7
+}
+
+.invoice-content {
+    background-color: #fff;
+    padding: 50px 33px;
+    -webkit-box-flex: 1;
+    -ms-flex: 1 1 0%;
+    flex: 1 1 0%
+}
+
+@media (max-width: 575.98px) {
+    .invoice-content {
+        padding:25px
+    }
+}
+
+.invoice-header {
+    margin-bottom: 100px
+}
+
+@media (max-width: 575.98px) {
+    .invoice-header {
+        margin-bottom:50px
+    }
+}
+
+.invoice-title {
+    font-size: 2.69231rem;
+    font-weight: 300
+}
+
+@media (max-width: 575.98px) {
+    .invoice-title {
+        font-size:1.92308rem
+    }
+}
+
+.invoice-order {
+    text-align: right
+}
+
+.invoice-order .invoice-number {
+    display: block;
+    margin-top: 1rem;
+    font-size: 1.38462rem
+}
+
+@media (max-width: 575.98px) {
+    .invoice-order .invoice-number {
+        font-size:1.07692rem
+    }
+}
+
+.invoice-order .invoice-date {
+    font-size: 1.077rem;
+    color: #858585
+}
+
+@media (max-width: 575.98px) {
+    .invoice-order .invoice-date {
+        font-size:1rem
+    }
+}
+
+.invoice-details {
+    width: 100%;
+    font-size: 1.07692rem;
+    margin-bottom: 110px
+}
+
+@media (max-width: 575.98px) {
+    .invoice-details {
+        font-size:1rem;
+        margin-bottom: 55px
+    }
+}
+
+.invoice-details thead th {
+    text-align: right;
+    padding-bottom: 1.69231rem;
+    font-size: 1.38462rem
+}
+
+@media (max-width: 575.98px) {
+    .invoice-details thead th {
+        font-size:1rem;
+        padding-bottom: 1.15385rem
+    }
+}
+
+.invoice-details thead th:first-child {
+    text-align: left
+}
+
+.invoice-details tr>td {
+    padding: 23px 0
+}
+
+@media (max-width: 767.98px) {
+    .invoice-details tr>td {
+        padding:10px 0
+    }
+}
+
+.invoice-details tbody .hours {
+    text-align: right
+}
+
+.invoice-details tbody .amount {
+    text-align: right
+}
+
+.invoice-summary {
+    width: 100%;
+    font-size: 1.38462rem;
+    border-top: 1px solid #d9d9d9;
+    margin-bottom: 110px
+}
+
+@media (max-width: 575.98px) {
+    .invoice-summary {
+        margin-bottom:55px;
+        font-size: 1.07692rem
+    }
+}
+
+.invoice-summary th {
+    padding-top: 26px;
+    font-weight: 600;
+    width: 20%
+}
+
+@media (max-width: 575.98px) {
+    .invoice-summary th {
+        width:37%
+    }
+}
+
+.invoice-summary th.total {
+    width: 60%;
+    font-size: 1.84615rem;
+    text-align: right
+}
+
+@media (max-width: 575.98px) {
+    .invoice-summary th.total {
+        font-size:1.07692rem;
+        width: 26%
+    }
+}
+
+.invoice-summary .total-value {
+    text-align: right;
+    font-size: 3.07692rem
+}
+
+@media (max-width: 575.98px) {
+    .invoice-summary .total-value {
+        font-size:1.07692rem;
+        font-weight: 600
+    }
+}
+
+.invoice-payment-details {
+    border: 1px solid #d9d9d9;
+    border-left-width: 0;
+    border-right-width: 0;
+    padding: 23px 0
+}
+
+.invoice-payment-details p {
+    margin-bottom: .538462rem
+}
+
+.invoice-message .title {
+    display: block;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #545454;
+    font-size: 1.23077rem
+}
+
+@media (max-width: 575.98px) {
+    .invoice-message .title {
+        font-size:1.077rem
+    }
+}
+
+.invoice-message p {
+    font-size: 1.23077rem;
+    color: #999;
+    line-height: 1.6
+}
+
+@media (max-width: 575.98px) {
+    .invoice-message p {
+        font-size:1rem
+    }
+}
+
+.invoice-footer {
+    text-align: right
+}
+
+@media (max-width: 575.98px) {
+    .invoice-footer {
+        text-align:center
+    }
+}
+</style>
+<body>
+    <div class="main-content container">
+<div class="row invoice">
+  <div class="col-md-3 invoice-aside">
+    <div class="invoice-logo"></div>
+    <div class="invoice-data">
+      <div class="invoice-person"><span class="name">Kristopher Donny</span><span class="position">Developer and Designer</span><span>donny@designer.co</span><span>661 Bubby Street</span><span>United States</span></div>
+      <div class="invoice-payment-direction"><i class="icon s7-angle-down-circle"></i></div>
+      <div class="invoice-person"><span class="name">Elliot Mark</span><span class="position">CEO at BLX</span><span>ceoblx@company.co</span><span>839 Owagner Drive</span><span>United States</span></div>
+      <div class="invoice-company-info">
+        <div class="summary"><span class="title">Maisonette Company</span>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+        </div>
+        <div class="phone">
+          <ul class="list-unstyled">
+            <li>+1(535)-8999278</li>
+            <li>+1(656)-3558302</li>
+          </ul>
+        </div>
+        <div class="email">
+          <ul class="list-unstyled">
+            <li>maisonette@company.co</li>
+            <li>maisonette@support.co</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-9 invoice-content">
+    <div class="row invoice-header">
+      <div class="col-6 invoice-title"><span>Invoice</span></div>
+      <div class="col-6 invoice-order"><span class="invoice-number">Number 2308</span><span class="invoice-date">August 23, 2018</span></div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <table class="invoice-details">
+          <thead>
+            <tr>
+              <th style="width:60%">Description</th>
+              <th class="hours" style="width:17%">Hours</th>
+              <th class="amount" style="width:15%">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="description">Web design (Etiam sagittis metus sit amet mauris gravida hendrerit)</td>
+              <td class="hours">60</td>
+              <td class="amount">$4,200.00</td>
+            </tr>
+            <tr>
+              <td class="description">Responsive design (Etiam sagittis metus sit amet mauris gravida hendrerit)</td>
+              <td class="hours">10</td>
+              <td class="amount">$1,500.00</td>
+            </tr>
+            <tr>
+              <td class="description">Logo design (Cras faucibus tincidunt elit id rhoncus.)</td>
+              <td class="hours">12</td>
+              <td class="amount">$1,700.00</td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="invoice-summary">
+          <thead>
+            <tr>
+              <th>Subtotal</th>
+              <th>Discount (20%)</th>
+              <th class="total">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="amount">$7,400,00</td>
+              <td class="amount">$1,480,00</td>
+              <td class="amount total-value">$5,920</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="invoice-payment-details">
+          <p><b>Payment Method:</b> Credit card</p>
+          <p><b>Card type:</b> Mastercard</p>
+          <p><b>Number verification:</b> 4256981387</p>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 invoice-message mt-5 mb-5 mt-sm-6 mb-sm-6"><span class="title mb-4">Thank you for contacting us!</span>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas quis massa nisl. Sed fringilla turpis id mi ultrices, et faucibus ipsum aliquam.</p>
+      </div>
+    </div>
+    <div class="row invoice-footer">
+      <div class="col-md-12">
+        <button class="btn btn-space btn-secondary">Save PDF</button>
+        <button class="btn btn-space btn-secondary">Print</button>
+        <button class="btn btn-space btn-primary">Pay now</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</body>
+</html>

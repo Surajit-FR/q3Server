@@ -12,6 +12,7 @@ import userRouter from "./routes/user.route";
 import pricingRuleRouter from "./routes/pricing.route";
 import stripeRouter from "./routes/stripe.routes";
 import webhookRouter from "./routes/webhook.route"
+import squareRouter from "./routes/square.route";
 
 const app = express();
 
@@ -40,6 +41,9 @@ app.use(cookieParser());
 
 //Stripe routes
 app.use("/api/v1/stripe", stripeRouter);
+
+//Square routes
+app.use('/api/v1/square',squareRouter)
 
 //API routes
 app.use("/api/v1/auth", authRouter);
