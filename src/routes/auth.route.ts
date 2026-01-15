@@ -9,6 +9,7 @@ import {
   forgetPassword,
   resetPassword,
   verifyServiceProvider,
+  banUser,
 } from "../controller/auth/auth.controller";
 import { sendMailController, verifyEmail } from "../../utils/sendEmail";
 import { sendOTP, verifyOTP } from "../controller/otp.controller";
@@ -22,6 +23,7 @@ import { getCardValue } from "../controller/user.controller";
 import { storeFcmToken } from "../../utils/sendPushNotification.utils";
 
 const router: Router = express.Router();
+
 
 //save-fcm
 router.route("/store-fcm-token").post(storeFcmToken);
@@ -81,6 +83,13 @@ router.route("/logout").post(
   // rateLimiter,
   [VerifyJWTToken],
   logoutUser
+);
+
+//ban customer
+router.route("/ban-customer").post(
+  [VerifyJWTToken],
+  verifyUserType(["SuperAdmin"]),
+  banUser
 );
 
 // router.route('/save-fcm-token').post(

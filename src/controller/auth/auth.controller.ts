@@ -22,6 +22,7 @@ import {
 } from "../../config/config";
 import OTPModel from "../../models/otp.model";
 import additionalInfoModel from "../../models/additionalInfo.model";
+import towingServiceBookingModel from "../../models/towingServiceBooking.model";
 const accountSid = TWILIO_ACCOUNT_SID;
 const authToken = TWILIO_AUTH_TOKEN;
 let client = twilio(accountSid, authToken);
@@ -257,10 +258,16 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
   // console.log(user);
   // console.log(user.isOTPVerified);
 
-  if (
-    !user.isOTPVerified
-    || !user.isVerified
-  ) {
+  if (!user.isBan) {
+    return handleResponse(
+      res,
+      "error",
+      400,
+      "",
+      "Your account is banned!"
+    );
+  }
+  if (!user.isOTPVerified || !user.isVerified || !user.isBan) {
     return handleResponse(
       res,
       "error",
@@ -668,6 +675,71 @@ export const verifyServiceProvider = asyncHandler(
       ? "Service Provider profile verified successfully."
       : "Service Provider profile made unverified.";
 
-    return handleResponse(res,"success", 200, {}, message);
+    return handleResponse(res, "success", 200, {}, message);
+  }
+);
+
+export const banUser = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    const { isBan, userId } = req.body;
+    if (isBan) {
+      const prevOngoigServices = await towingServiceBookingModel.aggregate([
+        {
+          $match: {
+            userId: new mongoose.Types.ObjectId(userId),
+            $or: [
+              { serviceProgess: "ServiceAccepted" },
+              { serviceProgess: "ServiceStarted" },
+            ],
+          },
+        },
+      ]);
+
+      if (prevOngoigServices && prevOngoigServices.length > 0) {
+        return handleResponse(
+          res,
+          "error",
+          400,
+          "There is a service in progress, you can not ban this user"
+        );
+      }
+
+      const banUser = await UserModel.findOneAndUpdate(
+        {
+          _id: userId,
+        },
+        {
+          $set: {
+            isBan,
+            accessToken: "",
+          },
+        }
+      );
+      return handleResponse(
+        res,
+        "success",
+        200,
+        "",
+        "Successfully banned the user"
+      );
+    } else {
+      const banUser = await UserModel.findOneAndUpdate(
+        {
+          _id: userId,
+        },
+        {
+          $set: {
+            isBan,
+          },
+        }
+      );
+      return handleResponse(
+        res,
+        "success",
+        200,
+        "",
+        "Successfully unbanned the user"
+      );
+    }
   }
 );

@@ -90,6 +90,10 @@ const UserSchema: Schema<IUser> = new Schema(
       type: Boolean,
       default: false,
     },
+    isBan: {
+      type: Boolean,
+      default: false,
+    },
     geoLocation: {
       type: {
         type: String,

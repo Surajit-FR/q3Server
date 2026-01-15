@@ -28,6 +28,7 @@ export interface IUser extends Document {
   generateAccessToken(): string;
   generateRefreshToken(): string;
   isDeleted?: boolean;
+  isBan?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
   geoLocation: IGeoJSONPoint;
