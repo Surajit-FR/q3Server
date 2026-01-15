@@ -18,6 +18,7 @@ const user_route_1 = __importDefault(require("./routes/user.route"));
 const pricing_route_1 = __importDefault(require("./routes/pricing.route"));
 const stripe_routes_1 = __importDefault(require("./routes/stripe.routes"));
 const webhook_route_1 = __importDefault(require("./routes/webhook.route"));
+const square_route_1 = __importDefault(require("./routes/square.route"));
 const app = (0, express_1.default)();
 exports.app = app;
 //  CORS Middleware
@@ -39,6 +40,8 @@ app.use(express_1.default.static("public"));
 app.use((0, cookie_parser_1.default)());
 //Stripe routes
 app.use("/api/v1/stripe", stripe_routes_1.default);
+//Square routes
+app.use('/api/v1/square', square_route_1.default);
 //API routes
 app.use("/api/v1/auth", auth_route_1.default);
 app.use("/api/v1/", upload_routes_1.default);

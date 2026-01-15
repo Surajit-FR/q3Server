@@ -51,6 +51,8 @@ router
 router.route("/logout").post(
 // rateLimiter,
 [userAuth_1.VerifyJWTToken], auth_controller_1.logoutUser);
+//ban customer
+router.route("/ban-customer").post([userAuth_1.VerifyJWTToken], (0, userAuth_1.verifyUserType)(["SuperAdmin"]), auth_controller_1.banUser);
 // router.route('/save-fcm-token').post(
 //     rateLimiter,
 //     [VerifyJWTToken],

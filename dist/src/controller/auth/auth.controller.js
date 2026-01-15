@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyServiceProvider = exports.resetPassword = exports.forgetPassword = exports.logoutUser = exports.refreshAccessToken = exports.CheckJWTTokenExpiration = exports.loginUser = exports.completeRegistration = exports.startRegistration = exports.cookieOption = exports.fetchUserData = void 0;
+exports.banUser = exports.verifyServiceProvider = exports.resetPassword = exports.forgetPassword = exports.logoutUser = exports.refreshAccessToken = exports.CheckJWTTokenExpiration = exports.loginUser = exports.completeRegistration = exports.startRegistration = exports.cookieOption = exports.fetchUserData = void 0;
 const user_model_1 = __importDefault(require("../../models/user.model"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const asyncHandler_utils_1 = require("../../../utils/asyncHandler.utils");
@@ -30,6 +30,7 @@ const twilio_1 = __importDefault(require("twilio"));
 const config_1 = require("../../config/config");
 const otp_model_1 = __importDefault(require("../../models/otp.model"));
 const additionalInfo_model_2 = __importDefault(require("../../models/additionalInfo.model"));
+const towingServiceBooking_model_1 = __importDefault(require("../../models/towingServiceBooking.model"));
 const accountSid = config_1.TWILIO_ACCOUNT_SID;
 const authToken = config_1.TWILIO_AUTH_TOKEN;
 let client = (0, twilio_1.default)(accountSid, authToken);
@@ -189,8 +190,10 @@ exports.loginUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __await
     }
     // console.log(user);
     // console.log(user.isOTPVerified);
-    if (!user.isOTPVerified
-        || !user.isVerified) {
+    if (!user.isBan) {
+        return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Your account is banned!");
+    }
+    if (!user.isOTPVerified || !user.isVerified || !user.isBan) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Your account is not verified");
     }
     if (userType && !userType.includes(user.userType)) {
@@ -451,4 +454,42 @@ exports.verifyServiceProvider = (0, asyncHandler_utils_1.asyncHandler)((req, res
         ? "Service Provider profile verified successfully."
         : "Service Provider profile made unverified.";
     return (0, response_utils_1.handleResponse)(res, "success", 200, {}, message);
+}));
+exports.banUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { isBan, userId } = req.body;
+    if (isBan) {
+        const prevOngoigServices = yield towingServiceBooking_model_1.default.aggregate([
+            {
+                $match: {
+                    userId: new mongoose_1.default.Types.ObjectId(userId),
+                    $or: [
+                        { serviceProgess: "ServiceAccepted" },
+                        { serviceProgess: "ServiceStarted" },
+                    ],
+                },
+            },
+        ]);
+        if (prevOngoigServices && prevOngoigServices.length > 0) {
+            return (0, response_utils_1.handleResponse)(res, "error", 400, "There is a service in progress, you can not ban this user");
+        }
+        const banUser = yield user_model_1.default.findOneAndUpdate({
+            _id: userId,
+        }, {
+            $set: {
+                isBan,
+                accessToken: "",
+            },
+        });
+        return (0, response_utils_1.handleResponse)(res, "success", 200, "", "Successfully banned the user");
+    }
+    else {
+        const banUser = yield user_model_1.default.findOneAndUpdate({
+            _id: userId,
+        }, {
+            $set: {
+                isBan,
+            },
+        });
+        return (0, response_utils_1.handleResponse)(res, "success", 200, "", "Successfully unbanned the user");
+    }
 }));

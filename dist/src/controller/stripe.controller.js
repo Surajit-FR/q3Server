@@ -17,6 +17,7 @@ const stripe_1 = __importDefault(require("stripe"));
 const config_1 = require("../config/config");
 const user_model_1 = __importDefault(require("../models/user.model"));
 const qrcode_1 = __importDefault(require("qrcode"));
+const square_1 = require("../config/square");
 const stripe = new stripe_1.default(config_1.STRIPE_SECRET_KEY, {
     apiVersion: "2024-09-30.acacia",
 });
@@ -88,3 +89,4 @@ const createCheckoutsession = (req, res) => __awaiter(void 0, void 0, void 0, fu
     catch (error) { }
 });
 exports.createCheckoutsession = createCheckoutsession;
+(0, square_1.getLocations)();

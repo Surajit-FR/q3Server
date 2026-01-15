@@ -4,8 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const squareWebhook_controller_1 = require("../controller/squareWebhook.controller");
+const userAuth_1 = require("../middlewares/auth/userAuth");
+const square_controller_1 = require("../controller/square.controller");
 const router = express_1.default.Router();
-//STRIPE WEBHOOK ROUTE
-router.post("/webhook", express_1.default.raw({ type: "application/json" }), squareWebhook_controller_1.squareWebhook);
+//STRIPE API ROUTES
+router.use(userAuth_1.VerifyJWTToken);
+router.post("/create-checkout", square_controller_1.createSquareCheckoutsession);
 exports.default = router;

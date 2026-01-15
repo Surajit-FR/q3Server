@@ -142,8 +142,22 @@ exports.getAllCustomer = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __
             $match: matchCriteria,
         },
         {
+            $lookup: {
+                from: "towingservicebookings",
+                foreignField: "userId",
+                localField: "_id",
+                as: "bookedService"
+            }
+        },
+        {
+            $addFields: {
+                totalBookedServices: { $size: "$bookedService" }
+            }
+        },
+        {
             $project: {
                 password: 0,
+                bookedService: 0,
                 stripeCustomerId: 0,
                 accessToken: 0,
                 fcmToken: 0,
@@ -190,6 +204,19 @@ exports.getAllProviders = (0, asyncHandler_utils_1.asyncHandler)((req, res) => _
         },
         {
             $lookup: {
+                from: "towingservicebookings",
+                foreignField: "serviceProviderId",
+                localField: "_id",
+                as: "bookedService"
+            }
+        },
+        {
+            $addFields: {
+                totalBookedServices: { $size: "$bookedService" }
+            }
+        },
+        {
+            $lookup: {
                 from: "additionalinfos",
                 foreignField: "userId",
                 localField: "_id",
@@ -210,6 +237,7 @@ exports.getAllProviders = (0, asyncHandler_utils_1.asyncHandler)((req, res) => _
                 fcmToken: 0,
                 __v: 0,
                 "additionalInfo.__v": 0,
+                bookedService: 0,
             },
         },
         { $sort: sortCriteria },
