@@ -11,6 +11,7 @@ const router = express_1.default.Router();
 router.route("/fetch-single-user").get(user_controller_1.getSingleUser);
 router.route("/fetch-customers").get(user_controller_1.getAllCustomer);
 router.route("/fetch-poviders").get(user_controller_1.getAllProviders);
+router.route("/fetch-top-performing-poviders").get(towingServiceBooking_controller_1.fetchTopPerformerSPs);
 router.use(userAuth_1.VerifyJWTToken);
 router.route("/give-rating").post((0, userAuth_1.verifyUserType)(["Customer"]), user_controller_1.giveRating);
 router.route("/update-sp").post((0, userAuth_1.verifyUserType)(["ServiceProvider"]), user_controller_1.updateSp);

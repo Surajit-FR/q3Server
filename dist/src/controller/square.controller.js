@@ -34,7 +34,7 @@ const createSquareCheckoutsession = (req, res) => __awaiter(void 0, void 0, void
                 .status(404)
                 .json({ success: false, message: "User not found" });
         const session = yield client.checkout.paymentLinks.create({
-            idempotencyKey: crypto.randomUUID(),
+            idempotencyKey: String(serviceId),
             quickPay: {
                 name: "Total Service Cost",
                 priceMoney: {
@@ -43,6 +43,7 @@ const createSquareCheckoutsession = (req, res) => __awaiter(void 0, void 0, void
                 },
                 locationId: "L7CDHAQHZZZFX",
             },
+            // referenceId:serviceId.toString(),
         });
         const paymentUrl = ((_b = session.paymentLink) === null || _b === void 0 ? void 0 : _b.url) || "";
         const paymentQR = yield qrcode_1.default.toDataURL(paymentUrl);

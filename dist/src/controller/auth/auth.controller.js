@@ -190,10 +190,10 @@ exports.loginUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __await
     }
     // console.log(user);
     // console.log(user.isOTPVerified);
-    if (!user.isBan) {
+    if (user.isBan) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Your account is banned!");
     }
-    if (!user.isOTPVerified || !user.isVerified || !user.isBan) {
+    if (!user.isOTPVerified || !user.isVerified || user.isBan) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Your account is not verified");
     }
     if (userType && !userType.includes(user.userType)) {

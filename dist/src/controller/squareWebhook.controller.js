@@ -39,9 +39,6 @@ const squareWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 if (payment.status === "COMPLETED") {
                     console.log("payment", payment);
                     // ✅ PAYMENT SUCCESS
-                    // 1. Verify amount & currency
-                    // 2. Match referenceId / orderId
-                    // 3. Mark service as PAID
                 }
             }
             res.json({ status: 200, msg: "Event received and verified" });

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchTransactions = exports.fetchOngoingServices = exports.fetchCustomersTotalServices = exports.verifyServiceCode = exports.fetchAssociatedCustomer = exports.previewTowingService = exports.cancelServiceBySP = exports.fetchSingleService = exports.fetchTotalServiceProgresswiseBySp = exports.fetchTotalServiceByAdmin = exports.getUserServiceDetilsByState = exports.getSavedDestination = exports.handleServiceRequestState = exports.acceptServiceRequest = exports.cancelServiceRequestByCustomer = exports.declineServicerequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
+exports.fetchTopPerformerSPs = exports.fetchTransactions = exports.fetchOngoingServices = exports.fetchCustomersTotalServices = exports.verifyServiceCode = exports.fetchAssociatedCustomer = exports.previewTowingService = exports.cancelServiceBySP = exports.fetchSingleService = exports.fetchTotalServiceProgresswiseBySp = exports.fetchTotalServiceByAdmin = exports.getUserServiceDetilsByState = exports.getSavedDestination = exports.handleServiceRequestState = exports.acceptServiceRequest = exports.cancelServiceRequestByCustomer = exports.declineServicerequest = exports.fetchTowingServiceRequest = exports.bookTowingService = void 0;
 const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
 const response_utils_1 = require("../../utils/response.utils");
 const towingServiceBooking_model_1 = __importDefault(require("../models/towingServiceBooking.model"));
@@ -1229,11 +1229,11 @@ exports.fetchCustomersTotalServices = (0, asyncHandler_utils_1.asyncHandler)((re
 }));
 exports.fetchOngoingServices = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    const customerId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const totalOngoingServices = yield towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
-                userId: customerId,
+                serviceProviderId: userId,
                 $or: [
                     { serviceProgess: "Booked" },
                     { serviceProgess: "ServiceAccepted" },
@@ -1419,4 +1419,51 @@ exports.fetchTransactions = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
         },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, totalTransactions, "Total transactions fetched successfully");
+}));
+exports.fetchTopPerformerSPs = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const totalOngoingServices = yield towingServiceBooking_model_1.default.aggregate([
+        {
+            $match: {
+                serviceProgess: "ServiceCompleted",
+                isPaymentComplete: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                foreignField: "_id",
+                localField: "serviceProviderId",
+                as: "sp_details",
+            },
+        },
+        {
+            $unwind: {
+                preserveNullAndEmptyArrays: true,
+                path: "$sp_details",
+            },
+        },
+        {
+            $addFields: {
+                sp_fullName: "$sp_details.fullName",
+                sp_avatar: "$sp_details.avatar",
+                sp_phoneNumber: "$sp_details.phone",
+                towing_cost: "$pricing.total",
+            },
+        },
+        {
+            $sort: {
+                towing_cost: -1,
+            },
+        },
+        { $limit: 10 },
+        {
+            $project: {
+                sp_fullName: 1,
+                sp_avatar: 1,
+                sp_phoneNumber: 1,
+                towing_cost: 1,
+            },
+        },
+    ]);
+    return (0, response_utils_1.handleResponse)(res, "success", 200, totalOngoingServices, "Service requests fetched successfully");
 }));
