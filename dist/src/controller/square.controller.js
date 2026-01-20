@@ -23,7 +23,7 @@ const client = new square_1.SquareClient({
 });
 //session for towing service payment payment
 const createSquareCheckoutsession = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c;
+    var _a, _b;
     try {
         const { amount, serviceId } = req.body;
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
@@ -32,40 +32,38 @@ const createSquareCheckoutsession = (req, res) => __awaiter(void 0, void 0, void
             return res
                 .status(404)
                 .json({ success: false, message: "User not found" });
-        const order = yield client.orders.create({
-            idempotencyKey: crypto.randomUUID(),
-            order: {
-                locationId: "L7CDHAQHZZZFX",
-                referenceId: serviceId.toString(),
-                lineItems: [
-                    {
-                        name: "Total Service Cost",
-                        quantity: "1",
-                        basePriceMoney: {
-                            amount: BigInt(amount * 100),
-                            currency: "USD",
-                        },
-                    },
-                ],
-            },
-        });
+        // const order = await client.orders.create({
+        //   idempotencyKey: crypto.randomUUID(),
+        //   order: {
+        //     locationId: "L7CDHAQHZZZFX",
+        //     lineItems: [
+        //       {
+        //         name: "Total Service Cost",
+        //         quantity: "1",
+        //         basePriceMoney: {
+        //           amount: BigInt(amount * 100),
+        //           currency: "USD",
+        //         },
+        //       },
+        //     ],
+        //     metadata: {
+        //       serviceId: serviceId.toString(),
+        //     },    
+        //   },
+        // });
         const session = yield client.checkout.paymentLinks.create({
             idempotencyKey: crypto.randomUUID(),
-            // quickPay: {
-            //   name: "Total Service Cost",
-            //   priceMoney: {
-            //     amount: BigInt(amount * 100),
-            //     currency: "USD",
-            //   },
-            //   locationId: "L7CDHAQHZZZFX",
-            // },
-            order: {
+            quickPay: {
+                name: "Total Service Cost",
+                priceMoney: {
+                    amount: BigInt(amount * 100),
+                    currency: "USD",
+                },
                 locationId: "L7CDHAQHZZZFX",
-                id: (_b = order === null || order === void 0 ? void 0 : order.order) === null || _b === void 0 ? void 0 : _b.id
-            }
+            },
         });
         console.log({ session });
-        const paymentUrl = ((_c = session.paymentLink) === null || _c === void 0 ? void 0 : _c.url) || "";
+        const paymentUrl = ((_b = session.paymentLink) === null || _b === void 0 ? void 0 : _b.url) || "";
         const paymentQR = yield qrcode_1.default.toDataURL(paymentUrl);
         res.json({ paymentQR });
     }
