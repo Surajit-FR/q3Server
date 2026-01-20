@@ -44,15 +44,21 @@ export const createSquareCheckoutsession = async (
 
     const session = await client.checkout.paymentLinks.create({
       idempotencyKey: crypto.randomUUID(),
-      quickPay: {
-        name: "Total Service Cost",
-        priceMoney: {
-          amount: BigInt(amount * 100),
-          currency: "USD",
-        },
-        locationId: "L7CDHAQHZZZFX",
-      },
+      // quickPay: {
+      //   name: "Total Service Cost",
+      //   priceMoney: {
+      //     amount: BigInt(amount * 100),
+      //     currency: "USD",
+      //   },
+      //   locationId: "L7CDHAQHZZZFX",
+      // },
+      order:{
+         locationId: "L7CDHAQHZZZFX",
+         id:order?.order?.id
+      }
     });
+    console.log({session});
+    
     const paymentUrl = session.paymentLink?.url || "";
     const paymentQR = await QRCode.toDataURL(paymentUrl);
     res.json({ paymentQR });
