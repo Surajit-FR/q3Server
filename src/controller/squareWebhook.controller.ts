@@ -1,9 +1,17 @@
 import express, { Response } from "express";
+import { SQUARE_ACCESS_TOKEN } from "../config/config";
+import { SquareClient, SquareEnvironment } from "square";
 import { WebhooksHelper } from "square"; // Use 'square' for the new SDK
 import {
   SQUARE_SIGNATURE_KEY,
   SQUARE_NOTIFICATION_URL,
 } from "../config/config"; // Replace with the key from Step 2
+import towingServiceBookingModel from "../models/towingServiceBooking.model";
+
+const client = new SquareClient({
+  environment: SquareEnvironment.Sandbox,
+  token: SQUARE_ACCESS_TOKEN,
+});
 
 const app = express();
 app.use(express.raw({ type: "application/json" }));
@@ -31,9 +39,17 @@ export const squareWebhook = async (req: any, res: Response) => {
 
         if (payment.status === "COMPLETED") {
           console.log("payment", payment);
+          const response = await client.orders.get({
+            orderId: payment?.order_id as string,
+          });
+          console.log("api hitt", response);
+          const serviceId = response?.order?.referenceId;
 
-          // ✅ PAYMENT SUCCESS
-          
+          await towingServiceBookingModel.findByIdAndUpdate(serviceId, {
+            isPaymentComplete: true,
+            paymentIntentId: payment.id,
+            serviceProgess: "ServiceCompleted",
+          });
         }
       }
 
