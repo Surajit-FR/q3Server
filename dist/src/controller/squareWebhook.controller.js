@@ -14,21 +14,29 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.squareWebhook = void 0;
 const express_1 = __importDefault(require("express"));
-const square_1 = require("square"); // Use 'square' for the new SDK
-const config_1 = require("../config/config"); // Replace with the key from Step 2
+const config_1 = require("../config/config");
+const square_1 = require("square");
+const square_2 = require("square"); // Use 'square' for the new SDK
+const config_2 = require("../config/config"); // Replace with the key from Step 2
+const towingServiceBooking_model_1 = __importDefault(require("../models/towingServiceBooking.model"));
+const client = new square_1.SquareClient({
+    environment: square_1.SquareEnvironment.Sandbox,
+    token: config_1.SQUARE_ACCESS_TOKEN,
+});
 const app = (0, express_1.default)();
 app.use(express_1.default.raw({ type: "application/json" }));
 const squareWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     console.log("webhook runs");
     try {
         const signature = req.headers["x-square-hmacsha256-signature"];
         const rawBody = req.body; // The raw body as a Buffer
         // Verify the signature
-        const isVerified = yield square_1.WebhooksHelper.verifySignature({
+        const isVerified = yield square_2.WebhooksHelper.verifySignature({
             requestBody: rawBody,
             signatureHeader: signature,
-            signatureKey: config_1.SQUARE_SIGNATURE_KEY,
-            notificationUrl: config_1.SQUARE_NOTIFICATION_URL,
+            signatureKey: config_2.SQUARE_SIGNATURE_KEY,
+            notificationUrl: config_2.SQUARE_NOTIFICATION_URL,
         });
         if (isVerified) {
             // Process the event
@@ -38,7 +46,16 @@ const squareWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 const payment = event.data.object.payment;
                 if (payment.status === "COMPLETED") {
                     console.log("payment", payment);
-                    // ✅ PAYMENT SUCCESS
+                    const response = yield client.orders.get({
+                        orderId: payment === null || payment === void 0 ? void 0 : payment.order_id,
+                    });
+                    console.log("api hitt", response);
+                    const serviceId = (_a = response === null || response === void 0 ? void 0 : response.order) === null || _a === void 0 ? void 0 : _a.referenceId;
+                    yield towingServiceBooking_model_1.default.findByIdAndUpdate(serviceId, {
+                        isPaymentComplete: true,
+                        paymentIntentId: payment.id,
+                        serviceProgess: "ServiceCompleted",
+                    });
                 }
             }
             res.json({ status: 200, msg: "Event received and verified" });
