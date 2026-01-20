@@ -12,12 +12,11 @@ const client = new SquareClient({
 //session for towing service payment payment
 export const createSquareCheckoutsession = async (
   req: CustomRequest,
-  res: any
+  res: any,
 ) => {
   try {
     const { amount, serviceId } = req.body;
     const userId = req.user?._id;
-    const currency = "usd";
 
     const user = await UserModel.findById(userId);
     if (!user)
@@ -25,8 +24,26 @@ export const createSquareCheckoutsession = async (
         .status(404)
         .json({ success: false, message: "User not found" });
 
+    const order = await client.orders.create({
+      idempotencyKey: crypto.randomUUID(),
+      order: {
+        locationId: "L7CDHAQHZZZFX",
+        referenceId: serviceId.toString(),
+        lineItems: [
+          {
+            name: "Total Service Cost",
+            quantity: "1",
+            basePriceMoney: {
+              amount: BigInt(amount * 100),
+              currency: "USD",
+            },
+          },
+        ],
+      },
+    });
+
     const session = await client.checkout.paymentLinks.create({
-      idempotencyKey: String(serviceId),
+      idempotencyKey: crypto.randomUUID(),
       quickPay: {
         name: "Total Service Cost",
         priceMoney: {
@@ -35,10 +52,8 @@ export const createSquareCheckoutsession = async (
         },
         locationId: "L7CDHAQHZZZFX",
       },
-      // referenceId:serviceId.toString(),
     });
     const paymentUrl = session.paymentLink?.url || "";
-
     const paymentQR = await QRCode.toDataURL(paymentUrl);
     res.json({ paymentQR });
   } catch (error) {}
