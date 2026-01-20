@@ -51,11 +51,13 @@ const squareWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     });
                     console.log("api hitt", response);
                     const serviceId = (_a = response === null || response === void 0 ? void 0 : response.order) === null || _a === void 0 ? void 0 : _a.referenceId;
-                    yield towingServiceBooking_model_1.default.findByIdAndUpdate(serviceId, {
+                    console.log("api serviceId", serviceId);
+                    const service = yield towingServiceBooking_model_1.default.findByIdAndUpdate(serviceId, {
                         isPaymentComplete: true,
                         paymentIntentId: payment.id,
                         serviceProgess: "ServiceCompleted",
                     });
+                    console.log({ service });
                 }
             }
             res.json({ status: 200, msg: "Event received and verified" });

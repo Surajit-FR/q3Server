@@ -23,7 +23,7 @@ const client = new square_1.SquareClient({
 });
 //session for towing service payment payment
 const createSquareCheckoutsession = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c;
     try {
         const { amount, serviceId } = req.body;
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
@@ -51,16 +51,21 @@ const createSquareCheckoutsession = (req, res) => __awaiter(void 0, void 0, void
         });
         const session = yield client.checkout.paymentLinks.create({
             idempotencyKey: crypto.randomUUID(),
-            quickPay: {
-                name: "Total Service Cost",
-                priceMoney: {
-                    amount: BigInt(amount * 100),
-                    currency: "USD",
-                },
+            // quickPay: {
+            //   name: "Total Service Cost",
+            //   priceMoney: {
+            //     amount: BigInt(amount * 100),
+            //     currency: "USD",
+            //   },
+            //   locationId: "L7CDHAQHZZZFX",
+            // },
+            order: {
                 locationId: "L7CDHAQHZZZFX",
-            },
+                id: (_b = order === null || order === void 0 ? void 0 : order.order) === null || _b === void 0 ? void 0 : _b.id
+            }
         });
-        const paymentUrl = ((_b = session.paymentLink) === null || _b === void 0 ? void 0 : _b.url) || "";
+        console.log({ session });
+        const paymentUrl = ((_c = session.paymentLink) === null || _c === void 0 ? void 0 : _c.url) || "";
         const paymentQR = yield qrcode_1.default.toDataURL(paymentUrl);
         res.json({ paymentQR });
     }
