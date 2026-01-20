@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { asyncHandler } from "../../utils/asyncHandler.utils";
 import { CustomRequest } from "../../types/commonType";
 import { handleResponse } from "../../utils/response.utils";
@@ -1611,11 +1611,11 @@ export const fetchCustomersTotalServices = asyncHandler(
 
 export const fetchOngoingServices = asyncHandler(
   async (req: CustomRequest, res: Response) => {
-    const customerId = req.user?._id;
+    const userId = req.user?._id;
     const totalOngoingServices = await towingServiceBookingModel.aggregate([
       {
         $match: {
-          userId: customerId,
+          serviceProviderId: userId,
           $or: [
             { serviceProgess: "Booked" },
             { serviceProgess: "ServiceAccepted" },
@@ -1804,7 +1804,7 @@ export const fetchTransactions = asyncHandler(
           paidBy: "$customer_fullName",
           receivedBy: "$sp_fullName",
           towing_cost: 1,
-          paidAt:"$updatedAt",
+          paidAt: "$updatedAt",
           // customer_fullName: 1,
         },
       },
@@ -1815,6 +1815,62 @@ export const fetchTransactions = asyncHandler(
       200,
       totalTransactions,
       "Total transactions fetched successfully"
+    );
+  }
+);
+
+export const fetchTopPerformerSPs = asyncHandler(
+  async (req: Request, res: Response) => {
+    const totalOngoingServices = await towingServiceBookingModel.aggregate([
+      {
+        $match: {
+          serviceProgess: "ServiceCompleted",
+          isPaymentComplete: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          foreignField: "_id",
+          localField: "serviceProviderId",
+          as: "sp_details",
+        },
+      },
+      {
+        $unwind: {
+          preserveNullAndEmptyArrays: true,
+          path: "$sp_details",
+        },
+      },
+      {
+        $addFields: {
+          sp_fullName: "$sp_details.fullName",
+          sp_avatar: "$sp_details.avatar",
+          sp_phoneNumber: "$sp_details.phone",
+          towing_cost: "$pricing.total",
+        },
+      },
+      {
+        $sort: {
+          towing_cost: -1,
+        },
+      },
+      { $limit: 10 },
+      {
+        $project: {
+          sp_fullName: 1,
+          sp_avatar: 1,
+          sp_phoneNumber: 1,
+          towing_cost: 1,
+        },
+      },
+    ]);
+    return handleResponse(
+      res,
+      "success",
+      200,
+      totalOngoingServices,
+      "Service requests fetched successfully"
     );
   }
 );

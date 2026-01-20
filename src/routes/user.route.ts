@@ -8,13 +8,14 @@ import {
   updateCustomer,
 } from "../controller/user.controller";
 import { VerifyJWTToken, verifyUserType } from "../middlewares/auth/userAuth";
-import { getSavedDestination } from "../controller/towingServiceBooking.controller";
+import { fetchTopPerformerSPs, getSavedDestination } from "../controller/towingServiceBooking.controller";
 
 const router: Router = express.Router();
 
 router.route("/fetch-single-user").get(getSingleUser);
 router.route("/fetch-customers").get(getAllCustomer);
 router.route("/fetch-poviders").get(getAllProviders);
+router.route("/fetch-top-performing-poviders").get(fetchTopPerformerSPs);
 
 router.use(VerifyJWTToken);
 
