@@ -44,12 +44,17 @@ export const squareWebhook = async (req: any, res: Response) => {
           });
           console.log("api hitt", response);
           const serviceId = response?.order?.referenceId;
+          console.log("api serviceId", serviceId);
 
-          await towingServiceBookingModel.findByIdAndUpdate(serviceId, {
-            isPaymentComplete: true,
-            paymentIntentId: payment.id,
-            serviceProgess: "ServiceCompleted",
-          });
+          const service = await towingServiceBookingModel.findByIdAndUpdate(
+            serviceId,
+            {
+              isPaymentComplete: true,
+              paymentIntentId: payment.id,
+              serviceProgess: "ServiceCompleted",
+            },
+          );
+          console.log({ service });
         }
       }
 
