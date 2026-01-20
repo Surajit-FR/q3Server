@@ -1,21 +1,6 @@
-export const TWILIO_ACCOUNT_SID = "ACfd59c31488716b5256b8a2fa10804b80";
-export const TWILIO_AUTH_TOKEN = "def209ba8225d5db366af65eba1177a4";
-export const TWILIO_PHONE_NUMBER = "+13018880421";
-export const STRIPE_SECRET_KEY ="sk_test_51QD1hlLLbJPDR1xRNXBN7HxyJ3frpc9Q1wkvYi63oRTuXvFnNC7R9VkfCQysQYMBqFNxGdHA2C852jflahGUygds00o57KpNmN";
-export const STRIPE_WEBHOOK_SECRET = "whsec_oycA6bq2oNKW1VdQnFJ2o4g21aeD27nI";
-export const FIREBASE_TYPE = "service_account";
-export const FIREBASE_PROJECT_ID = "q3car-7b654";
-export const FIREBASE_PRIVATE_KEY_ID ="aa99b2b53a9384c17a2e0e36acee7bad456eadac";
-export const FIREBASE_PRIVATE_KEY ="-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC7n9mFu+yh+w7k\nKDYwSwXq/ZYGAO/JqQg3PYr58mUwzupiGyP345ZwJmHJFB/O7Lee27coZJyETgMz\nenh+ZN8nKjdHibSFGxKBw1rVzzBEkLzQQfg7I5nu+kvbd0HHwATqVj8gq8d1Ed1Q\nbpVyUaBUuHR1JfCX5KZ+CKFnHc58jCMEZtp34mvG0L5H9ke1co/d/oyFUAqrHy2H\nlfO+PPRGeJ7WxtyWqMRB39YyPDG8LRwwOEvoBTljv/4K3ZF5OOdoy5xlXYfmlk+E\nat7R9ODS0G/X4wuQ5lIrQdmM22f+5q+bzrh9WNhZIztyljUr9iZYLcVPg22qetPX\nv7Ts6/GdAgMBAAECggEAAJz2SC5uiLL6KqW0/ksTIwr0GriVuq96OY/9FxxYgfnT\nIJdHx/oZlkE8hZHdbr7YShpxX/OVjVsh6IuoaXqpPgawdTk5JUw1hHC1KHNhDCr6\n6vqkNdvubK5VtssOJHnMqlALgcRTRl8qEtFhsfob+jA7dTHhYOWxjkI3S3p4n8Xm\nCAbYjvNK6nDKEpkSwuqEikRleMOBu0C69ua8HDiRQTaW8hfi/Yc5k30Q5lP/Szlv\nzDq0CqcOSHYiRL8b3C9CgTRlQyq3QsBC2KKDm50mLJL9j4WXz7VCM8gV7CICkLd2\nB9Z61YlNTulKccGGg8+VrqO97VT2B+zBDOPFtH0C0wKBgQDcfTNA6rdt2eV5pSSu\naj4oZmfCB9tZ9Carw0ZOpAVn54G4Vlp9cDMXG8E/VjWlpK4wh9si4TeBbjLbbTUE\npcAkgNqs/Vv+8BgD7Uqymx73x1YwBrMMLTt929RIXf2VmgSsq3dsMjKq5PunbQPP\nyXO52pvOuiYGum+RG5ENHG6KTwKBgQDZ16J27l30FYOoLrJ9N1jqA+rGtnV+M1Sv\noTWId6OOOhhhAOwsDUy2DtcAxdX9lSDchICyQ3MmTrPoYwjYk/nUeuMHcAA6HFHA\nqGz7QH1Pk4xqopXM01jbbyiXfwjQ7YR66VsTsfvt2KSprllLSH3ZmFtL9h8CqpLC\n3KsOTSTGUwKBgQCx4ujY9QUsQWHcNJpVhS3E1mnbpw8Xkd0pMpCknbwmyiZkHHdB\nQKZXfHL6sIjzrNtEGDd5+o4XhFrPoVnm9/r++F50tqvkELyvXmCnnHLtoQsuEBmg\nN1YKArNP91TBv9MJpATja9Ro//jwaQlsOLF/Ppn5vUE0qHGedskd9NRSDQKBgQC9\nbQDdIlGYmcyuRkz3DVXHyDgzKx3n64LMZgZC8KXMW0AvubmkZLw745OaHG4D39V/\na8jtOjG7MdzHSra6fZJU7bbVFNNdtJpySQLbSCyvMcJ8R3yza2RtC6/kbJah9qeo\nqZqE+dPz8trcobsL97FXsWBSIWa9zs1nnLMx8Gr1+QKBgQDW5tyXUCSaLt1e1XLq\nO+1HO/2iTfVl0BNU0vWE3S7T/vlwPupsevgip+Dr0GLBhhGbN7ucKDRqQ3pDjQ5D\n+oJs/QNUn5AGpstoBrPG+ogYbRm5E8lYzukHiwxtmP2qpToLc3x5d5M9uoXRYkXF\nvm99KlDD6D2X9/7UTDqtuKGggw==\n-----END PRIVATE KEY-----\n";
-export const FIREBASE_CLIENT_EMAIL ="firebase-adminsdk-fbsvc@q3car-7b654.iam.gserviceaccount.com";
-export const FIREBASE_CLIENT_ID = "108112654393364689409";
-export const FIREBASE_AUTH_URI = "https://accounts.google.com/o/oauth2/auth";
-export const FIREBASE_TOKEN_URI = "https://oauth2.googleapis.com/token";
-export const FIREBASE_AUTH_PROVIDER_CERT_URL ="https://www.googleapis.com/oauth2/v1/certs";
-export const FIREBASE_CLIENT_CERT_URL ="https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40q3car-7b654.iam.gserviceaccount.com";
-export const FIREBASE_UNIVERSE_DOMAIN = "googleapis.com";
-export const SQUARE_ACCESS_TOKEN = "EAAAl-gIfkMaHnJY0ewSenSQTODtdYNtUdAb0mq4QTtIrt4z2RV-qkrkjH67vADP";
-export const SQUARE_TEST_APPLICATION_ID = "sandbox-sq0idb-YEelItTcem6h15b0t9TEGA";
-export const SQUARE_PROD_APPLICATION_ID = "sq0idp-W3H9ooUlERZ41CLhAtwl4g";
-export const SQUARE_SIGNATURE_KEY = "PlUEWHrtbBNGLSHGvBmIAg";
-export const SQUARE_NOTIFICATION_URL = "https://frontend.theassure.co.uk/api/v1/payment/webhook";
+export const TWILIO_ACCOUNT_SID = "";
+export const TWILIO_AUTH_TOKEN = "";
+export const TWILIO_PHONE_NUMBER = "";
+export const STRIPE_SECRET_KEY =
+  "";
+export const STRIPE_WEBHOOK_SECRET = "";
