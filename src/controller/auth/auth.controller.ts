@@ -258,7 +258,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
   // console.log(user);
   // console.log(user.isOTPVerified);
 
-  if (!user.isBan) {
+  if (user.isBan) {
     return handleResponse(
       res,
       "error",
@@ -267,7 +267,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
       "Your account is banned!"
     );
   }
-  if (!user.isOTPVerified || !user.isVerified || !user.isBan) {
+  if (!user.isOTPVerified || !user.isVerified || user.isBan) {
     return handleResponse(
       res,
       "error",

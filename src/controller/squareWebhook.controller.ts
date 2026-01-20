@@ -33,9 +33,7 @@ export const squareWebhook = async (req: any, res: Response) => {
           console.log("payment", payment);
 
           // ✅ PAYMENT SUCCESS
-          // 1. Verify amount & currency
-          // 2. Match referenceId / orderId
-          // 3. Mark service as PAID
+          
         }
       }
 

@@ -50,8 +50,8 @@ router
   .route("/fetch-customer-total-service")
   .get(verifyUserType(["Customer"]), fetchCustomersTotalServices);
 router
-  .route("/fetch-customer-ongoing-service")
-  .get(verifyUserType(["Customer"]), fetchOngoingServices);
+  .route("/fetch-ongoing-service")
+  .get(verifyUserType(["Customer", "ServiceProvider"]), fetchOngoingServices);
 
 router
   .route("/fetch-all-request")
@@ -74,7 +74,5 @@ router
 router
   .route("/fetch-transactions")
   .get(verifyUserType(["SuperAdmin"]), fetchTransactions);
-
-
 
 export default router;

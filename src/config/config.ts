@@ -18,3 +18,4 @@ export const SQUARE_ACCESS_TOKEN = "";
 export const SQUARE_TEST_APPLICATION_ID = ""; 
 export const SQUARE_SIGNATURE_KEY = ""; 
 export const SQUARE_NOTIFICATION_URL = "";
+

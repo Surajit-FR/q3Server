@@ -6,7 +6,7 @@ import UserModel from "../models/user.model";
 import { SQUARE_ACCESS_TOKEN } from "../config/config";
 const client = new SquareClient({
   environment: SquareEnvironment.Sandbox,
-  token:SQUARE_ACCESS_TOKEN,
+  token: SQUARE_ACCESS_TOKEN,
 });
 
 //session for towing service payment payment
@@ -26,15 +26,16 @@ export const createSquareCheckoutsession = async (
         .json({ success: false, message: "User not found" });
 
     const session = await client.checkout.paymentLinks.create({
-      idempotencyKey: crypto.randomUUID(),
+      idempotencyKey: String(serviceId),
       quickPay: {
         name: "Total Service Cost",
         priceMoney: {
-          amount: BigInt(amount*100),
+          amount: BigInt(amount * 100),
           currency: "USD",
         },
         locationId: "L7CDHAQHZZZFX",
       },
+      // referenceId:serviceId.toString(),
     });
     const paymentUrl = session.paymentLink?.url || "";
 
