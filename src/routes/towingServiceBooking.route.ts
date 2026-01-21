@@ -15,6 +15,7 @@ import {
   fetchCustomersTotalServices,
   fetchOngoingServices,
   fetchTransactions,
+  fetchOngoingServicesByCustomer,
 } from "../controller/towingServiceBooking.controller";
 import { VerifyJWTToken, verifyUserType } from "../middlewares/auth/userAuth";
 
@@ -51,7 +52,10 @@ router
   .get(verifyUserType(["Customer"]), fetchCustomersTotalServices);
 router
   .route("/fetch-ongoing-service")
-  .get(verifyUserType(["Customer", "ServiceProvider"]), fetchOngoingServices);
+  .get(verifyUserType(["ServiceProvider"]), fetchOngoingServices);
+router
+  .route("/fetch-ongoing-service-customer")
+  .get(verifyUserType(["Customer"]), fetchOngoingServicesByCustomer);
 
 router
   .route("/fetch-all-request")
@@ -65,7 +69,7 @@ router
   .route("/fetch-single-request")
   .get(
     verifyUserType(["ServiceProvider", "SuperAdmin", "Customer"]),
-    fetchSingleService
+    fetchSingleService,
   );
 router
   .route("/cancel-service-bysp")
