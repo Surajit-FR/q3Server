@@ -32,7 +32,10 @@ router
     .get((0, userAuth_1.verifyUserType)(["Customer"]), towingServiceBooking_controller_1.fetchCustomersTotalServices);
 router
     .route("/fetch-ongoing-service")
-    .get((0, userAuth_1.verifyUserType)(["Customer", "ServiceProvider"]), towingServiceBooking_controller_1.fetchOngoingServices);
+    .get((0, userAuth_1.verifyUserType)(["ServiceProvider"]), towingServiceBooking_controller_1.fetchOngoingServices);
+router
+    .route("/fetch-ongoing-service-customer")
+    .get((0, userAuth_1.verifyUserType)(["Customer"]), towingServiceBooking_controller_1.fetchOngoingServicesByCustomer);
 router
     .route("/fetch-all-request")
     .get((0, userAuth_1.verifyUserType)(["SuperAdmin"]), towingServiceBooking_controller_1.fetchTotalServiceByAdmin);
