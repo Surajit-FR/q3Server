@@ -16,6 +16,8 @@ export const createSquareCheckoutsession = async (
 ) => {
   try {
     const { amount, serviceId } = req.body;
+    console.log(req.body);
+
     const userId = req.user?._id;
 
     const user = await UserModel.findById(userId);
@@ -24,38 +26,41 @@ export const createSquareCheckoutsession = async (
         .status(404)
         .json({ success: false, message: "User not found" });
 
-    // const order = await client.orders.create({
-    //   idempotencyKey: crypto.randomUUID(),
-    //   order: {
-    //     locationId: "L7CDHAQHZZZFX",
-    //     lineItems: [
-    //       {
-    //         name: "Total Service Cost",
-    //         quantity: "1",
-    //         basePriceMoney: {
-    //           amount: BigInt(amount * 100),
-    //           currency: "USD",
-    //         },
-    //       },
-    //     ],
-    //     metadata: {
-    //       serviceId: serviceId.toString(),
-    //     },    
-    //   },
-    // });
-
     const session = await client.checkout.paymentLinks.create({
       idempotencyKey: crypto.randomUUID(),
-      quickPay: {
-        name: "Total Service Cost",
-        priceMoney: {
-          amount: BigInt(amount * 100),
-          currency: "USD",
-        },
+      order: {
         locationId: "L7CDHAQHZZZFX",
+        referenceId: serviceId.toString(),
+        lineItems: [
+          {
+            name: "Total Service Cost",
+            quantity: "1",
+            basePriceMoney: {
+              amount: BigInt(amount * 100),
+              currency: "USD",
+            },
+          },
+        ],
       },
+
+      // order: {
+      //   locationId: "L7CDHAQHZZZFX",
+      //   id: order?.order?.id,
+      // },
+      // quickPay: {
+      //   name: "Total Service Cost",
+      //   priceMoney: {
+      //     amount: BigInt(amount * 100),
+      //     currency: "USD",
+      //   },
+      //   locationId: "L7CDHAQHZZZFX",
+      // },
     });
     console.log({ session });
+    const response = await client.orders.get({
+      orderId: session?.paymentLink?.orderId as string,
+    });
+    console.log({ response });
 
     const paymentUrl = session.paymentLink?.url || "";
     const paymentQR = await QRCode.toDataURL(paymentUrl);
