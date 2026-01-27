@@ -571,7 +571,7 @@ export const acceptServiceRequest = asyncHandler(
       );
       sendPushNotification(
         customerDetails?._id as string,
-        "Your service is accepted by our service provider.",
+        "Your service is accepted by our service provider....",
         ""
       );
 
