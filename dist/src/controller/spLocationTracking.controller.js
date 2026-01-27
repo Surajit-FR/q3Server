@@ -43,11 +43,10 @@ exports.updateSPLocation = (0, asyncHandler_utils_1.asyncHandler)((req, res) => 
     return (0, response_utils_1.handleResponse)(res, "success", 200, updatedDoc, "SP location updated");
 }));
 exports.getSPLocation = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const { serviceId } = req.params;
+    const { serviceId } = req.body;
+    console.log(req.body, "fetch sp locats while tracking");
     const locationRecord = yield spLocationTracking_model_1.default.findOne({
         serviceId,
-        spId: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
     }).lean();
     if (!locationRecord) {
         return res.status(404).json({

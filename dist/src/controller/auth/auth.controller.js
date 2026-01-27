@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.banUser = exports.verifyServiceProvider = exports.resetPassword = exports.forgetPassword = exports.logoutUser = exports.refreshAccessToken = exports.CheckJWTTokenExpiration = exports.loginUser = exports.completeRegistration = exports.startRegistration = exports.cookieOption = exports.fetchUserData = void 0;
+exports.deletAccount = exports.deleteuser = exports.banUser = exports.verifyServiceProvider = exports.resetPassword = exports.forgetPassword = exports.logoutUser = exports.refreshAccessToken = exports.CheckJWTTokenExpiration = exports.loginUser = exports.completeRegistration = exports.startRegistration = exports.cookieOption = exports.fetchUserData = void 0;
 const user_model_1 = __importDefault(require("../../models/user.model"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const asyncHandler_utils_1 = require("../../../utils/asyncHandler.utils");
@@ -34,6 +34,7 @@ const towingServiceBooking_model_1 = __importDefault(require("../../models/towin
 const accountSid = config_1.TWILIO_ACCOUNT_SID;
 const authToken = config_1.TWILIO_AUTH_TOKEN;
 let client = (0, twilio_1.default)(accountSid, authToken);
+const sendPushNotification_utils_1 = require("../../../utils/sendPushNotification.utils");
 // fetchUserData func.
 const fetchUserData = (userId) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("Api runs...: fetchUserData");
@@ -492,4 +493,104 @@ exports.banUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter
         });
         return (0, response_utils_1.handleResponse)(res, "success", 200, "", "Successfully unbanned the user");
     }
+}));
+exports.deleteuser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.body;
+    const userDetails = yield user_model_1.default.findById({ _id: userId }).select("userType");
+    console.log({ userDetails });
+    const userType = userDetails === null || userDetails === void 0 ? void 0 : userDetails.userType;
+    if (userType === "ServiceProvider") {
+        const prevOngoigServices = yield towingServiceBooking_model_1.default.aggregate([
+            {
+                $match: {
+                    serviceProviderId: new mongoose_1.default.Types.ObjectId(userId),
+                    $or: [
+                        { serviceProgess: "ServiceAccepted" },
+                        { serviceProgess: "ServiceStarted" },
+                    ],
+                },
+            },
+        ]);
+        if (prevOngoigServices && prevOngoigServices.length > 0) {
+            return (0, response_utils_1.handleResponse)(res, "error", 400, "There is a service in progress, you can not delete this user");
+        }
+    }
+    else if (userType === "Customer") {
+        const RunningBookedServices = yield towingServiceBooking_model_1.default.aggregate([
+            {
+                $match: {
+                    userId: new mongoose_1.default.Types.ObjectId(userId),
+                    $or: [
+                        { serviceProgess: "Booked" },
+                        { serviceProgess: "ServiceAccepted" },
+                        { serviceProgess: "ServiceStarted" },
+                    ],
+                },
+            },
+        ]);
+        if (RunningBookedServices && RunningBookedServices.length > 0) {
+            return (0, response_utils_1.handleResponse)(res, "error", 400, "There is a service in progress, you can not delete this user");
+        }
+    }
+    else {
+        return (0, response_utils_1.handleResponse)(res, "error", 400, {}, "UserType not found");
+    }
+    const updateUser = yield user_model_1.default.findOneAndUpdate({ _id: userId }, {
+        $set: {
+            isDeleted: true,
+            accessToken: "",
+        },
+    });
+    return (0, response_utils_1.handleResponse)(res, "success", 200, {}, "User deleted successfully");
+}));
+exports.deletAccount = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const { userId } = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+    const userDetails = yield user_model_1.default.findById({ _id: userId }).select("userType");
+    console.log({ userDetails });
+    const userType = userDetails === null || userDetails === void 0 ? void 0 : userDetails.userType;
+    if (userType === "ServiceProvider") {
+        const prevOngoigServices = yield towingServiceBooking_model_1.default.aggregate([
+            {
+                $match: {
+                    serviceProviderId: new mongoose_1.default.Types.ObjectId(userId),
+                    $or: [
+                        { serviceProgess: "ServiceAccepted" },
+                        { serviceProgess: "ServiceStarted" },
+                    ],
+                },
+            },
+        ]);
+        if (prevOngoigServices && prevOngoigServices.length > 0) {
+            return (0, response_utils_1.handleResponse)(res, "error", 400, "There is a service in progress, you can not delete your account");
+        }
+    }
+    else if (userType === "Customer") {
+        const RunningBookedServices = yield towingServiceBooking_model_1.default.aggregate([
+            {
+                $match: {
+                    userId: new mongoose_1.default.Types.ObjectId(userId),
+                    $or: [
+                        { serviceProgess: "Booked" },
+                        { serviceProgess: "ServiceAccepted" },
+                        { serviceProgess: "ServiceStarted" },
+                    ],
+                },
+            },
+        ]);
+        if (RunningBookedServices && RunningBookedServices.length > 0) {
+            return (0, response_utils_1.handleResponse)(res, "error", 400, "There is a service in progress, you can not delete your account");
+        }
+    }
+    else {
+        return (0, response_utils_1.handleResponse)(res, "error", 400, {}, "UserType not found");
+    }
+    const updateUser = yield user_model_1.default.findOneAndUpdate({ _id: userId }, {
+        $set: {
+            isDeleted: true,
+            accessToken: "",
+        },
+    });
+    yield sendPushNotification_utils_1.firestore.collection("fcmTokens").doc(userId).delete();
+    return (0, response_utils_1.handleResponse)(res, "success", 200, {}, "Account deleted successfully");
 }));

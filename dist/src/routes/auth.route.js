@@ -52,11 +52,23 @@ router.route("/logout").post(
 // rateLimiter,
 [userAuth_1.VerifyJWTToken], auth_controller_1.logoutUser);
 //ban customer
-router.route("/ban-customer").post([userAuth_1.VerifyJWTToken], (0, userAuth_1.verifyUserType)(["SuperAdmin"]), auth_controller_1.banUser);
+router
+    .route("/ban-customer")
+    .post([userAuth_1.VerifyJWTToken], (0, userAuth_1.verifyUserType)(["SuperAdmin"]), auth_controller_1.banUser);
+//delete customer or sp
+router
+    .route("/delete-user")
+    .post([userAuth_1.VerifyJWTToken], (0, userAuth_1.verifyUserType)(["SuperAdmin"]), auth_controller_1.deleteuser);
+//delete account by user himself
+router
+    .route("/delete-account")
+    .get([userAuth_1.VerifyJWTToken], (0, userAuth_1.verifyUserType)(["ServiceProvider", "Customer"]), auth_controller_1.deletAccount);
 // router.route('/save-fcm-token').post(
 //     rateLimiter,
 //     [VerifyJWTToken],
 //     saveFcmToken
 // );
-router.route('/get-card-value').get([userAuth_1.VerifyJWTToken], (0, userAuth_1.verifyUserType)(["SuperAdmin"]), user_controller_1.getCardValue);
+router
+    .route("/get-card-value")
+    .get([userAuth_1.VerifyJWTToken], (0, userAuth_1.verifyUserType)(["SuperAdmin"]), user_controller_1.getCardValue);
 exports.default = router;
