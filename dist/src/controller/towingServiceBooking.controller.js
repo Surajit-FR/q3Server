@@ -399,7 +399,7 @@ exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res)
         });
         console.log({ customerDetails });
         (0, otp_controller_1.sendSMS)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.phone, customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.countryCode, `Your service is accepted by our service provider.`);
-        (0, sendPushNotification_utils_1.sendPushNotification)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails._id, "Your service is accepted by our service provider.", "");
+        (0, sendPushNotification_utils_1.sendPushNotification)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails._id, "Your service is accepted by our service provider....", "");
         return (0, response_utils_1.handleResponse)(res, "success", 200, updateService, "Service Accepted Successfully");
     }
     return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Something went wrong");
