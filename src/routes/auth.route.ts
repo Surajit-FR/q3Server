@@ -10,6 +10,8 @@ import {
   resetPassword,
   verifyServiceProvider,
   banUser,
+  deleteuser,
+  deletAccount,
 } from "../controller/auth/auth.controller";
 import { sendMailController, verifyEmail } from "../../utils/sendEmail";
 import { sendOTP, verifyOTP } from "../controller/otp.controller";
@@ -24,10 +26,8 @@ import { storeFcmToken } from "../../utils/sendPushNotification.utils";
 
 const router: Router = express.Router();
 
-
 //save-fcm
 router.route("/store-fcm-token").post(storeFcmToken);
-
 
 //sign-up
 router.route("/start-registration").post(startRegistration);
@@ -67,7 +67,7 @@ router.route("/get-autocomplete-address").post(getPlacesAutocomplete);
 // Refresh token routes
 router.route("/refresh-token").post(
   // rateLimiter,
-  refreshAccessToken
+  refreshAccessToken,
 );
 
 //check-token-expiration
@@ -82,15 +82,24 @@ router
 router.route("/logout").post(
   // rateLimiter,
   [VerifyJWTToken],
-  logoutUser
+  logoutUser,
 );
 
 //ban customer
-router.route("/ban-customer").post(
-  [VerifyJWTToken],
-  verifyUserType(["SuperAdmin"]),
-  banUser
-);
+router
+  .route("/ban-customer")
+  .post([VerifyJWTToken], verifyUserType(["SuperAdmin"]), banUser);
+
+//delete customer or sp
+router
+  .route("/delete-user")
+  .post([VerifyJWTToken], verifyUserType(["SuperAdmin"]), deleteuser);
+
+
+//delete account by user himself
+router
+  .route("/delete-account")
+  .get([VerifyJWTToken], verifyUserType(["ServiceProvider","Customer"]), deletAccount);
 
 // router.route('/save-fcm-token').post(
 //     rateLimiter,
@@ -98,10 +107,8 @@ router.route("/ban-customer").post(
 //     saveFcmToken
 // );
 
-router.route('/get-card-value').get(
-    [VerifyJWTToken],
-    verifyUserType(["SuperAdmin"]),
-    getCardValue
-);
+router
+  .route("/get-card-value")
+  .get([VerifyJWTToken], verifyUserType(["SuperAdmin"]), getCardValue);
 
 export default router;

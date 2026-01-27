@@ -28,7 +28,7 @@ const serviceAccount = {
   universe_domain: FIREBASE_UNIVERSE_DOMAIN,
 };
 
-admin.initializeApp({
+export const FirestoreAdmin = admin.initializeApp({
   credential: admin.credential.cert(serviceAccount as any),
 });
 

@@ -115,9 +115,9 @@ export const getSingleUser = asyncHandler(
       "success",
       200,
       userData,
-      "User fetched successfully"
+      "User fetched successfully",
     );
-  }
+  },
 );
 
 export const getAllCustomer = asyncHandler(
@@ -160,17 +160,17 @@ export const getAllCustomer = asyncHandler(
         $match: matchCriteria,
       },
       {
-        $lookup:{
-          from:"towingservicebookings",
-          foreignField:"userId",
-          localField:"_id",
-          as:"bookedService"
-        }
+        $lookup: {
+          from: "towingservicebookings",
+          foreignField: "userId",
+          localField: "_id",
+          as: "bookedService",
+        },
       },
       {
-        $addFields:{
-          totalBookedServices:{$size:"$bookedService"}
-        }
+        $addFields: {
+          totalBookedServices: { $size: "$bookedService" },
+        },
       },
 
       {
@@ -195,7 +195,7 @@ export const getAllCustomer = asyncHandler(
         "success",
         200,
         customersDetails,
-        "Customers not found"
+        "Customers not found",
       );
     }
     return handleResponse(
@@ -210,9 +210,9 @@ export const getAllCustomer = asyncHandler(
           limit: limitNumber,
         },
       },
-      "Customers fetched successfully"
+      "Customers fetched successfully",
     );
-  }
+  },
 );
 
 export const getAllProviders = asyncHandler(
@@ -253,18 +253,18 @@ export const getAllProviders = asyncHandler(
       {
         $match: matchCriteria,
       },
-       {
-        $lookup:{
-          from:"towingservicebookings",
-          foreignField:"serviceProviderId",
-          localField:"_id",
-          as:"bookedService"
-        }
+      {
+        $lookup: {
+          from: "towingservicebookings",
+          foreignField: "serviceProviderId",
+          localField: "_id",
+          as: "bookedService",
+        },
       },
       {
-        $addFields:{
-          totalBookedServices:{$size:"$bookedService"}
-        }
+        $addFields: {
+          totalBookedServices: { $size: "$bookedService" },
+        },
       },
       {
         $lookup: {
@@ -303,7 +303,7 @@ export const getAllProviders = asyncHandler(
         "success",
         200,
         providersDetails,
-        "Providers not found"
+        "Providers not found",
       );
     }
 
@@ -319,9 +319,9 @@ export const getAllProviders = asyncHandler(
           limit: limitNumber,
         },
       },
-      "Providers fetched successfully"
+      "Providers fetched successfully",
     );
-  }
+  },
 );
 
 // giveRating controller for customer
@@ -351,7 +351,7 @@ export const giveRating = asyncHandler(
         "success",
         201,
         savedRating,
-        "Rating submitted successfully"
+        "Rating submitted successfully",
       );
     }
     return handleResponse(
@@ -359,9 +359,9 @@ export const giveRating = asyncHandler(
       "success",
       201,
       savedRating,
-      "Error in add rating"
+      "Error in add rating",
     );
-  }
+  },
 );
 
 //update sp data
@@ -392,7 +392,7 @@ export const updateSp = asyncHandler(
         "error",
         400,
         {},
-        "Cannot update while performing the service"
+        "Cannot update while performing the service",
       );
     }
 
@@ -416,7 +416,7 @@ export const updateSp = asyncHandler(
             ...(avatar && { avatar }),
           },
         },
-        { runValidators: true }
+        { runValidators: true },
       );
 
       if (userUpdate) isUpdated = true;
@@ -438,7 +438,7 @@ export const updateSp = asyncHandler(
             ...(insuranceImage && { insuranceImage }),
           },
         },
-        { runValidators: true }
+        { runValidators: true },
       );
 
       if (additionalUpdate.modifiedCount > 0) isUpdated = true;
@@ -453,9 +453,9 @@ export const updateSp = asyncHandler(
       "success",
       200,
       {},
-      "Service provider updated successfully"
+      "Service provider updated successfully",
     );
-  }
+  },
 );
 
 export const updateCustomer = asyncHandler(
@@ -474,10 +474,10 @@ export const updateCustomer = asyncHandler(
       },
       {
         new: true,
-      }
+      },
     );
     return handleResponse(res, "success", 200, "User updated successfully");
-  }
+  },
 );
 
 export const getCardValue = asyncHandler(
@@ -500,11 +500,20 @@ export const getCardValue = asyncHandler(
       "success",
       200,
       { totalCustomer, totalSps, totalServices, totalActiveSps },
-      "KPI card values fetched successfully"
+      "KPI card values fetched successfully",
     );
-  }
+  },
 );
 
-
-
-
+export const fetchAllActiveSps = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    const activeSps = await LocationSessionModel.find({ isActive: true });
+    return handleResponse(
+      res,
+      "success",
+      200,
+      activeSps,
+      "All active sps fetched successfully",
+    );
+  },
+);
