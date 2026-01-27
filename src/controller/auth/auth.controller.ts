@@ -16,6 +16,17 @@ import { sendMail } from "../../../utils/sendEmail";
 import EmailCodeModel from "../../models/emailCode.model";
 import twilio from "twilio";
 import {
+  FIREBASE_AUTH_PROVIDER_CERT_URL,
+  FIREBASE_AUTH_URI,
+  FIREBASE_CLIENT_CERT_URL,
+  FIREBASE_CLIENT_EMAIL,
+  FIREBASE_CLIENT_ID,
+  FIREBASE_PRIVATE_KEY,
+  FIREBASE_PRIVATE_KEY_ID,
+  FIREBASE_PROJECT_ID,
+  FIREBASE_TOKEN_URI,
+  FIREBASE_TYPE,
+  FIREBASE_UNIVERSE_DOMAIN,
   TWILIO_ACCOUNT_SID,
   TWILIO_AUTH_TOKEN,
   TWILIO_PHONE_NUMBER,
@@ -26,6 +37,11 @@ import towingServiceBookingModel from "../../models/towingServiceBooking.model";
 const accountSid = TWILIO_ACCOUNT_SID;
 const authToken = TWILIO_AUTH_TOKEN;
 let client = twilio(accountSid, authToken);
+import {
+  firestore,
+  FirestoreAdmin,
+} from "../../../utils/sendPushNotification.utils";
+
 
 // fetchUserData func.
 export const fetchUserData = async (userId: string | ObjectId) => {
@@ -112,7 +128,7 @@ export const startRegistration = asyncHandler(
           "error",
           409,
           "",
-          "User with phone already exists"
+          "User with phone already exists",
         );
       }
     }
@@ -125,7 +141,7 @@ export const startRegistration = asyncHandler(
           "error",
           409,
           "",
-          "User with email already exists"
+          "User with email already exists",
         );
       }
     }
@@ -170,7 +186,7 @@ export const startRegistration = asyncHandler(
       message: "User created",
       success: true,
     });
-  }
+  },
 );
 
 export const completeRegistration = asyncHandler(
@@ -186,7 +202,7 @@ export const completeRegistration = asyncHandler(
         "error",
         400,
         "",
-        "Phone and password are required"
+        "Phone and password are required",
       );
     }
 
@@ -203,7 +219,7 @@ export const completeRegistration = asyncHandler(
         "error",
         404,
         "",
-        "User not found or already registered"
+        "User not found or already registered",
       );
     }
 
@@ -217,7 +233,7 @@ export const completeRegistration = asyncHandler(
       message: "Password set successfully. Registration complete.",
       data: { user: user },
     });
-  }
+  },
 );
 
 // login user controller
@@ -238,7 +254,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
       "error",
       400,
       "",
-      "Either email or phone number with usertype is required"
+      "Either email or phone number with usertype is required",
     );
   }
   if (!password) {
@@ -259,13 +275,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
   // console.log(user.isOTPVerified);
 
   if (user.isBan) {
-    return handleResponse(
-      res,
-      "error",
-      400,
-      "",
-      "Your account is banned!"
-    );
+    return handleResponse(res, "error", 400, "", "Your account is banned!");
   }
   if (!user.isOTPVerified || !user.isVerified || user.isBan) {
     return handleResponse(
@@ -273,7 +283,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
       "error",
       400,
       "",
-      "Your account is not verified"
+      "Your account is not verified",
     );
   }
 
@@ -295,7 +305,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
       "error",
       400,
       "",
-      "Your account is banned from  this platform."
+      "Your account is banned from  this platform.",
     );
   }
 
@@ -308,7 +318,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
         "error",
         403,
         "",
-        "Access denied. Only authorized users can log in to the admin panel."
+        "Access denied. Only authorized users can log in to the admin panel.",
       );
     }
   }
@@ -344,7 +354,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
         "error",
         400,
         "",
-        "Your account is created but please add address & your additional information."
+        "Your account is created but please add address & your additional information.",
       );
     }
 
@@ -397,7 +407,7 @@ export const CheckJWTTokenExpiration = asyncHandler(
         "error",
         400,
         "",
-        "Invalid token or missing expiration"
+        "Invalid token or missing expiration",
       );
     }
 
@@ -410,7 +420,7 @@ export const CheckJWTTokenExpiration = asyncHandler(
         .json({ isExpired: true, remainingTimeInSeconds: 0 });
     }
     return res.status(200).json({ isExpired: false, remainingTimeInSeconds });
-  }
+  },
 );
 
 // refreshAccessToken controller
@@ -429,7 +439,7 @@ export const refreshAccessToken = asyncHandler(
     try {
       const decodedToken = jwt.verify(
         incomingAccessToken,
-        process.env.ACCESS_TOKEN_SECRET as string
+        process.env.ACCESS_TOKEN_SECRET as string,
       ) as JwtPayload;
       const user = await UserModel.findById(decodedToken?._id);
 
@@ -443,7 +453,7 @@ export const refreshAccessToken = asyncHandler(
           "error",
           401,
           "",
-          "Access token is expired or used"
+          "Access token is expired or used",
         );
       }
 
@@ -464,10 +474,10 @@ export const refreshAccessToken = asyncHandler(
         "error",
         401,
         "",
-        exc.message || "Invalid access token"
+        exc.message || "Invalid access token",
       );
     }
-  }
+  },
 );
 
 // logout user controller
@@ -487,7 +497,7 @@ export const logoutUser = asyncHandler(
           fcmToken: "",
         },
       },
-      { new: true }
+      { new: true },
     );
 
     const cookieOptions = {
@@ -500,7 +510,7 @@ export const logoutUser = asyncHandler(
       .status(200)
       .clearCookie("accessToken", cookieOptions)
       .json(new ApiResponse(200, {}, "User logged out successfully"));
-  }
+  },
 );
 
 export const forgetPassword = asyncHandler(
@@ -533,7 +543,7 @@ export const forgetPassword = asyncHandler(
         "..",
         "..",
         "templates",
-        "verify_email.html"
+        "verify_email.html",
       );
       let html = readFile(filePath, async function (error, html) {
         if (error) {
@@ -559,7 +569,7 @@ export const forgetPassword = asyncHandler(
             {
               upsert: true,
               new: true,
-            }
+            },
           );
         }
         res.end(html);
@@ -586,7 +596,7 @@ export const forgetPassword = asyncHandler(
           {
             upsert: true,
             new: true,
-          }
+          },
         );
       }
     }
@@ -595,9 +605,9 @@ export const forgetPassword = asyncHandler(
       "success",
       200,
       { identifier },
-      "Verification code sent fsuccessfully"
+      "Verification code sent fsuccessfully",
     );
-  }
+  },
 );
 
 export const resetPassword = asyncHandler(
@@ -612,7 +622,7 @@ export const resetPassword = asyncHandler(
         res,
         "error",
         400,
-        "Either email or phone number is required"
+        "Either email or phone number is required",
       );
     }
     const userDetails = await UserModel.findOne({
@@ -634,9 +644,9 @@ export const resetPassword = asyncHandler(
       "success",
       200,
       {},
-      "Password reset successfull"
+      "Password reset successfull",
     );
-  }
+  },
 );
 
 // verifyServiceProvider controller
@@ -650,7 +660,7 @@ export const verifyServiceProvider = asyncHandler(
         res,
         "error",
         400,
-        "Service Provider ID is required."
+        "Service Provider ID is required.",
       );
     }
 
@@ -661,7 +671,7 @@ export const verifyServiceProvider = asyncHandler(
     const results = await UserModel.findByIdAndUpdate(
       serviceProviderId,
       { $set: { isVerified } },
-      { new: true }
+      { new: true },
     ).select("-password -refreshToken -__V");
 
     if (!results) {
@@ -676,7 +686,7 @@ export const verifyServiceProvider = asyncHandler(
       : "Service Provider profile made unverified.";
 
     return handleResponse(res, "success", 200, {}, message);
-  }
+  },
 );
 
 export const banUser = asyncHandler(
@@ -700,7 +710,7 @@ export const banUser = asyncHandler(
           res,
           "error",
           400,
-          "There is a service in progress, you can not ban this user"
+          "There is a service in progress, you can not ban this user",
         );
       }
 
@@ -713,14 +723,14 @@ export const banUser = asyncHandler(
             isBan,
             accessToken: "",
           },
-        }
+        },
       );
       return handleResponse(
         res,
         "success",
         200,
         "",
-        "Successfully banned the user"
+        "Successfully banned the user",
       );
     } else {
       const banUser = await UserModel.findOneAndUpdate(
@@ -731,15 +741,163 @@ export const banUser = asyncHandler(
           $set: {
             isBan,
           },
-        }
+        },
       );
       return handleResponse(
         res,
         "success",
         200,
         "",
-        "Successfully unbanned the user"
+        "Successfully unbanned the user",
       );
     }
-  }
+  },
+);
+
+export const deleteuser = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    const { userId } = req.body;
+    const userDetails = await UserModel.findById({ _id: userId }).select(
+      "userType",
+    );
+    console.log({ userDetails });
+    const userType = userDetails?.userType;
+
+    if (userType === "ServiceProvider") {
+      const prevOngoigServices = await towingServiceBookingModel.aggregate([
+        {
+          $match: {
+            serviceProviderId: new mongoose.Types.ObjectId(userId),
+            $or: [
+              { serviceProgess: "ServiceAccepted" },
+              { serviceProgess: "ServiceStarted" },
+            ],
+          },
+        },
+      ]);
+
+      if (prevOngoigServices && prevOngoigServices.length > 0) {
+        return handleResponse(
+          res,
+          "error",
+          400,
+          "There is a service in progress, you can not delete this user",
+        );
+      }
+    } else if (userType === "Customer") {
+      const RunningBookedServices = await towingServiceBookingModel.aggregate([
+        {
+          $match: {
+            userId: new mongoose.Types.ObjectId(userId),
+            $or: [
+              { serviceProgess: "Booked" },
+              { serviceProgess: "ServiceAccepted" },
+              { serviceProgess: "ServiceStarted" },
+            ],
+          },
+        },
+      ]);
+
+      if (RunningBookedServices && RunningBookedServices.length > 0) {
+        return handleResponse(
+          res,
+          "error",
+          400,
+          "There is a service in progress, you can not delete this user",
+        );
+      }
+    } else {
+      return handleResponse(res, "error", 400, {}, "UserType not found");
+    }
+
+    const updateUser = await UserModel.findOneAndUpdate(
+      { _id: userId },
+      {
+        $set: {
+          isDeleted: true,
+          accessToken: "",
+        },
+      },
+    );
+
+    return handleResponse(res, "success", 200, {}, "User deleted successfully");
+  },
+);
+
+export const deletAccount = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    const { userId } = req.user?._id;
+    const userDetails = await UserModel.findById({ _id: userId }).select(
+      "userType",
+    );
+    console.log({ userDetails });
+    const userType = userDetails?.userType;
+
+    if (userType === "ServiceProvider") {
+      const prevOngoigServices = await towingServiceBookingModel.aggregate([
+        {
+          $match: {
+            serviceProviderId: new mongoose.Types.ObjectId(userId),
+            $or: [
+              { serviceProgess: "ServiceAccepted" },
+              { serviceProgess: "ServiceStarted" },
+            ],
+          },
+        },
+      ]);
+
+      if (prevOngoigServices && prevOngoigServices.length > 0) {
+        return handleResponse(
+          res,
+          "error",
+          400,
+          "There is a service in progress, you can not delete your account",
+        );
+      }
+    } else if (userType === "Customer") {
+      const RunningBookedServices = await towingServiceBookingModel.aggregate([
+        {
+          $match: {
+            userId: new mongoose.Types.ObjectId(userId),
+            $or: [
+              { serviceProgess: "Booked" },
+              { serviceProgess: "ServiceAccepted" },
+              { serviceProgess: "ServiceStarted" },
+            ],
+          },
+        },
+      ]);
+
+      if (RunningBookedServices && RunningBookedServices.length > 0) {
+        return handleResponse(
+          res,
+          "error",
+          400,
+          "There is a service in progress, you can not delete your account",
+        );
+      }
+    } else {
+      return handleResponse(res, "error", 400, {}, "UserType not found");
+    }
+
+    const updateUser = await UserModel.findOneAndUpdate(
+      { _id: userId },
+      {
+        $set: {
+          isDeleted: true,
+          accessToken: "",
+        },
+      },
+    );
+
+    await firestore.collection("fcmTokens").doc(userId).delete();
+
+    return handleResponse(
+      res,
+      "success",
+      200,
+      {},
+      "Account deleted successfully",
+    );
+  },
 );

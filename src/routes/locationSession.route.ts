@@ -27,6 +27,6 @@ router
   .post(verifyUserType(["ServiceProvider"]), updateSPLocation);
 router
   .route("/fetch-sp-location")
-  .post(verifyUserType(["ServiceProvider"]), getSPLocation);
+  .post(verifyUserType(["ServiceProvider","Customer"]), getSPLocation);
 
 export default router;

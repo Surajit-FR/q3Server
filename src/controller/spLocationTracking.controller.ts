@@ -48,11 +48,12 @@ export const updateSPLocation = asyncHandler(
 
 export const getSPLocation = asyncHandler(
   async (req: CustomRequest, res: Response) => {
-    const { serviceId } = req.params;
+    const { serviceId } = req.body;
+    console.log(req.body,"fetch sp locats while tracking");
+    
 
     const locationRecord = await SPLocationTrackingModel.findOne({
       serviceId,
-      spId: req.user?._id,
     }).lean();
 
     if (!locationRecord) {

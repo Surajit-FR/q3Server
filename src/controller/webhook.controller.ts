@@ -62,3 +62,4 @@ async function handleFailure(paymentIntent: any) {
     });
   }
 }
+
