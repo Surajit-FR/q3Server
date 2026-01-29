@@ -483,10 +483,10 @@ export const updateCustomer = asyncHandler(
 export const getCardValue = asyncHandler(
   async (req: CustomRequest, res: Response) => {
     const totalCustomer = await UserModel.find({
-      userType: "Customer",
+      userType: "Customer", isDeleted:false
     }).countDocuments();
     const totalSps = await UserModel.find({
-      userType: "ServiceProvider",
+      userType: "ServiceProvider",isDeleted:false
     }).countDocuments();
     const totalServices = await towingServiceBookingModel
       .find({})
