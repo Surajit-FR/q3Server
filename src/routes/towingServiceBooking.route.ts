@@ -17,6 +17,7 @@ import {
   fetchTransactions,
   fetchTransactionsSPWise,
   fetchOngoingServicesByCustomer,
+  fetchTransactionsCustomerWise,
 } from "../controller/towingServiceBooking.controller";
 import { VerifyJWTToken, verifyUserType } from "../middlewares/auth/userAuth";
 
@@ -83,5 +84,9 @@ router
 router
   .route("/fetch-transactions-spwise")
   .post(verifyUserType(["SuperAdmin"]), fetchTransactionsSPWise);
+
+router
+  .route("/fetch-transactions-customerwise")
+  .get(verifyUserType(["Customer"]), fetchTransactionsCustomerWise);
 
 export default router;
