@@ -19,5 +19,5 @@ router
     .post((0, userAuth_1.verifyUserType)(["ServiceProvider"]), spLocationTracking_controller_1.updateSPLocation);
 router
     .route("/fetch-sp-location")
-    .post((0, userAuth_1.verifyUserType)(["ServiceProvider", "Customer"]), spLocationTracking_controller_1.getSPLocation);
+    .post((0, userAuth_1.verifyUserType)(["ServiceProvider", "Customer", "SuperAdmin"]), spLocationTracking_controller_1.getSPLocation);
 exports.default = router;

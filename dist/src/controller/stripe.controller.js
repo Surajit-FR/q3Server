@@ -12,12 +12,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createCheckoutsession = void 0;
+exports.fetchSPPayout = exports.payoutServiceProvider = exports.createCheckoutsession = void 0;
 const stripe_1 = __importDefault(require("stripe"));
 const config_1 = require("../config/config");
 const user_model_1 = __importDefault(require("../models/user.model"));
 const qrcode_1 = __importDefault(require("qrcode"));
-const square_1 = require("../config/square");
+const payout_model_1 = __importDefault(require("../models/payout.model"));
+const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
+const response_utils_1 = require("../../utils/response.utils");
+const mongoose_1 = __importDefault(require("mongoose"));
 const stripe = new stripe_1.default(config_1.STRIPE_SECRET_KEY, {
     apiVersion: "2024-09-30.acacia",
 });
@@ -89,4 +92,152 @@ const createCheckoutsession = (req, res) => __awaiter(void 0, void 0, void 0, fu
     catch (error) { }
 });
 exports.createCheckoutsession = createCheckoutsession;
-(0, square_1.getLocations)();
+const payoutServiceProvider = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const { spId, first_name, last_name, amount, serviceId, socialSecurity, dob, accountNumber, ifsc, routing_number, } = req.body;
+    if (!spId || !amount) {
+        res.status(400).json({
+            success: false,
+            message: "spId and amount are required",
+        });
+    }
+    const sp = yield user_model_1.default.findById(spId);
+    if (!sp) {
+        res.status(404).json({
+            success: false,
+            message: "Service Provider not found",
+        });
+    }
+    /**
+     * 🔹 FIRST TIME → CREATE STRIPE ACCOUNT
+     */
+    if (!(sp === null || sp === void 0 ? void 0 : sp.stripeAccountId)) {
+        const account = yield stripe.accounts.create({
+            type: "custom",
+            country: "US",
+            email: sp === null || sp === void 0 ? void 0 : sp.email,
+            business_type: "individual",
+            capabilities: {
+                transfers: { requested: true },
+            },
+            individual: {
+                first_name: first_name,
+                last_name: last_name,
+                email: sp === null || sp === void 0 ? void 0 : sp.email,
+                phone: sp === null || sp === void 0 ? void 0 : sp.phone,
+                ssn_last_4: socialSecurity,
+                dob: {
+                    day: dob.day,
+                    month: dob.month,
+                    year: dob.year,
+                },
+            },
+            business_profile: {
+                url: "https://your-test-business.com",
+                mcc: "5818",
+            },
+            tos_acceptance: {
+                date: Math.floor(Date.now() / 1000),
+                ip: req.ip || "127.0.0.1",
+            },
+        });
+        yield stripe.accounts.createExternalAccount(account.id, {
+            external_account: {
+                object: "bank_account",
+                country: "US",
+                currency: "usd",
+                account_number: accountNumber,
+                routing_number: routing_number,
+            },
+        });
+        if (sp) {
+            sp.stripeAccountId = account.id;
+            sp.stripeOnboarded = false;
+            yield sp.save();
+        }
+    }
+    if (sp) {
+        // 🔹 CREATE ONBOARDING URL
+        const accountLink = yield stripe.accountLinks.create({
+            account: sp === null || sp === void 0 ? void 0 : sp.stripeAccountId,
+            refresh_url: "https://yourdomain.com/stripe/onboarding/refresh",
+            return_url: "https://yourdomain.com/stripe/onboarding/success",
+            type: "account_onboarding",
+        });
+        // 🔹 CHECK CAPABILITY
+        const accountDetails = yield stripe.accounts.retrieve(sp.stripeAccountId);
+        // If transfers not active, send onboarding URL
+        if (((_a = accountDetails.capabilities) === null || _a === void 0 ? void 0 : _a.transfers) !== "active") {
+            res.status(200).json({
+                success: true,
+                message: "Please complete Stripe onboarding",
+                onboardingUrl: accountLink.url,
+                accountId: sp.stripeAccountId,
+                capabilities: accountDetails.capabilities,
+            });
+        }
+    }
+    // 1️⃣ Transfer Admin → SP
+    const transfer = yield stripe.transfers.create({
+        amount: Math.round(amount * 100),
+        currency: "usd",
+        destination: sp ? sp.stripeAccountId : "",
+        metadata: {
+            spId,
+            serviceId,
+        },
+    });
+    // 2️⃣ Payout SP → Bank
+    const payout = yield stripe.payouts.create({
+        amount: Math.round(amount * 100),
+        currency: "usd",
+    }, {
+        stripeAccount: sp ? sp.stripeAccountId : "",
+    });
+    // // 3️⃣ Update wallet
+    // sp.walletBalance = Math.max(0, sp.walletBalance - amount);
+    // await sp.save();
+    if (payout) {
+        // After successful payout
+        yield payout_model_1.default.create({
+            serviceProviderId: sp === null || sp === void 0 ? void 0 : sp._id,
+            serviceId,
+            amount,
+            stripeAccountId: sp === null || sp === void 0 ? void 0 : sp.stripeAccountId,
+            transferId: transfer.id,
+            payoutId: payout.id,
+            status: "paid",
+            metadata: {
+                bankLast4: payout.destination,
+                payoutArrivalDate: payout.arrival_date,
+            },
+        });
+    }
+    res.status(200).json({
+        success: true,
+        message: "Payout completed successfully",
+        transferId: transfer.id,
+        payoutId: payout.id,
+    });
+});
+exports.payoutServiceProvider = payoutServiceProvider;
+exports.fetchSPPayout = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { serviceProviderId } = req.body;
+    if (!serviceProviderId) {
+        return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Service Provider ID is required");
+    }
+    const payouts = yield payout_model_1.default.aggregate([
+        {
+            $match: {
+                serviceProviderId: new mongoose_1.default.Types.ObjectId(serviceProviderId),
+                status: "paid",
+            },
+        },
+        {
+            $project: {
+                serviceId: 0
+            }
+        }
+    ]);
+    return (0, response_utils_1.handleResponse)(res, "success", 200, payouts, "Payouts fetched successfully");
+}));

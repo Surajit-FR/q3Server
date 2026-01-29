@@ -51,4 +51,7 @@ router
 router
     .route("/fetch-transactions")
     .get((0, userAuth_1.verifyUserType)(["SuperAdmin"]), towingServiceBooking_controller_1.fetchTransactions);
+router
+    .route("/fetch-transactions-spwise")
+    .post((0, userAuth_1.verifyUserType)(["SuperAdmin"]), towingServiceBooking_controller_1.fetchTransactionsSPWise);
 exports.default = router;

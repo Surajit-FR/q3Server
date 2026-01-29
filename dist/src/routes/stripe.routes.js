@@ -11,4 +11,6 @@ const router = express_1.default.Router();
 //STRIPE API ROUTES
 router.use(userAuth_1.VerifyJWTToken);
 router.post("/create-checkout-session", stripe_controller_1.createCheckoutsession);
+router.post("/payout-sp", stripe_controller_1.payoutServiceProvider);
+router.post("/fetch-payout", stripe_controller_1.fetchSPPayout);
 exports.default = router;

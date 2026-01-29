@@ -343,10 +343,10 @@ exports.updateCustomer = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __
 }));
 exports.getCardValue = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const totalCustomer = yield user_model_1.default.find({
-        userType: "Customer",
+        userType: "Customer", isDeleted: false
     }).countDocuments();
     const totalSps = yield user_model_1.default.find({
-        userType: "ServiceProvider",
+        userType: "ServiceProvider", isDeleted: false
     }).countDocuments();
     const totalServices = yield towingServiceBooking_model_1.default
         .find({})

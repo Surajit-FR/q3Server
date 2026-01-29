@@ -81,6 +81,13 @@ const UserSchema = new mongoose_1.Schema({
     emailCode: {
         type: String,
     },
+    stripeAccountId: {
+        type: String,
+    },
+    stripeOnboarded: {
+        type: Boolean,
+        default: false
+    },
     avatar: {
         type: String,
         default: "",
