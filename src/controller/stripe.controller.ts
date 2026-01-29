@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Response, Request } from "express";
 import Stripe from "stripe";
 import { STRIPE_SECRET_KEY } from "../config/config";
 import { CustomRequest } from "../../types/commonType";
@@ -6,6 +6,11 @@ import UserModel from "../models/user.model";
 import QRCode from "qrcode";
 import towingServiceBookingModel from "../models/towingServiceBooking.model";
 import { getLocations } from "../config/square";
+import { userInfo } from "node:os";
+import payoutModel from "../models/payout.model";
+import { asyncHandler } from "../../utils/asyncHandler.utils";
+import { handleResponse } from "../../utils/response.utils";
+import mongoose from "mongoose";
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
   apiVersion: "2024-09-30.acacia" as any,
@@ -88,4 +93,193 @@ export const createCheckoutsession = async (req: CustomRequest, res: any) => {
   } catch (error) {}
 };
 
-getLocations();
+export const payoutServiceProvider = async (
+  req: CustomRequest,
+  res: Response,
+) => {
+  const {
+    spId,
+    first_name,
+    last_name,
+    amount,
+    serviceId,
+    socialSecurity,
+    dob,
+    accountNumber,
+    ifsc,
+    routing_number,
+  } = req.body;
+
+  if (!spId || !amount) {
+    res.status(400).json({
+      success: false,
+      message: "spId and amount are required",
+    });
+  }
+
+  const sp = await UserModel.findById(spId);
+
+  if (!sp) {
+    res.status(404).json({
+      success: false,
+      message: "Service Provider not found",
+    });
+  }
+  /**
+   * 🔹 FIRST TIME → CREATE STRIPE ACCOUNT
+   */
+  if (!sp?.stripeAccountId) {
+    const account = await stripe.accounts.create({
+      type: "custom",
+      country: "US",
+      email: sp?.email,
+      business_type: "individual",
+      capabilities: {
+        transfers: { requested: true },
+      },
+      individual: {
+        first_name: first_name,
+        last_name: last_name,
+        email: sp?.email,
+        phone: sp?.phone,
+        ssn_last_4: socialSecurity,
+        dob: {
+          day: dob.day,
+          month: dob.month,
+          year: dob.year,
+        },
+      },
+      business_profile: {
+        url: "https://your-test-business.com",
+        mcc: "5818",
+      },
+      tos_acceptance: {
+        date: Math.floor(Date.now() / 1000),
+        ip: req.ip || "127.0.0.1",
+      },
+    });
+
+    await stripe.accounts.createExternalAccount(account.id, {
+      external_account: {
+        object: "bank_account",
+        country: "US",
+        currency: "usd",
+        account_number: accountNumber,
+        routing_number: routing_number,
+      },
+    });
+    if (sp) {
+      sp.stripeAccountId = account.id;
+      sp.stripeOnboarded = false;
+      await sp.save();
+    }
+  }
+
+  if (sp) {
+    // 🔹 CREATE ONBOARDING URL
+    const accountLink = await stripe.accountLinks.create({
+      account: sp?.stripeAccountId,
+      refresh_url: "https://yourdomain.com/stripe/onboarding/refresh",
+      return_url: "https://yourdomain.com/stripe/onboarding/success",
+      type: "account_onboarding",
+    });
+
+    // 🔹 CHECK CAPABILITY
+    const accountDetails = await stripe.accounts.retrieve(sp.stripeAccountId);
+
+    // If transfers not active, send onboarding URL
+    if (accountDetails.capabilities?.transfers !== "active") {
+      res.status(200).json({
+        success: true,
+        message: "Please complete Stripe onboarding",
+        onboardingUrl: accountLink.url,
+        accountId: sp.stripeAccountId,
+        capabilities: accountDetails.capabilities,
+      });
+    }
+  }
+
+  // 1️⃣ Transfer Admin → SP
+  const transfer = await stripe.transfers.create({
+    amount: Math.round(amount * 100),
+    currency: "usd",
+    destination: sp ? sp.stripeAccountId : "",
+    metadata: {
+      spId,
+      serviceId,
+    },
+  });
+
+  // 2️⃣ Payout SP → Bank
+  const payout = await stripe.payouts.create(
+    {
+      amount: Math.round(amount * 100),
+      currency: "usd",
+    },
+    {
+      stripeAccount: sp ? sp.stripeAccountId : "",
+    },
+  );
+
+  // // 3️⃣ Update wallet
+  // sp.walletBalance = Math.max(0, sp.walletBalance - amount);
+  // await sp.save();
+  if (payout) {
+    // After successful payout
+    await payoutModel.create({
+      serviceProviderId: sp?._id,
+      serviceId,
+      amount,
+      stripeAccountId: sp?.stripeAccountId,
+      transferId: transfer.id,
+      payoutId: payout.id,
+      status: "paid",
+      metadata: {
+        bankLast4: payout.destination,
+        payoutArrivalDate: payout.arrival_date,
+      },
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Payout completed successfully",
+    transferId: transfer.id,
+    payoutId: payout.id,
+  });
+};
+
+export const fetchSPPayout = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    const { serviceProviderId } = req.body;
+    if (!serviceProviderId) {
+      return handleResponse(
+        res,
+        "error",
+        400,
+        "",
+        "Service Provider ID is required",
+      );
+    }
+    const payouts = await payoutModel.aggregate([
+      {
+        $match: {
+          serviceProviderId:new mongoose.Types.ObjectId(serviceProviderId),
+          status: "paid",
+        },
+      },
+      {
+        $project:{
+          serviceId:0
+        }
+      }
+    ]);
+    return handleResponse(
+      res,
+      "success",
+      200,
+      payouts,
+      "Payouts fetched successfully",
+    );
+  },
+);

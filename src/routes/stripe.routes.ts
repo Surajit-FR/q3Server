@@ -2,7 +2,7 @@ import express, { Router } from "express";
 
 // import { stripeWebhook } from "../controller/webhook.controller";
 import { VerifyJWTToken } from "../middlewares/auth/userAuth";
-import { createCheckoutsession } from "../controller/stripe.controller";
+import { createCheckoutsession, fetchSPPayout, payoutServiceProvider } from "../controller/stripe.controller";
 
 const router: Router = express.Router();
 
@@ -10,6 +10,8 @@ const router: Router = express.Router();
 router.use(VerifyJWTToken);
 
 router.post("/create-checkout-session",createCheckoutsession);
+router.post("/payout-sp",payoutServiceProvider);
+router.post("/fetch-payout",fetchSPPayout);
 
 
 

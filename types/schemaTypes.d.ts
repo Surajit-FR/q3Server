@@ -19,6 +19,8 @@ export interface IUser extends Document {
   isEmailVerified: boolean;
   emailCode: string;
   isRegistered: boolean;
+  stripeAccountId: string;
+  stripeOnboarded: boolean;
   userType: string;
   accessToken?: string;
   fcmToken?: string;

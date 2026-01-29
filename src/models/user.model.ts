@@ -2,6 +2,7 @@ import mongoose, { Schema, Model } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { IUser } from "../../types/schemaTypes";
+import { boolean } from "square/core/schemas";
 
 const UserSchema: Schema<IUser> = new Schema(
   {
@@ -36,6 +37,13 @@ const UserSchema: Schema<IUser> = new Schema(
     },
     emailCode: {
       type: String,
+    },
+    stripeAccountId: {
+      type: String,
+    },
+    stripeOnboarded: {
+      type: Boolean,
+      default:false
     },
     avatar: {
       type: String,
