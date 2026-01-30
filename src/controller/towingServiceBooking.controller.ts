@@ -83,7 +83,7 @@ export const bookTowingService = asyncHandler(
         res,
         "error",
         400,
-        "Previously booked service is pending now."
+        "Previously booked service is pending now.",
       );
     }
 
@@ -110,7 +110,7 @@ export const bookTowingService = asyncHandler(
           res,
           "error",
           400,
-          "while choosing current location for picup location coordinates are required."
+          "while choosing current location for picup location coordinates are required.",
         );
 
       picklocation_derived = {
@@ -135,14 +135,14 @@ export const bookTowingService = asyncHandler(
           res,
           "error",
           400,
-          "destinyLocation is required."
+          "destinyLocation is required.",
         );
       if (!placeId_destination)
         return handleResponse(
           res,
           "error",
           400,
-          "placeId_destination is required."
+          "placeId_destination is required.",
         );
 
       const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId_pickup}&key=${apiKey}`;
@@ -162,14 +162,14 @@ export const bookTowingService = asyncHandler(
           res,
           "error",
           400,
-          "placeId of destination is required."
+          "placeId of destination is required.",
         );
       if (!destinyLocation)
         return handleResponse(
           res,
           "error",
           400,
-          "DestinyLocation is required."
+          "DestinyLocation is required.",
         );
       placeId_destination_derived = placeId_destination;
     }
@@ -179,7 +179,7 @@ export const bookTowingService = asyncHandler(
 
     let distance = await getDistanceInKm(
       placeId_pickup_derived,
-      placeId_destination_derived
+      placeId_destination_derived,
     );
     console.log({ distance });
     let bookingDetails: any = {
@@ -246,24 +246,24 @@ export const bookTowingService = asyncHandler(
         res,
         "error",
         500,
-        "Something went wrong while booking."
+        "Something went wrong while booking.",
       );
     }
     const customerDetails = await UserModel.findOne({ _id: userId });
     sendSMS(
       customerDetails?.phone as string,
       customerDetails?.countryCode as string,
-      `Thank You for booking service from Q3 app, Your one time service verification code is ${uniqueServiceCode}`
+      `Thank You for booking service from Q3 app, Your one time service verification code is ${uniqueServiceCode}`,
     );
 
     sendPushNotification(
       customerDetails?._id as string,
       "Your service is booked",
-      "Thank you for choosing Q3!"
+      "Thank you for choosing Q3!",
     );
 
     return handleResponse(res, "success", 201, newBooking, customResponseMsg);
-  }
+  },
 );
 
 //fetch near-by service request
@@ -397,7 +397,7 @@ export const fetchTowingServiceRequest = asyncHandler(
         "success",
         200,
         serviceRequests,
-        "No nearby service request found"
+        "No nearby service request found",
       );
     }
 
@@ -406,12 +406,10 @@ export const fetchTowingServiceRequest = asyncHandler(
       "success",
       200,
       serviceRequests,
-      "Service requests fetched successfully"
+      "Service requests fetched successfully",
     );
-  }
+  },
 );
-
-
 
 //decline service request by sp
 export const declineServicerequest = asyncHandler(
@@ -428,16 +426,16 @@ export const declineServicerequest = asyncHandler(
       },
       {
         new: true,
-      }
+      },
     );
     return handleResponse(
       res,
       "success",
       200,
       declineService,
-      "Service declined successfully"
+      "Service declined successfully",
     );
-  }
+  },
 );
 
 //cancel service request by customer
@@ -460,7 +458,7 @@ export const cancelServiceRequestByCustomer = asyncHandler(
         serviceProgess,
         updatedAt: Date.now(),
       },
-      { new: true }
+      { new: true },
     );
 
     if (updateService) {
@@ -469,11 +467,11 @@ export const cancelServiceRequestByCustomer = asyncHandler(
         "success",
         200,
         {},
-        "Service cancelled successfully"
+        "Service cancelled successfully",
       );
     }
     return handleResponse(res, "error", 400, "", "Something went wrong");
-  }
+  },
 );
 
 //accept service requset by sp(required service state:"Booked","ServiceCancelledBySP")
@@ -494,7 +492,7 @@ export const acceptServiceRequest = asyncHandler(
         "error",
         400,
         "",
-        "Service ID and service progress is required"
+        "Service ID and service progress is required",
       );
     }
     if (!providerVehicleDetails) {
@@ -503,7 +501,7 @@ export const acceptServiceRequest = asyncHandler(
         "error",
         400,
         "",
-        "Provider vehicle details is required"
+        "Provider vehicle details is required",
       );
     }
 
@@ -522,7 +520,7 @@ export const acceptServiceRequest = asyncHandler(
         updatedAt: Date.now(),
         isReqAccepted: true,
       },
-      { new: true }
+      { new: true },
     );
 
     if (updateService) {
@@ -543,7 +541,7 @@ export const acceptServiceRequest = asyncHandler(
               acceptedServiceDetails.serviceProgess,
           },
         },
-        { new: true }
+        { new: true },
       );
       if (!updateResult) {
         await LocationSessionModel.findOneAndUpdate(
@@ -553,7 +551,7 @@ export const acceptServiceRequest = asyncHandler(
               serviceDetails: acceptedServiceDetails,
             },
           },
-          { new: true }
+          { new: true },
         );
       }
       const serviceData = await towingServiceBookingModel.findOne({
@@ -567,12 +565,12 @@ export const acceptServiceRequest = asyncHandler(
       sendSMS(
         customerDetails?.phone as string,
         customerDetails?.countryCode as string,
-        `Your service is accepted by our service provider.`
+        `Your service is accepted by our service provider.`,
       );
       sendPushNotification(
         customerDetails?._id as string,
         "Your service is accepted by our service provider....",
-        ""
+        "",
       );
 
       return handleResponse(
@@ -580,11 +578,11 @@ export const acceptServiceRequest = asyncHandler(
         "success",
         200,
         updateService,
-        "Service Accepted Successfully"
+        "Service Accepted Successfully",
       );
     }
     return handleResponse(res, "error", 400, "", "Something went wrong");
-  }
+  },
 );
 
 //handle state of requested services after acceptance of that service
@@ -600,7 +598,7 @@ export const handleServiceRequestState = asyncHandler(
         "error",
         400,
         "",
-        "Service ID and service progress are required"
+        "Service ID and service progress are required",
       );
     }
 
@@ -630,7 +628,7 @@ export const handleServiceRequestState = asyncHandler(
         "error",
         400,
         "",
-        `Invalid state transition from ${previousState} to ${serviceProgess}`
+        `Invalid state transition from ${previousState} to ${serviceProgess}`,
       );
     }
 
@@ -651,7 +649,7 @@ export const handleServiceRequestState = asyncHandler(
     const updatedService = await towingServiceBookingModel.findOneAndUpdate(
       filterCondition,
       { $set: updateFields },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedService) {
@@ -676,14 +674,14 @@ export const handleServiceRequestState = asyncHandler(
           "serviceDetails.$.serviceProgess": serviceProgess,
         },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!activeLocation) {
       await LocationSessionModel.findOneAndUpdate(
         { userId: req.user?._id, isActive: true },
         { $push: { serviceDetails: serviceSessionDetails } },
-        { new: true }
+        { new: true },
       );
     }
 
@@ -694,9 +692,9 @@ export const handleServiceRequestState = asyncHandler(
       updatedService,
       `Service ${serviceProgess
         .replace("Service", "")
-        .toLowerCase()} successfully`
+        .toLowerCase()} successfully`,
     );
-  }
+  },
 );
 
 export const getSavedDestination = asyncHandler(
@@ -725,9 +723,9 @@ export const getSavedDestination = asyncHandler(
       "success",
       200,
       savedDestination,
-      "Saved destinations fetched Successfully"
+      "Saved destinations fetched Successfully",
     );
-  }
+  },
 );
 
 export const getUserServiceDetilsByState = asyncHandler(
@@ -862,9 +860,9 @@ export const getUserServiceDetilsByState = asyncHandler(
       "success",
       200,
       customerServiceDetails,
-      "Service requests fetched successfully"
+      "Service requests fetched successfully",
     );
-  }
+  },
 );
 
 export const fetchTotalServiceByAdmin = asyncHandler(
@@ -884,6 +882,7 @@ export const fetchTotalServiceByAdmin = asyncHandler(
             { sp_fullName: { $regex: query, $options: "i" } },
             { customer_fullName: { $regex: query, $options: "i" } },
             { sp_email: { $regex: query, $options: "i" } },
+            { serviceProgess: { $regex: query, $options: "i" } },
           ],
         }
       : {};
@@ -981,16 +980,16 @@ export const fetchTotalServiceByAdmin = asyncHandler(
       { $limit: limitNumber },
     ]);
 
-    // const totalRecords = await towingServiceBookingModel.countDocuments(
+    const totalRecords = await towingServiceBookingModel.countDocuments();
     //   matchCriteria
     // );
-    const totalRecords = ServiceDetails.map((serviceData) => {
-      if (
-        serviceData.customer_fullName === query ||
-        serviceData.sp_fullName === query
-      )
-        return serviceData;
-    });
+    // const totalRecords = ServiceDetails.map((serviceData) => {
+    //   if (
+    //     serviceData.customer_fullName === query ||
+    //     serviceData.sp_fullName === query
+    //   )
+    //     return serviceData;
+    // });
 
     return handleResponse(
       res,
@@ -999,14 +998,14 @@ export const fetchTotalServiceByAdmin = asyncHandler(
       {
         ServiceDetails,
         pagination: {
-          total: totalRecords.length,
+          total: totalRecords,
           page: pageNumber,
           limit: limitNumber,
         },
       },
-      "Service requests fetched successfully"
+      "Service requests fetched successfully",
     );
-  }
+  },
 );
 
 export const fetchTotalServiceProgresswiseBySp = asyncHandler(
@@ -1104,14 +1103,15 @@ export const fetchTotalServiceProgresswiseBySp = asyncHandler(
       "success",
       200,
       ServiceDetails,
-      "Service requests fetched successfully"
+      "Service requests fetched successfully",
     );
-  }
+  },
 );
 
 export const fetchSingleService = asyncHandler(
   async (req: CustomRequest, res: Response) => {
     console.log("Api runs...: fetchSingleService");
+    // await sendPushNotification("6932ab57ee4f70abf6980d64","title","body")
 
     const { serviceId } = req.query;
     const ServiceDetails = await towingServiceBookingModel.aggregate([
@@ -1145,6 +1145,7 @@ export const fetchSingleService = asyncHandler(
           towing_cost: "$pricing.total",
         },
       },
+
       {
         $lookup: {
           from: "users",
@@ -1157,6 +1158,33 @@ export const fetchSingleService = asyncHandler(
         $unwind: {
           preserveNullAndEmptyArrays: true,
           path: "$sp_details",
+        },
+      },
+      {
+        $lookup: {
+          from: "ratings",
+          foreignField: "ratedTo",
+          localField: "serviceProviderId",
+          let: {
+            spId: "$serviceProviderId",
+            customerId: "$userId",
+            serviceId: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$ratedTo", "$$spId"] },
+                    { $eq: ["$ratedBy", "$$customerId"] },
+                    { $eq: ["$serviceId", "$$serviceId"] },
+                    { $eq: ["$isDeleted", false] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "customerGivenRatings",
         },
       },
 
@@ -1232,9 +1260,9 @@ export const fetchSingleService = asyncHandler(
       "success",
       200,
       ServiceDetails[0],
-      "Service request fetched successfully"
+      "Service request fetched successfully",
     );
-  }
+  },
 );
 
 export const cancelServiceBySP = asyncHandler(
@@ -1270,7 +1298,7 @@ export const cancelServiceBySP = asyncHandler(
           serviceProgess: "ServiceCancelledBySP",
           serviceProviderId: null,
         },
-      }
+      },
     );
     if (updatedService) {
       const canceledService = {
@@ -1286,11 +1314,11 @@ export const cancelServiceBySP = asyncHandler(
         "success",
         200,
         updatedService,
-        "Service request cancelled successfully"
+        "Service request cancelled successfully",
       );
     }
     return handleResponse(res, "error", 400, "", "Something went wrong");
-  }
+  },
 );
 
 export const previewTowingService = asyncHandler(
@@ -1314,7 +1342,7 @@ export const previewTowingService = asyncHandler(
     const origin_addresses = response.data.origin_addresses;
 
     const user = await UserModel.findById(userId).select(
-      "fullName email phone"
+      "fullName email phone",
     );
 
     const vehicle = await vehicleTypeModel
@@ -1373,9 +1401,9 @@ export const previewTowingService = asyncHandler(
       "success",
       200,
       previewData,
-      "Preview booking details"
+      "Preview booking details",
     );
-  }
+  },
 );
 
 // Function to fetch associated customer with the service request
@@ -1416,7 +1444,7 @@ export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
         "error",
         400,
         "",
-        "Service ID and code are required"
+        "Service ID and code are required",
       );
     }
 
@@ -1434,7 +1462,7 @@ export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
         "error",
         403,
         "",
-        "Not authorized for this service"
+        "Not authorized for this service",
       );
     }
 
@@ -1451,7 +1479,7 @@ export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
       },
       {
         new: true,
-      }
+      },
     );
 
     const customerDetails = await UserModel.findOne({ _id: service?.userId });
@@ -1460,12 +1488,12 @@ export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
     sendSMS(
       customerDetails?.phone as string,
       customerDetails?.countryCode as string,
-      `Your booked service is marked started by ${spDetails?.fullName}`
+      `Your booked service is marked started by ${spDetails?.fullName}`,
     );
     sendPushNotification(
       customerDetails?._id as string,
       "Your service code is verified.",
-      `Your service is performed by  ${spDetails?.fullName}! `
+      `Your service is performed by  ${spDetails?.fullName}! `,
     );
 
     return handleResponse(
@@ -1473,7 +1501,7 @@ export const verifyServiceCode = async (req: CustomRequest, res: Response) => {
       "success",
       200,
       service,
-      "Service verified successfully"
+      "Service verified successfully",
     );
   } catch (error) {
     console.error("Verification error:", error);
@@ -1606,9 +1634,9 @@ export const fetchCustomersTotalServices = asyncHandler(
       "success",
       200,
       serviceDetails,
-      "Service requests fetched successfully"
+      "Service requests fetched successfully",
     );
-  }
+  },
 );
 
 export const fetchOngoingServices = asyncHandler(
@@ -1664,8 +1692,8 @@ export const fetchOngoingServices = asyncHandler(
         $lookup: {
           from: "ratings",
           foreignField: "ratedTo",
-          localField: "serviceProviderId",
-          as: "sp_ratings",
+          localField: "userId",
+          as: "customer_ratings",
         },
       },
       {
@@ -1674,7 +1702,9 @@ export const fetchOngoingServices = asyncHandler(
           sp_avatar: "$sp_details.avatar",
           sp_phoneNumber: "$sp_details.phone",
           sp_email: "$sp_details.email",
-          sp_avg_rating: { $ifNull: [{ $avg: "$sp_ratings.rating" }, 0] },
+          customer_avg_rating: {
+            $ifNull: [{ $avg: "$customer_ratings.rating" }, 0],
+          },
         },
       },
       {
@@ -1742,9 +1772,9 @@ export const fetchOngoingServices = asyncHandler(
       "success",
       200,
       totalOngoingServices,
-      "Service requests fetched successfully"
+      "Service requests fetched successfully",
     );
-  }
+  },
 );
 export const fetchOngoingServicesByCustomer = asyncHandler(
   async (req: CustomRequest, res: Response) => {
@@ -1877,13 +1907,29 @@ export const fetchOngoingServicesByCustomer = asyncHandler(
       "success",
       200,
       totalOngoingServices,
-      "Service requests fetched successfully"
+      "Service requests fetched successfully",
     );
-  }
+  },
 );
 
 export const fetchTransactions = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    const { page = 1, limit = 10, query = "" } = req.query;
+    const pageNumber = parseInt(page as string, 10);
+    const limitNumber = parseInt(limit as string, 10);
+
+    const searchQuery = query
+      ? {
+          isDeleted: false,
+
+          $or: [{ paymentIntentId: { $regex: query, $options: "i" } }],
+        }
+      : {};
+
+    const matchCriteria = {
+      ...searchQuery,
+    };
+
     const totalTransactions = await towingServiceBookingModel.aggregate([
       {
         $match: {
@@ -1945,15 +1991,22 @@ export const fetchTransactions = asyncHandler(
           // customer_fullName: 1,
         },
       },
+      {
+        $match: matchCriteria,
+      },
+      { $sort: { createdAt: -1 } },
+      { $skip: (pageNumber - 1) * limitNumber },
+      { $limit: limitNumber },
     ]);
+
     return handleResponse(
       res,
       "success",
       200,
       totalTransactions,
-      "Total transactions fetched successfully"
+      "Total transactions fetched successfully",
     );
-  }
+  },
 );
 
 export const fetchTopPerformerSPs = asyncHandler(
@@ -2007,18 +2060,18 @@ export const fetchTopPerformerSPs = asyncHandler(
       "success",
       200,
       totalOngoingServices,
-      "Service requests fetched successfully"
+      "Service requests fetched successfully",
     );
-  }
+  },
 );
 
 export const fetchTransactionsSPWise = asyncHandler(
   async (req: CustomRequest, res: Response) => {
-    const {serviceProviderId} = req.body;
+    const { serviceProviderId } = req.body;
     const totalTransactions = await towingServiceBookingModel.aggregate([
       {
         $match: {
-          serviceProviderId:new mongoose.Types.ObjectId(serviceProviderId),
+          serviceProviderId: new mongoose.Types.ObjectId(serviceProviderId),
           serviceProgess: "ServiceCompleted",
           isPaymentComplete: true,
           paymentIntentId: { $ne: null },
@@ -2083,9 +2136,9 @@ export const fetchTransactionsSPWise = asyncHandler(
       "success",
       200,
       totalTransactions,
-      "Total transactions fetched successfully"
+      "Total transactions fetched successfully",
     );
-  }
+  },
 );
 
 export const fetchTransactionsCustomerWise = asyncHandler(
@@ -2095,7 +2148,7 @@ export const fetchTransactionsCustomerWise = asyncHandler(
     const totalTransactions = await towingServiceBookingModel.aggregate([
       {
         $match: {
-          userId:new mongoose.Types.ObjectId(userId),
+          userId: new mongoose.Types.ObjectId(userId),
           serviceProgess: "ServiceCompleted",
           isPaymentComplete: true,
           paymentIntentId: { $ne: null },
@@ -2151,7 +2204,7 @@ export const fetchTransactionsCustomerWise = asyncHandler(
           receivedBy: "$sp_fullName",
           towing_cost: 1,
           paidAt: "$updatedAt",
-          spAvatar:"$sp_avatar"
+          spAvatar: "$sp_avatar",
           // customer_fullName: 1,
         },
       },
@@ -2161,7 +2214,7 @@ export const fetchTransactionsCustomerWise = asyncHandler(
       "success",
       200,
       totalTransactions,
-      "Total transactions fetched successfully"
+      "Total transactions fetched successfully",
     );
-  }
+  },
 );

@@ -21,7 +21,7 @@ router.route("/fetch-active-sps").get(fetchAllActiveSps);
 
 router.use(VerifyJWTToken);
 
-router.route("/give-rating").post(verifyUserType(["Customer"]), giveRating);
+// router.route("/give-rating").post(verifyUserType(["Customer"]), giveRating);
 router.route("/update-sp").post(verifyUserType(["ServiceProvider"]), updateSp);
 router
   .route("/update-customer")

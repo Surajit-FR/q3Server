@@ -489,7 +489,7 @@ export const getCardValue = asyncHandler(
       userType: "ServiceProvider",isDeleted:false
     }).countDocuments();
     const totalServices = await towingServiceBookingModel
-      .find({})
+      .find({isDeleted:false})
       .countDocuments();
     const totalActiveSps = await LocationSessionModel.find({
       isActive: true,

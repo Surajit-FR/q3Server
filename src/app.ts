@@ -13,6 +13,7 @@ import pricingRuleRouter from "./routes/pricing.route";
 import stripeRouter from "./routes/stripe.routes";
 import webhookRouter from "./routes/webhook.route"
 import squareRouter from "./routes/square.route";
+import ratingRouter from './routes/ratings.route';
 
 const app = express();
 
@@ -53,6 +54,7 @@ app.use("/api/v1/pricing-rule", pricingRuleRouter);
 app.use("/api/v1/service", towingServiceBookingRouter);
 app.use("/api/v1/location-session", locationSessionRouter);
 app.use("/api/v1/user", userRouter);
+app.use("/api/v1/rating", ratingRouter);
 
 //  Ping Route for Health Check
 app.get("/api/v1/ping", (req: Request, res: Response) => {
