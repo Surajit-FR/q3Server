@@ -144,6 +144,7 @@ export interface IRatingSchema extends Document {
   _id: ObjectId;
   ratedBy: ObjectId;
   ratedTo: ObjectId;
+  serviceId: ObjectId;
   rating: number;
   comments: string;
   isDeleted: boolean;
@@ -209,3 +210,14 @@ interface ISPLocationTrackingSchema extends Document {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export interface IRatingSchema extends Document {
+    _id: ObjectId;
+    ratedBy: ObjectId;
+    ratedTo: ObjectId;
+    rating: number;
+    comments: string;
+    isDeleted: boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
+};

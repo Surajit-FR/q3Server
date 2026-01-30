@@ -41,7 +41,7 @@ export const storeFcmToken = async (req: Request, res: Response) => {
     const { userId, token, deviceId } = req.body;
 
     if (!userId || !token || !deviceId) {
-     res
+      res
         .status(400)
         .json({ message: "User ID, token, and device ID are required." });
     }
@@ -56,7 +56,7 @@ export const storeFcmToken = async (req: Request, res: Response) => {
         doc.data()?.tokens || [];
 
       const alreadyExists = existingTokens.some(
-        (entry) => entry.deviceId === deviceId && entry.token === token
+        (entry) => entry.deviceId === deviceId && entry.token === token,
       );
 
       if (!alreadyExists) {
@@ -72,10 +72,10 @@ export const storeFcmToken = async (req: Request, res: Response) => {
       });
     }
 
-     res.status(200).json({ message: "Token stored successfully." });
+    res.status(200).json({ message: "Token stored successfully." });
   } catch (error) {
     console.error("Error storing FCM token:", error);
-     res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -127,10 +127,11 @@ export async function sendPushNotification(
   userId: string,
   title: string,
   body: string,
-  dbData?: object
+  dbData?: object,
 ) {
   try {
-    const userRef = firestore.collection("fcmTokens").doc(userId);
+    const userRef = firestore.collection("fcmTokens").doc(userId.toString());
+
     const doc = await userRef.get();
 
     if (!doc.exists)

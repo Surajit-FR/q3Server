@@ -42,7 +42,6 @@ import {
   FirestoreAdmin,
 } from "../../../utils/sendPushNotification.utils";
 
-
 // fetchUserData func.
 export const fetchUserData = async (userId: string | ObjectId) => {
   console.log("Api runs...: fetchUserData");
@@ -121,7 +120,11 @@ export const startRegistration = asyncHandler(
     console.log({ userData });
 
     if (phone) {
-      const existingPhone = await UserModel.findOne({ phone, userType });
+      const existingPhone = await UserModel.findOne({
+        phone,
+        userType,
+        isDeleted: false,
+      });
       if (existingPhone) {
         throw handleResponse(
           res,
@@ -210,6 +213,7 @@ export const completeRegistration = asyncHandler(
     const user = await UserModel.findOne({
       phone,
       userType,
+      isDeleted:false,
       isRegistered: false,
     });
 
