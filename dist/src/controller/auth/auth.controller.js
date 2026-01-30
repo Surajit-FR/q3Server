@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -36,9 +27,9 @@ const authToken = config_1.TWILIO_AUTH_TOKEN;
 let client = (0, twilio_1.default)(accountSid, authToken);
 const sendPushNotification_utils_1 = require("../../../utils/sendPushNotification.utils");
 // fetchUserData func.
-const fetchUserData = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+const fetchUserData = async (userId) => {
     console.log("Api runs...: fetchUserData");
-    const user = yield user_model_1.default.aggregate([
+    const user = await user_model_1.default.aggregate([
         {
             $match: {
                 isDeleted: false,
@@ -73,7 +64,7 @@ const fetchUserData = (userId) => __awaiter(void 0, void 0, void 0, function* ()
         },
     ]);
     return user;
-});
+};
 exports.fetchUserData = fetchUserData;
 // Set cookieOption
 exports.cookieOption = {
@@ -83,26 +74,30 @@ exports.cookieOption = {
     sameSite: "strict",
 };
 // register user controller
-exports.startRegistration = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.startRegistration = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     console.log("Api runs...: startRegistration");
     const userData = req.body;
     let newUser;
     const { fullName, email, countryCode, phone, userType, avatar, vehicleRegistrationNumber, driverLicense, driverLicenseImage, insuranceNumber, insuranceImage, } = userData;
     console.log({ userData });
     if (phone) {
-        const existingPhone = yield user_model_1.default.findOne({ phone, userType });
+        const existingPhone = await user_model_1.default.findOne({
+            phone,
+            userType,
+            isDeleted: false,
+        });
         if (existingPhone) {
             throw (0, response_utils_1.handleResponse)(res, "error", 409, "", "User with phone already exists");
         }
     }
     if (email) {
-        const existingEmail = yield user_model_1.default.findOne({ email, userType });
+        const existingEmail = await user_model_1.default.findOne({ email, userType });
         if (existingEmail) {
             throw (0, response_utils_1.handleResponse)(res, "error", 409, "", "User with email already exists");
         }
     }
     if (userType === "ServiceProvider") {
-        newUser = yield user_model_1.default.create({
+        newUser = await user_model_1.default.create({
             fullName,
             email,
             countryCode,
@@ -122,10 +117,10 @@ exports.startRegistration = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
             insuranceNumber,
             insuranceImage,
         };
-        yield new additionalInfo_model_1.default(addInfoData).save();
+        await new additionalInfo_model_1.default(addInfoData).save();
     }
     else {
-        newUser = yield user_model_1.default.create({
+        newUser = await user_model_1.default.create({
             fullName,
             email,
             countryCode,
@@ -142,8 +137,8 @@ exports.startRegistration = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
         message: "User created",
         success: true,
     });
-}));
-exports.completeRegistration = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.completeRegistration = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     console.log("Api runs...: completeRegistration");
     const { phone, password, userType } = req.body;
     console.log(req.body);
@@ -151,9 +146,10 @@ exports.completeRegistration = (0, asyncHandler_utils_1.asyncHandler)((req, res)
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Phone and password are required");
     }
     // Find the unregistered user
-    const user = yield user_model_1.default.findOne({
+    const user = await user_model_1.default.findOne({
         phone,
         userType,
+        isDeleted: false,
         isRegistered: false,
     });
     if (!user) {
@@ -162,15 +158,15 @@ exports.completeRegistration = (0, asyncHandler_utils_1.asyncHandler)((req, res)
     user.password = password;
     user.isRegistered = true;
     user.isOTPVerified = true;
-    yield user.save();
+    await user.save();
     return res.status(200).json({
         success: true,
         message: "Password set successfully. Registration complete.",
         data: { user: user },
     });
-}));
+});
 // login user controller
-exports.loginUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.loginUser = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     console.log("Api runs...: loginUser");
     const { email, phone, password, userType, fcmToken, isAdminPanel, } = req.body;
     if (!userType || (!email && !phone)) {
@@ -181,7 +177,7 @@ exports.loginUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __await
     }
     console.log({ email });
     console.log({ phone });
-    const user = yield user_model_1.default.findOne({
+    const user = await user_model_1.default.findOne({
         $or: [{ email }, { phone }],
         userType,
         isDeleted: false,
@@ -201,7 +197,7 @@ exports.loginUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __await
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Access denied");
     }
     const userId = user._id;
-    const isPasswordValid = yield user.isPasswordCorrect(password);
+    const isPasswordValid = await user.isPasswordCorrect(password);
     // console.log(isPasswordValid, "isPasswordValid");
     if (!isPasswordValid) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Invalid user credentials");
@@ -219,10 +215,10 @@ exports.loginUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __await
     // Save FCM Token if provided
     if (fcmToken) {
         user.fcmToken = fcmToken;
-        yield user.save();
+        await user.save();
     }
-    const { accessToken } = yield (0, createToken_utils_1.generateAccessToken)(res, user._id);
-    const loggedInUser = yield (0, exports.fetchUserData)(user._id);
+    const { accessToken } = await (0, createToken_utils_1.generateAccessToken)(res, user._id);
+    const loggedInUser = await (0, exports.fetchUserData)(user._id);
     const filteredUser = {
         _id: loggedInUser[0]._id,
         fullName: loggedInUser[0].fullName,
@@ -235,7 +231,7 @@ exports.loginUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __await
     };
     if (user.userType === "ServiceProvider") {
         // Fetch additional info and address by userId
-        const userAdditionalInfo = yield additionalInfo_model_1.default.findOne({
+        const userAdditionalInfo = await additionalInfo_model_1.default.findOne({
             userId: user._id,
         });
         if (!userAdditionalInfo) {
@@ -264,8 +260,8 @@ exports.loginUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __await
         message: "User logged In successfully",
         success: true,
     });
-}));
-exports.CheckJWTTokenExpiration = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.CheckJWTTokenExpiration = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a, _b;
     console.log("Api runs...: CheckJWTTokenExpiration");
     let token = ((_a = req.cookies) === null || _a === void 0 ? void 0 : _a.accessToken) ||
@@ -286,9 +282,9 @@ exports.CheckJWTTokenExpiration = (0, asyncHandler_utils_1.asyncHandler)((req, r
             .json({ isExpired: true, remainingTimeInSeconds: 0 });
     }
     return res.status(200).json({ isExpired: false, remainingTimeInSeconds });
-}));
+});
 // refreshAccessToken controller
-exports.refreshAccessToken = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.refreshAccessToken = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
     console.log("Api runs...: refreshAccessToken");
     const incomingAccessToken = (_a = req
@@ -298,7 +294,7 @@ exports.refreshAccessToken = (0, asyncHandler_utils_1.asyncHandler)((req, res) =
     }
     try {
         const decodedToken = jsonwebtoken_1.default.verify(incomingAccessToken, process.env.ACCESS_TOKEN_SECRET);
-        const user = yield user_model_1.default.findById(decodedToken === null || decodedToken === void 0 ? void 0 : decodedToken._id);
+        const user = await user_model_1.default.findById(decodedToken === null || decodedToken === void 0 ? void 0 : decodedToken._id);
         if (!user) {
             return (0, response_utils_1.handleResponse)(res, "error", 401, "", "Invalid access token");
         }
@@ -309,7 +305,7 @@ exports.refreshAccessToken = (0, asyncHandler_utils_1.asyncHandler)((req, res) =
             httpOnly: true,
             secure: true,
         };
-        const { accessToken } = yield (0, createToken_utils_1.generateAccessToken)(res, user._id);
+        const { accessToken } = await (0, createToken_utils_1.generateAccessToken)(res, user._id);
         return res
             .status(200)
             .cookie("accessToken", accessToken, cookieOption)
@@ -318,16 +314,16 @@ exports.refreshAccessToken = (0, asyncHandler_utils_1.asyncHandler)((req, res) =
     catch (exc) {
         return (0, response_utils_1.handleResponse)(res, "error", 401, "", exc.message || "Invalid access token");
     }
-}));
+});
 // logout user controller
-exports.logoutUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.logoutUser = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a, _b;
     console.log("Api runs...: logoutUser");
     if (!req.user || !((_a = req.user) === null || _a === void 0 ? void 0 : _a._id)) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "User not found in request");
     }
     const userId = (_b = req.user) === null || _b === void 0 ? void 0 : _b._id;
-    yield user_model_1.default.findByIdAndUpdate(userId, {
+    await user_model_1.default.findByIdAndUpdate(userId, {
         $set: {
             accessToken: "",
             fcmToken: "",
@@ -342,14 +338,14 @@ exports.logoutUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awai
         .status(200)
         .clearCookie("accessToken", cookieOptions)
         .json(new apiResponse_utils_1.ApiResponse(200, {}, "User logged out successfully"));
-}));
-exports.forgetPassword = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.forgetPassword = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     console.log("Api runs...: forgetPassword");
     const { input, userType } = req.body;
     let identifier = "";
     identifier = input.includes("@") ? "email" : "phone";
     // Find user by email or phone
-    const user = yield user_model_1.default.findOne({
+    const user = await user_model_1.default.findOne({
         userType,
         $or: [{ email: input }, { phone: input }],
     });
@@ -362,37 +358,35 @@ exports.forgetPassword = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __
         const subject = "Email Verification";
         const to = input;
         const filePath = path_1.default.join(__dirname, "..", "..", "..", "templates", "verify_email.html");
-        let html = (0, fs_1.readFile)(filePath, function (error, html) {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (error) {
-                    throw error;
-                }
-                console.log({ html });
-                const mailContent = html.toString();
-                const updatedTemplate = mailContent
-                    .replace("{{email}}", to)
-                    .replace("{{code}}", verificationCode);
-                const invokeSendMail = yield (0, sendEmail_1.sendMail)(to, subject, updatedTemplate);
-                if (!invokeSendMail) {
-                    return (0, response_utils_1.handleResponse)(res, "error", 500, "", "Something went wrong");
-                }
-                else {
-                    yield emailCode_model_1.default.findOneAndUpdate({
-                        email: input,
-                    }, {
-                        code: verificationCode,
-                    }, {
-                        upsert: true,
-                        new: true,
-                    });
-                }
-                res.end(html);
-            });
+        let html = (0, fs_1.readFile)(filePath, async function (error, html) {
+            if (error) {
+                throw error;
+            }
+            console.log({ html });
+            const mailContent = html.toString();
+            const updatedTemplate = mailContent
+                .replace("{{email}}", to)
+                .replace("{{code}}", verificationCode);
+            const invokeSendMail = await (0, sendEmail_1.sendMail)(to, subject, updatedTemplate);
+            if (!invokeSendMail) {
+                return (0, response_utils_1.handleResponse)(res, "error", 500, "", "Something went wrong");
+            }
+            else {
+                await emailCode_model_1.default.findOneAndUpdate({
+                    email: input,
+                }, {
+                    code: verificationCode,
+                }, {
+                    upsert: true,
+                    new: true,
+                });
+            }
+            res.end(html);
         });
     }
     else {
         const otp = code;
-        const message = yield client.messages.create({
+        const message = await client.messages.create({
             body: `Your OTP code is ${otp}`,
             from: config_1.TWILIO_PHONE_NUMBER,
             to: input,
@@ -401,7 +395,7 @@ exports.forgetPassword = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __
             return (0, response_utils_1.handleResponse)(res, "error", 500, "Something went wrong");
         }
         else {
-            yield otp_model_1.default.findOneAndUpdate({
+            await otp_model_1.default.findOneAndUpdate({
                 userId: user._id,
             }, {
                 otp,
@@ -413,15 +407,15 @@ exports.forgetPassword = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __
         }
     }
     return (0, response_utils_1.handleResponse)(res, "success", 200, { identifier }, "Verification code sent fsuccessfully");
-}));
-exports.resetPassword = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.resetPassword = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     console.log("Api runs...: resetPassword");
     const { input, password, userType } = req.body;
     console.log(req.body);
     if (!input) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "Either email or phone number is required");
     }
-    const userDetails = yield user_model_1.default.findOne({
+    const userDetails = await user_model_1.default.findOne({
         userType,
         $or: [{ email: input }, { phone: input }],
     });
@@ -431,11 +425,11 @@ exports.resetPassword = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __a
     }
     // Update the password
     userDetails.password = req.body.password;
-    yield userDetails.save();
+    await userDetails.save();
     return (0, response_utils_1.handleResponse)(res, "success", 200, {}, "Password reset successfull");
-}));
+});
 // verifyServiceProvider controller
-exports.verifyServiceProvider = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.verifyServiceProvider = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     const { serviceProviderId } = req.params;
     const { isVerified } = req.body;
     if (!serviceProviderId) {
@@ -444,22 +438,22 @@ exports.verifyServiceProvider = (0, asyncHandler_utils_1.asyncHandler)((req, res
     if (!mongoose_1.default.Types.ObjectId.isValid(serviceProviderId)) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "Invalid Service Provider ID.");
     }
-    const results = yield user_model_1.default.findByIdAndUpdate(serviceProviderId, { $set: { isVerified } }, { new: true }).select("-password -refreshToken -__V");
+    const results = await user_model_1.default.findByIdAndUpdate(serviceProviderId, { $set: { isVerified } }, { new: true }).select("-password -refreshToken -__V");
     if (!results) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "Service Provider not found.");
     }
-    const additionalInfo = yield additionalInfo_model_2.default.findOne({
+    const additionalInfo = await additionalInfo_model_2.default.findOne({
         userId: serviceProviderId,
     });
     const message = isVerified
         ? "Service Provider profile verified successfully."
         : "Service Provider profile made unverified.";
     return (0, response_utils_1.handleResponse)(res, "success", 200, {}, message);
-}));
-exports.banUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.banUser = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     const { isBan, userId } = req.body;
     if (isBan) {
-        const prevOngoigServices = yield towingServiceBooking_model_1.default.aggregate([
+        const prevOngoigServices = await towingServiceBooking_model_1.default.aggregate([
             {
                 $match: {
                     userId: new mongoose_1.default.Types.ObjectId(userId),
@@ -473,7 +467,7 @@ exports.banUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter
         if (prevOngoigServices && prevOngoigServices.length > 0) {
             return (0, response_utils_1.handleResponse)(res, "error", 400, "There is a service in progress, you can not ban this user");
         }
-        const banUser = yield user_model_1.default.findOneAndUpdate({
+        const banUser = await user_model_1.default.findOneAndUpdate({
             _id: userId,
         }, {
             $set: {
@@ -484,7 +478,7 @@ exports.banUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter
         return (0, response_utils_1.handleResponse)(res, "success", 200, "", "Successfully banned the user");
     }
     else {
-        const banUser = yield user_model_1.default.findOneAndUpdate({
+        const banUser = await user_model_1.default.findOneAndUpdate({
             _id: userId,
         }, {
             $set: {
@@ -493,14 +487,14 @@ exports.banUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter
         });
         return (0, response_utils_1.handleResponse)(res, "success", 200, "", "Successfully unbanned the user");
     }
-}));
-exports.deleteuser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.deleteuser = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     const { userId } = req.body;
-    const userDetails = yield user_model_1.default.findById({ _id: userId }).select("userType");
+    const userDetails = await user_model_1.default.findById({ _id: userId }).select("userType");
     console.log({ userDetails });
     const userType = userDetails === null || userDetails === void 0 ? void 0 : userDetails.userType;
     if (userType === "ServiceProvider") {
-        const prevOngoigServices = yield towingServiceBooking_model_1.default.aggregate([
+        const prevOngoigServices = await towingServiceBooking_model_1.default.aggregate([
             {
                 $match: {
                     serviceProviderId: new mongoose_1.default.Types.ObjectId(userId),
@@ -516,7 +510,7 @@ exports.deleteuser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awai
         }
     }
     else if (userType === "Customer") {
-        const RunningBookedServices = yield towingServiceBooking_model_1.default.aggregate([
+        const RunningBookedServices = await towingServiceBooking_model_1.default.aggregate([
             {
                 $match: {
                     userId: new mongoose_1.default.Types.ObjectId(userId),
@@ -535,22 +529,22 @@ exports.deleteuser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awai
     else {
         return (0, response_utils_1.handleResponse)(res, "error", 400, {}, "UserType not found");
     }
-    const updateUser = yield user_model_1.default.findOneAndUpdate({ _id: userId }, {
+    const updateUser = await user_model_1.default.findOneAndUpdate({ _id: userId }, {
         $set: {
             isDeleted: true,
             accessToken: "",
         },
     });
     return (0, response_utils_1.handleResponse)(res, "success", 200, {}, "User deleted successfully");
-}));
-exports.deletAccount = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.deletAccount = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
     const { userId } = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-    const userDetails = yield user_model_1.default.findById({ _id: userId }).select("userType");
+    const userDetails = await user_model_1.default.findById({ _id: userId }).select("userType");
     console.log({ userDetails });
     const userType = userDetails === null || userDetails === void 0 ? void 0 : userDetails.userType;
     if (userType === "ServiceProvider") {
-        const prevOngoigServices = yield towingServiceBooking_model_1.default.aggregate([
+        const prevOngoigServices = await towingServiceBooking_model_1.default.aggregate([
             {
                 $match: {
                     serviceProviderId: new mongoose_1.default.Types.ObjectId(userId),
@@ -566,7 +560,7 @@ exports.deletAccount = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __aw
         }
     }
     else if (userType === "Customer") {
-        const RunningBookedServices = yield towingServiceBooking_model_1.default.aggregate([
+        const RunningBookedServices = await towingServiceBooking_model_1.default.aggregate([
             {
                 $match: {
                     userId: new mongoose_1.default.Types.ObjectId(userId),
@@ -585,12 +579,12 @@ exports.deletAccount = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __aw
     else {
         return (0, response_utils_1.handleResponse)(res, "error", 400, {}, "UserType not found");
     }
-    const updateUser = yield user_model_1.default.findOneAndUpdate({ _id: userId }, {
+    const updateUser = await user_model_1.default.findOneAndUpdate({ _id: userId }, {
         $set: {
             isDeleted: true,
             accessToken: "",
         },
     });
-    yield sendPushNotification_utils_1.firestore.collection("fcmTokens").doc(userId).delete();
+    await sendPushNotification_utils_1.firestore.collection("fcmTokens").doc(userId).delete();
     return (0, response_utils_1.handleResponse)(res, "success", 200, {}, "Account deleted successfully");
-}));
+});

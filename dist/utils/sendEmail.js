@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -36,9 +27,9 @@ var transporter = nodemailer_1.default.createTransport({
     },
     socketTimeout: 5000000,
 });
-const sendMail = (to, subject, html) => __awaiter(void 0, void 0, void 0, function* () {
+const sendMail = async (to, subject, html) => {
     try {
-        const info = yield transporter.sendMail({
+        const info = await transporter.sendMail({
             from: process.env.SMTP_USER,
             to,
             subject,
@@ -51,17 +42,17 @@ const sendMail = (to, subject, html) => __awaiter(void 0, void 0, void 0, functi
         console.error("Error sending email:", error);
         throw error;
     }
-});
+};
 exports.sendMail = sendMail;
-exports.sendMailController = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.sendMailController = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     const mailData = req.body;
     const verificationCode = (0, exports.generateVerificationCode)(5);
     const subject = "Email Verification";
     const { to } = mailData;
     const filePath = path_1.default.join(__dirname, "..", "templates", "verify_email.html");
-    let html = yield (0, promises_1.readFile)(filePath, "utf-8");
+    let html = await (0, promises_1.readFile)(filePath, "utf-8");
     html = html.replace("{{email}}", to).replace("{{code}}", verificationCode);
-    const invokeSendMail = yield (0, exports.sendMail)(to, subject, html);
+    const invokeSendMail = await (0, exports.sendMail)(to, subject, html);
     if (!invokeSendMail) {
         return (0, response_utils_1.handleResponse)(res, "error", 500, "", "Something went wrong");
     }
@@ -70,11 +61,11 @@ exports.sendMailController = (0, asyncHandler_utils_1.asyncHandler)((req, res) =
             email: to,
             code: verificationCode,
         };
-        yield new emailCode_model_1.default(addCode).save();
+        await new emailCode_model_1.default(addCode).save();
         return (0, response_utils_1.handleResponse)(res, "success", 200, invokeSendMail, "Mail sent successfully");
     }
-}));
-exports.verifyEmail = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.verifyEmail = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     const { email, code } = req.body;
     if (!email) {
         return res.status(400).json({ error: "Missing or invalid email" });
@@ -82,7 +73,7 @@ exports.verifyEmail = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awa
     // Set default OTP for testing in non-production environments
     const defaultOtp = "00000";
     // Find user with matching verification token
-    const EmailCode = yield emailCode_model_1.default.findOne({ email, code });
+    const EmailCode = await emailCode_model_1.default.findOne({ email, code });
     const isEmailValid = code === defaultOtp || (EmailCode && EmailCode.code === code);
     console.log({ isEmailValid });
     if (!isEmailValid) {
@@ -91,7 +82,7 @@ exports.verifyEmail = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awa
             .json({ error: "Invalid or expired verification code" });
     }
     if ((EmailCode && code === (EmailCode === null || EmailCode === void 0 ? void 0 : EmailCode.code)) || isEmailValid) {
-        EmailCode && (yield EmailCode.deleteOne());
+        EmailCode && await EmailCode.deleteOne();
         return res.status(200).json({ message: "Email verified successfully" });
     }
-}));
+});

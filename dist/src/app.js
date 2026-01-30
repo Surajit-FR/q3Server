@@ -19,6 +19,7 @@ const pricing_route_1 = __importDefault(require("./routes/pricing.route"));
 const stripe_routes_1 = __importDefault(require("./routes/stripe.routes"));
 const webhook_route_1 = __importDefault(require("./routes/webhook.route"));
 const square_route_1 = __importDefault(require("./routes/square.route"));
+const ratings_route_1 = __importDefault(require("./routes/ratings.route"));
 const app = (0, express_1.default)();
 exports.app = app;
 //  CORS Middleware
@@ -50,6 +51,7 @@ app.use("/api/v1/pricing-rule", pricing_route_1.default);
 app.use("/api/v1/service", towingServiceBooking_route_1.default);
 app.use("/api/v1/location-session", locationSession_route_1.default);
 app.use("/api/v1/user", user_route_1.default);
+app.use("/api/v1/rating", ratings_route_1.default);
 //  Ping Route for Health Check
 app.get("/api/v1/ping", (req, res) => {
     res.send("Hi!...I am server, Happy to see you boss...");

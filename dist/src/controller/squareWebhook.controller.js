@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -25,14 +16,14 @@ const client = new square_1.SquareClient({
 });
 const app = (0, express_1.default)();
 app.use(express_1.default.raw({ type: "application/json" }));
-const squareWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const squareWebhook = async (req, res) => {
     var _a;
     console.log("webhook runs");
     try {
         const signature = req.headers["x-square-hmacsha256-signature"];
         const rawBody = req.body; // The raw body as a Buffer
         // Verify the signature
-        const isVerified = yield square_2.WebhooksHelper.verifySignature({
+        const isVerified = await square_2.WebhooksHelper.verifySignature({
             requestBody: rawBody,
             signatureHeader: signature,
             signatureKey: config_2.SQUARE_SIGNATURE_KEY,
@@ -46,13 +37,13 @@ const squareWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 const payment = event.data.object.payment;
                 if (payment.status === "COMPLETED") {
                     console.log("payment", payment);
-                    const response = yield client.orders.get({
+                    const response = await client.orders.get({
                         orderId: payment === null || payment === void 0 ? void 0 : payment.order_id,
                     });
                     console.log("api hitt", response);
                     const serviceId = (_a = response === null || response === void 0 ? void 0 : response.order) === null || _a === void 0 ? void 0 : _a.referenceId;
                     console.log("api serviceId", serviceId);
-                    const service = yield towingServiceBooking_model_1.default.findByIdAndUpdate(serviceId, {
+                    const service = await towingServiceBooking_model_1.default.findByIdAndUpdate(serviceId, {
                         isPaymentComplete: true,
                         paymentIntentId: payment.id,
                         serviceProgess: "ServiceCompleted",
@@ -71,5 +62,5 @@ const squareWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         console.error("Webhook Error:", error.message);
         res.status(400).send(`Webhook Error: ${error.message}`);
     }
-});
+};
 exports.squareWebhook = squareWebhook;

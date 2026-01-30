@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -25,27 +16,27 @@ const stripe = new stripe_1.default(config_1.STRIPE_SECRET_KEY, {
     apiVersion: "2024-09-30.acacia",
 });
 //session for towing service payment payment
-const createCheckoutsession = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createCheckoutsession = async (req, res) => {
     var _a;
     try {
         const { amount, serviceId } = req.body;
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
         const currency = "usd";
-        const user = yield user_model_1.default.findById(userId);
+        const user = await user_model_1.default.findById(userId);
         if (!user)
             return res
                 .status(404)
                 .json({ success: false, message: "User not found" });
         let stripeCustomerId = user.stripeCustomerId;
         if (!stripeCustomerId) {
-            const customer = yield stripe.customers.create({
+            const customer = await stripe.customers.create({
                 email: user.email,
                 name: `${user.fullName}`,
             });
             stripeCustomerId = customer.id;
-            yield user_model_1.default.findByIdAndUpdate(userId, { stripeCustomerId });
+            await user_model_1.default.findByIdAndUpdate(userId, { stripeCustomerId });
         }
-        const session = yield stripe.checkout.sessions.create({
+        const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
             mode: "payment",
             customer: stripeCustomerId,
@@ -81,7 +72,7 @@ const createCheckoutsession = (req, res) => __awaiter(void 0, void 0, void 0, fu
         });
         console.log({ Incentivesession: session });
         const paymentUrl = session.url || "";
-        const paymentQR = yield qrcode_1.default.toDataURL(paymentUrl);
+        const paymentQR = await qrcode_1.default.toDataURL(paymentUrl);
         // await towingServiceBookingModel.findByIdAndUpdate(serviceId, {
         //   isPaymentComplete: true,
         //   paymentIntentId: session.payment_intent,
@@ -90,9 +81,9 @@ const createCheckoutsession = (req, res) => __awaiter(void 0, void 0, void 0, fu
         res.json({ paymentQR });
     }
     catch (error) { }
-});
+};
 exports.createCheckoutsession = createCheckoutsession;
-const payoutServiceProvider = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const payoutServiceProvider = async (req, res) => {
     var _a;
     const { spId, first_name, last_name, amount, serviceId, socialSecurity, dob, accountNumber, ifsc, routing_number, } = req.body;
     if (!spId || !amount) {
@@ -101,7 +92,7 @@ const payoutServiceProvider = (req, res) => __awaiter(void 0, void 0, void 0, fu
             message: "spId and amount are required",
         });
     }
-    const sp = yield user_model_1.default.findById(spId);
+    const sp = await user_model_1.default.findById(spId);
     if (!sp) {
         res.status(404).json({
             success: false,
@@ -112,7 +103,7 @@ const payoutServiceProvider = (req, res) => __awaiter(void 0, void 0, void 0, fu
      * 🔹 FIRST TIME → CREATE STRIPE ACCOUNT
      */
     if (!(sp === null || sp === void 0 ? void 0 : sp.stripeAccountId)) {
-        const account = yield stripe.accounts.create({
+        const account = await stripe.accounts.create({
             type: "custom",
             country: "US",
             email: sp === null || sp === void 0 ? void 0 : sp.email,
@@ -141,7 +132,7 @@ const payoutServiceProvider = (req, res) => __awaiter(void 0, void 0, void 0, fu
                 ip: req.ip || "127.0.0.1",
             },
         });
-        yield stripe.accounts.createExternalAccount(account.id, {
+        await stripe.accounts.createExternalAccount(account.id, {
             external_account: {
                 object: "bank_account",
                 country: "US",
@@ -153,19 +144,19 @@ const payoutServiceProvider = (req, res) => __awaiter(void 0, void 0, void 0, fu
         if (sp) {
             sp.stripeAccountId = account.id;
             sp.stripeOnboarded = false;
-            yield sp.save();
+            await sp.save();
         }
     }
     if (sp) {
         // 🔹 CREATE ONBOARDING URL
-        const accountLink = yield stripe.accountLinks.create({
+        const accountLink = await stripe.accountLinks.create({
             account: sp === null || sp === void 0 ? void 0 : sp.stripeAccountId,
             refresh_url: "https://yourdomain.com/stripe/onboarding/refresh",
             return_url: "https://yourdomain.com/stripe/onboarding/success",
             type: "account_onboarding",
         });
         // 🔹 CHECK CAPABILITY
-        const accountDetails = yield stripe.accounts.retrieve(sp.stripeAccountId);
+        const accountDetails = await stripe.accounts.retrieve(sp.stripeAccountId);
         // If transfers not active, send onboarding URL
         if (((_a = accountDetails.capabilities) === null || _a === void 0 ? void 0 : _a.transfers) !== "active") {
             res.status(200).json({
@@ -178,7 +169,7 @@ const payoutServiceProvider = (req, res) => __awaiter(void 0, void 0, void 0, fu
         }
     }
     // 1️⃣ Transfer Admin → SP
-    const transfer = yield stripe.transfers.create({
+    const transfer = await stripe.transfers.create({
         amount: Math.round(amount * 100),
         currency: "usd",
         destination: sp ? sp.stripeAccountId : "",
@@ -188,7 +179,7 @@ const payoutServiceProvider = (req, res) => __awaiter(void 0, void 0, void 0, fu
         },
     });
     // 2️⃣ Payout SP → Bank
-    const payout = yield stripe.payouts.create({
+    const payout = await stripe.payouts.create({
         amount: Math.round(amount * 100),
         currency: "usd",
     }, {
@@ -199,7 +190,7 @@ const payoutServiceProvider = (req, res) => __awaiter(void 0, void 0, void 0, fu
     // await sp.save();
     if (payout) {
         // After successful payout
-        yield payout_model_1.default.create({
+        await payout_model_1.default.create({
             serviceProviderId: sp === null || sp === void 0 ? void 0 : sp._id,
             serviceId,
             amount,
@@ -219,14 +210,14 @@ const payoutServiceProvider = (req, res) => __awaiter(void 0, void 0, void 0, fu
         transferId: transfer.id,
         payoutId: payout.id,
     });
-});
+};
 exports.payoutServiceProvider = payoutServiceProvider;
-exports.fetchSPPayout = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.fetchSPPayout = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     const { serviceProviderId } = req.body;
     if (!serviceProviderId) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Service Provider ID is required");
     }
-    const payouts = yield payout_model_1.default.aggregate([
+    const payouts = await payout_model_1.default.aggregate([
         {
             $match: {
                 serviceProviderId: new mongoose_1.default.Types.ObjectId(serviceProviderId),
@@ -240,4 +231,4 @@ exports.fetchSPPayout = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __a
         }
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, payouts, "Payouts fetched successfully");
-}));
+});

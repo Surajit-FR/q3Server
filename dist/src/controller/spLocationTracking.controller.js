@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -16,7 +7,7 @@ exports.getSPLocation = exports.updateSPLocation = void 0;
 const spLocationTracking_model_1 = __importDefault(require("../models/spLocationTracking.model"));
 const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
 const response_utils_1 = require("../../utils/response.utils");
-exports.updateSPLocation = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.updateSPLocation = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     const { spId = req.user._id, serviceId, lat, lng } = req.body;
     if (!spId || !serviceId || !lat || !lng) {
         return res.status(400).json({
@@ -29,7 +20,7 @@ exports.updateSPLocation = (0, asyncHandler_utils_1.asyncHandler)((req, res) => 
         lng,
         timestamp: new Date(),
     };
-    const updatedDoc = yield spLocationTracking_model_1.default.findOneAndUpdate({ spId, serviceId }, {
+    const updatedDoc = await spLocationTracking_model_1.default.findOneAndUpdate({ spId, serviceId }, {
         $push: {
             lastLocations: {
                 $each: [newPoint],
@@ -41,11 +32,11 @@ exports.updateSPLocation = (0, asyncHandler_utils_1.asyncHandler)((req, res) => 
         new: true,
     });
     return (0, response_utils_1.handleResponse)(res, "success", 200, updatedDoc, "SP location updated");
-}));
-exports.getSPLocation = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.getSPLocation = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     const { serviceId } = req.body;
     console.log(req.body, "fetch sp locats while tracking");
-    const locationRecord = yield spLocationTracking_model_1.default.findOne({
+    const locationRecord = await spLocationTracking_model_1.default.findOne({
         serviceId,
     }).lean();
     if (!locationRecord) {
@@ -55,4 +46,4 @@ exports.getSPLocation = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __a
         });
     }
     return (0, response_utils_1.handleResponse)(res, "success", 200, locationRecord.lastLocations, "SP location fetched successfully");
-}));
+});

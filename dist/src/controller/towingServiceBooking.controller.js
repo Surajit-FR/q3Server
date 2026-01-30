@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -28,8 +19,8 @@ const pricingRule_model_1 = __importDefault(require("../models/pricingRule.model
 const otp_controller_1 = require("./otp.controller");
 const sendPushNotification_utils_1 = require("../../utils/sendPushNotification.utils");
 const apiKey = "AIzaSyDtPUxp_vFvbx9og_F-q0EBkJPAiCAbj8w";
-const isEligibleForBooking = (customerId) => __awaiter(void 0, void 0, void 0, function* () {
-    const prevBookedServices = yield towingServiceBooking_model_1.default.aggregate([
+const isEligibleForBooking = async (customerId) => {
+    const prevBookedServices = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 userId: new mongoose_1.default.Types.ObjectId(customerId),
@@ -45,25 +36,25 @@ const isEligibleForBooking = (customerId) => __awaiter(void 0, void 0, void 0, f
     // console.log({ prevBookedServices });
     const returnValue = prevBookedServices.length ? false : true;
     return returnValue;
-});
-const generateUniqueCode = () => __awaiter(void 0, void 0, void 0, function* () {
+};
+const generateUniqueCode = async () => {
     let code;
     let exists = true;
     while (exists) {
         code = Math.floor(10000 + Math.random() * 90000);
-        const found = yield towingServiceBooking_model_1.default.findOne({ code });
+        const found = await towingServiceBooking_model_1.default.findOne({ code });
         exists = Boolean(found);
     }
     return code;
-});
+};
 // addVehicleType controller
-exports.bookTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.bookTowingService = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
     console.log("Api runs...: bookTowingService");
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     let picklocation_derived, placeId_pickup_derived, placeId_destination_derived, picklocationString, distance_derived;
     const { pickupLocation, placeId_pickup, destinyLocation, placeId_destination, vehicleTypeId, disputedVehicleImage, serviceSpecificNotes, totalDistance, pickupLat, pickuplong, isCurrentLocationforPick = false, savedAddressId, } = req.body;
-    const check = yield isEligibleForBooking(userId);
+    const check = await isEligibleForBooking(userId);
     if (!check) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "Previously booked service is pending now.");
     }
@@ -91,7 +82,7 @@ exports.bookTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
             coordinates: [pickuplong, pickupLat], // [longitude, latitude]
         };
         const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${pickupLat},${pickuplong}&key=${apiKey}`;
-        const response = yield axios_1.default.get(url);
+        const response = await axios_1.default.get(url);
         console.log({ response });
         placeId_pickup_derived = (_c = (_b = response === null || response === void 0 ? void 0 : response.data) === null || _b === void 0 ? void 0 : _b.results[0]) === null || _c === void 0 ? void 0 : _c.place_id;
         picklocationString = (_e = (_d = response === null || response === void 0 ? void 0 : response.data) === null || _d === void 0 ? void 0 : _d.results[0]) === null || _e === void 0 ? void 0 : _e.formatted_address;
@@ -108,7 +99,7 @@ exports.bookTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
         if (!placeId_destination)
             return (0, response_utils_1.handleResponse)(res, "error", 400, "placeId_destination is required.");
         const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId_pickup}&key=${apiKey}`;
-        const response = yield axios_1.default.get(url);
+        const response = await axios_1.default.get(url);
         const loc = (_h = (_g = (_f = response === null || response === void 0 ? void 0 : response.data) === null || _f === void 0 ? void 0 : _f.result) === null || _g === void 0 ? void 0 : _g.geometry) === null || _h === void 0 ? void 0 : _h.location;
         picklocation_derived = {
             type: "Point",
@@ -127,7 +118,7 @@ exports.bookTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
     }
     console.log({ placeId_pickup_derived });
     console.log({ placeId_destination_derived });
-    let distance = yield (0, googleapis_controller_1.getDistanceInKm)(placeId_pickup_derived, placeId_destination_derived);
+    let distance = await (0, googleapis_controller_1.getDistanceInKm)(placeId_pickup_derived, placeId_destination_derived);
     console.log({ distance });
     let bookingDetails = {
         pickupLocation: picklocationString,
@@ -144,20 +135,20 @@ exports.bookTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
         userId,
         picklocation: picklocation_derived,
     };
-    const vehicleInfo = yield vehicleType_model_1.default.findById({
+    const vehicleInfo = await vehicleType_model_1.default.findById({
         _id: new mongoose_1.default.Types.ObjectId(vehicleTypeId),
     });
     let customResponseMsg = { message: "Booking Successfully" };
     if ((vehicleInfo === null || vehicleInfo === void 0 ? void 0 : vehicleInfo.type) === "Truck") {
         bookingDetails.isCustomPricing = true;
-        const contactAdmin = yield customPricingRule_model_1.default.find({});
+        const contactAdmin = await customPricingRule_model_1.default.find({});
         customResponseMsg = {
             message: "Call for heavy vehicle rates. Pricing varies depending on weight",
             contactNo: contactAdmin[0].contactNumber,
         };
     }
     else {
-        const pricingDeatils = yield pricingRule_model_1.default.find({});
+        const pricingDeatils = await pricingRule_model_1.default.find({});
         console.log({ pricingDeatils });
         const includedMiles = ((_j = pricingDeatils[0]) === null || _j === void 0 ? void 0 : _j.includedMiles) || 0;
         const baseFee = ((_k = pricingDeatils[0]) === null || _k === void 0 ? void 0 : _k.baseFee) || 0;
@@ -176,27 +167,27 @@ exports.bookTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
         };
         bookingDetails.pricing = PricingData;
     }
-    const uniqueServiceCode = yield generateUniqueCode();
+    const uniqueServiceCode = await generateUniqueCode();
     bookingDetails.serviceCode = uniqueServiceCode;
     // // Create and save the service
-    const newBooking = yield towingServiceBooking_model_1.default.create(bookingDetails);
+    const newBooking = await towingServiceBooking_model_1.default.create(bookingDetails);
     if (!newBooking) {
         return (0, response_utils_1.handleResponse)(res, "error", 500, "Something went wrong while booking.");
     }
-    const customerDetails = yield user_model_1.default.findOne({ _id: userId });
+    const customerDetails = await user_model_1.default.findOne({ _id: userId });
     (0, otp_controller_1.sendSMS)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.phone, customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.countryCode, `Thank You for booking service from Q3 app, Your one time service verification code is ${uniqueServiceCode}`);
     (0, sendPushNotification_utils_1.sendPushNotification)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails._id, "Your service is booked", "Thank you for choosing Q3!");
     return (0, response_utils_1.handleResponse)(res, "success", 201, newBooking, customResponseMsg);
-}));
+});
 //fetch near-by service request
-exports.fetchTowingServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.fetchTowingServiceRequest = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a, _b;
     console.log("Api runs...: fetchTowingServiceRequest");
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const userType = (_b = req.user) === null || _b === void 0 ? void 0 : _b.userType;
     let serviceProviderId;
     let address;
-    address = yield locationSession_models_1.default.findOne({ userId, isActive: true });
+    address = await locationSession_models_1.default.findOne({ userId, isActive: true });
     console.log({ address });
     if (!address || !address.longitude || !address.latitude) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "SP's location not found.");
@@ -210,7 +201,7 @@ exports.fetchTowingServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req,
         return (0, response_utils_1.handleResponse)(res, "error", 400, "Invalid longitude or latitude");
     }
     const radius = 250000000; // in meters
-    const serviceRequests = yield towingServiceBooking_model_1.default.aggregate([
+    const serviceRequests = await towingServiceBooking_model_1.default.aggregate([
         {
             $geoNear: {
                 near: {
@@ -308,14 +299,14 @@ exports.fetchTowingServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req,
         return (0, response_utils_1.handleResponse)(res, "success", 200, serviceRequests, "No nearby service request found");
     }
     return (0, response_utils_1.handleResponse)(res, "success", 200, serviceRequests, "Service requests fetched successfully");
-}));
+});
 //decline service request by sp
-exports.declineServicerequest = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.declineServicerequest = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
     console.log("Api runs...: declineServicerequest");
     const { serviceId } = req.body;
     const spId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-    const declineService = yield towingServiceBooking_model_1.default.findOneAndUpdate({
+    const declineService = await towingServiceBooking_model_1.default.findOneAndUpdate({
         _id: new mongoose_1.default.Types.ObjectId(serviceId),
     }, {
         $push: { declinedBy: spId },
@@ -323,9 +314,9 @@ exports.declineServicerequest = (0, asyncHandler_utils_1.asyncHandler)((req, res
         new: true,
     });
     return (0, response_utils_1.handleResponse)(res, "success", 200, declineService, "Service declined successfully");
-}));
+});
 //cancel service request by customer
-exports.cancelServiceRequestByCustomer = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.cancelServiceRequestByCustomer = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
     console.log("Api runs...: cancelServiceRequestByCustomer");
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
@@ -333,7 +324,7 @@ exports.cancelServiceRequestByCustomer = (0, asyncHandler_utils_1.asyncHandler)(
     if (!serviceId && !serviceProgess) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Service ID is required");
     }
-    const updateService = yield towingServiceBooking_model_1.default.findOneAndUpdate({
+    const updateService = await towingServiceBooking_model_1.default.findOneAndUpdate({
         _id: new mongoose_1.default.Types.ObjectId(serviceId),
     }, {
         serviceProgess,
@@ -343,9 +334,9 @@ exports.cancelServiceRequestByCustomer = (0, asyncHandler_utils_1.asyncHandler)(
         return (0, response_utils_1.handleResponse)(res, "success", 200, {}, "Service cancelled successfully");
     }
     return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Something went wrong");
-}));
+});
 //accept service requset by sp(required service state:"Booked","ServiceCancelledBySP")
-exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a, _b, _c;
     console.log("Api runs...: acceptServiceRequest");
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
@@ -356,7 +347,7 @@ exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res)
     if (!providerVehicleDetails) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Provider vehicle details is required");
     }
-    const updateService = yield towingServiceBooking_model_1.default.findOneAndUpdate({
+    const updateService = await towingServiceBooking_model_1.default.findOneAndUpdate({
         _id: new mongoose_1.default.Types.ObjectId(serviceId),
         $or: [
             { serviceProgess: "Booked" },
@@ -375,7 +366,7 @@ exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res)
             serviceProgess,
             serviceDistance,
         };
-        const updateResult = yield locationSession_models_1.default.findOneAndUpdate({
+        const updateResult = await locationSession_models_1.default.findOneAndUpdate({
             userId: (_b = req.user) === null || _b === void 0 ? void 0 : _b._id,
             isActive: true,
             "serviceDetails.serviceId": serviceId,
@@ -385,16 +376,16 @@ exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res)
             },
         }, { new: true });
         if (!updateResult) {
-            yield locationSession_models_1.default.findOneAndUpdate({ userId: (_c = req.user) === null || _c === void 0 ? void 0 : _c._id, isActive: true }, {
+            await locationSession_models_1.default.findOneAndUpdate({ userId: (_c = req.user) === null || _c === void 0 ? void 0 : _c._id, isActive: true }, {
                 $push: {
                     serviceDetails: acceptedServiceDetails,
                 },
             }, { new: true });
         }
-        const serviceData = yield towingServiceBooking_model_1.default.findOne({
+        const serviceData = await towingServiceBooking_model_1.default.findOne({
             _id: serviceId,
         });
-        const customerDetails = yield user_model_1.default.findOne({
+        const customerDetails = await user_model_1.default.findOne({
             _id: serviceData === null || serviceData === void 0 ? void 0 : serviceData.userId,
         });
         console.log({ customerDetails });
@@ -403,16 +394,16 @@ exports.acceptServiceRequest = (0, asyncHandler_utils_1.asyncHandler)((req, res)
         return (0, response_utils_1.handleResponse)(res, "success", 200, updateService, "Service Accepted Successfully");
     }
     return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Something went wrong");
-}));
+});
 //handle state of requested services after acceptance of that service
-exports.handleServiceRequestState = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.handleServiceRequestState = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a, _b, _c;
     console.log("Api runs...: handleServiceRequestState");
     const { serviceId, serviceProgess } = req.body;
     if (!serviceId || !serviceProgess) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Service ID and service progress are required");
     }
-    const serviceDetails = yield towingServiceBooking_model_1.default.aggregate([
+    const serviceDetails = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 _id: new mongoose_1.default.Types.ObjectId(serviceId),
@@ -445,7 +436,7 @@ exports.handleServiceRequestState = (0, asyncHandler_utils_1.asyncHandler)((req,
         filterCondition.isPaymentComplete = true;
     }
     // Update service booking
-    const updatedService = yield towingServiceBooking_model_1.default.findOneAndUpdate(filterCondition, { $set: updateFields }, { new: true });
+    const updatedService = await towingServiceBooking_model_1.default.findOneAndUpdate(filterCondition, { $set: updateFields }, { new: true });
     if (!updatedService) {
         return (0, response_utils_1.handleResponse)(res, "error", 500, "", "Failed to update service");
     }
@@ -455,7 +446,7 @@ exports.handleServiceRequestState = (0, asyncHandler_utils_1.asyncHandler)((req,
         serviceProgess,
         serviceDistance: serviceDetails[0].totalDistance,
     };
-    const activeLocation = yield locationSession_models_1.default.findOneAndUpdate({
+    const activeLocation = await locationSession_models_1.default.findOneAndUpdate({
         userId: (_b = req.user) === null || _b === void 0 ? void 0 : _b._id,
         isActive: true,
         "serviceDetails.serviceId": serviceId,
@@ -465,17 +456,17 @@ exports.handleServiceRequestState = (0, asyncHandler_utils_1.asyncHandler)((req,
         },
     }, { new: true });
     if (!activeLocation) {
-        yield locationSession_models_1.default.findOneAndUpdate({ userId: (_c = req.user) === null || _c === void 0 ? void 0 : _c._id, isActive: true }, { $push: { serviceDetails: serviceSessionDetails } }, { new: true });
+        await locationSession_models_1.default.findOneAndUpdate({ userId: (_c = req.user) === null || _c === void 0 ? void 0 : _c._id, isActive: true }, { $push: { serviceDetails: serviceSessionDetails } }, { new: true });
     }
     return (0, response_utils_1.handleResponse)(res, "success", 200, updatedService, `Service ${serviceProgess
         .replace("Service", "")
         .toLowerCase()} successfully`);
-}));
-exports.getSavedDestination = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.getSavedDestination = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
     console.log("Api runs...: getSavedDestination");
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-    const savedDestination = yield towingServiceBooking_model_1.default.aggregate([
+    const savedDestination = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 userId,
@@ -492,13 +483,13 @@ exports.getSavedDestination = (0, asyncHandler_utils_1.asyncHandler)((req, res) 
         },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, savedDestination, "Saved destinations fetched Successfully");
-}));
-exports.getUserServiceDetilsByState = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.getUserServiceDetilsByState = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
     console.log("Api runs...: getUserServiceDetilsByState");
     const customerId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const { serviceProgess } = req.body;
-    const customerServiceDetails = yield towingServiceBooking_model_1.default.aggregate([
+    const customerServiceDetails = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 isDeleted: false,
@@ -619,8 +610,8 @@ exports.getUserServiceDetilsByState = (0, asyncHandler_utils_1.asyncHandler)((re
         },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, customerServiceDetails, "Service requests fetched successfully");
-}));
-exports.fetchTotalServiceByAdmin = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.fetchTotalServiceByAdmin = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     console.log("Api runs...: fetchTotalServiceByAdmin");
     const { page = 1, limit = 10, query = "" } = req.query;
     const pageNumber = parseInt(page, 10);
@@ -632,12 +623,13 @@ exports.fetchTotalServiceByAdmin = (0, asyncHandler_utils_1.asyncHandler)((req, 
                 { sp_fullName: { $regex: query, $options: "i" } },
                 { customer_fullName: { $regex: query, $options: "i" } },
                 { sp_email: { $regex: query, $options: "i" } },
+                { serviceProgess: { $regex: query, $options: "i" } },
             ],
         }
         : {};
     const matchCriteria = Object.assign({}, searchQuery);
     console.log({ matchCriteria });
-    const ServiceDetails = yield towingServiceBooking_model_1.default.aggregate([
+    const ServiceDetails = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: { isDeleted: false },
         },
@@ -723,27 +715,29 @@ exports.fetchTotalServiceByAdmin = (0, asyncHandler_utils_1.asyncHandler)((req, 
         { $skip: (pageNumber - 1) * limitNumber },
         { $limit: limitNumber },
     ]);
-    // const totalRecords = await towingServiceBookingModel.countDocuments(
+    const totalRecords = await towingServiceBooking_model_1.default.countDocuments();
     //   matchCriteria
     // );
-    const totalRecords = ServiceDetails.map((serviceData) => {
-        if (serviceData.customer_fullName === query ||
-            serviceData.sp_fullName === query)
-            return serviceData;
-    });
+    // const totalRecords = ServiceDetails.map((serviceData) => {
+    //   if (
+    //     serviceData.customer_fullName === query ||
+    //     serviceData.sp_fullName === query
+    //   )
+    //     return serviceData;
+    // });
     return (0, response_utils_1.handleResponse)(res, "success", 200, {
         ServiceDetails,
         pagination: {
-            total: totalRecords.length,
+            total: totalRecords,
             page: pageNumber,
             limit: limitNumber,
         },
     }, "Service requests fetched successfully");
-}));
-exports.fetchTotalServiceProgresswiseBySp = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.fetchTotalServiceProgresswiseBySp = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     console.log("Api runs...: fetchTotalServiceProgresswiseBySp");
     const { serviceProgess } = req.body;
-    const ServiceDetails = yield towingServiceBooking_model_1.default.aggregate([
+    const ServiceDetails = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 isDeleted: false,
@@ -828,11 +822,12 @@ exports.fetchTotalServiceProgresswiseBySp = (0, asyncHandler_utils_1.asyncHandle
         },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, ServiceDetails, "Service requests fetched successfully");
-}));
-exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     console.log("Api runs...: fetchSingleService");
+    // await sendPushNotification("6932ab57ee4f70abf6980d64","title","body")
     const { serviceId } = req.query;
-    const ServiceDetails = yield towingServiceBooking_model_1.default.aggregate([
+    const ServiceDetails = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 _id: new mongoose_1.default.Types.ObjectId(serviceId),
@@ -875,6 +870,33 @@ exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =
             $unwind: {
                 preserveNullAndEmptyArrays: true,
                 path: "$sp_details",
+            },
+        },
+        {
+            $lookup: {
+                from: "ratings",
+                foreignField: "ratedTo",
+                localField: "serviceProviderId",
+                let: {
+                    spId: "$serviceProviderId",
+                    customerId: "$userId",
+                    serviceId: "$_id",
+                },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ["$ratedTo", "$$spId"] },
+                                    { $eq: ["$ratedBy", "$$customerId"] },
+                                    { $eq: ["$serviceId", "$$serviceId"] },
+                                    { $eq: ["$isDeleted", false] },
+                                ],
+                            },
+                        },
+                    },
+                ],
+                as: "customerGivenRatings",
             },
         },
         {
@@ -943,8 +965,8 @@ exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)((req, res) =
         },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, ServiceDetails[0], "Service request fetched successfully");
-}));
-exports.cancelServiceBySP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.cancelServiceBySP = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a, _b, _c, _d, _e, _f;
     console.log("Api runs...: cancelServiceBySP");
     const SPId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
@@ -952,7 +974,7 @@ exports.cancelServiceBySP = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
     if (!serviceId) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Service ID  are required");
     }
-    const serviceDetails = yield towingServiceBooking_model_1.default.aggregate([
+    const serviceDetails = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 _id: new mongoose_1.default.Types.ObjectId(serviceId),
@@ -963,7 +985,7 @@ exports.cancelServiceBySP = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
     if (!serviceDetails.length) {
         return (0, response_utils_1.handleResponse)(res, "error", 404, "", "Service details not found");
     }
-    const updatedService = yield towingServiceBooking_model_1.default.findOneAndUpdate({
+    const updatedService = await towingServiceBooking_model_1.default.findOneAndUpdate({
         _id: new mongoose_1.default.Types.ObjectId(serviceId),
         serviceProviderId: (_c = req.user) === null || _c === void 0 ? void 0 : _c._id,
     }, {
@@ -979,12 +1001,12 @@ exports.cancelServiceBySP = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
             serviceId,
             progressBeforeCancel: (_f = serviceDetails[0]) === null || _f === void 0 ? void 0 : _f.serviceProgess,
         };
-        yield new canceledServiceBySP_model_1.CancelServiceBySPModel(canceledService).save();
+        await new canceledServiceBySP_model_1.CancelServiceBySPModel(canceledService).save();
         return (0, response_utils_1.handleResponse)(res, "success", 200, updatedService, "Service request cancelled successfully");
     }
     return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Something went wrong");
-}));
-exports.previewTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.previewTowingService = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a, _b, _c, _d, _e, _f, _g, _h;
     console.log("Api runs...: previewTowingService");
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
@@ -992,13 +1014,13 @@ exports.previewTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res)
     if (!vehicleTypeId)
         return (0, response_utils_1.handleResponse)(res, "error", 400, "vehicleTypeId is required.");
     const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=place_id:${placeId_pickup}&destinations=place_id:${placeId_destination}&key=${apiKey}`;
-    const response = yield axios_1.default.get(url);
+    const response = await axios_1.default.get(url);
     let distanceMeters = (_d = (_c = (_b = response.data.rows[0]) === null || _b === void 0 ? void 0 : _b.elements[0]) === null || _c === void 0 ? void 0 : _c.distance) === null || _d === void 0 ? void 0 : _d.value;
     const distance = distanceMeters ? distanceMeters / 1000 : 0; //km
     const destination_addresses = response.data.destination_addresses;
     const origin_addresses = response.data.origin_addresses;
-    const user = yield user_model_1.default.findById(userId).select("fullName email phone");
-    const vehicle = yield vehicleType_model_1.default
+    const user = await user_model_1.default.findById(userId).select("fullName email phone");
+    const vehicle = await vehicleType_model_1.default
         .findById(vehicleTypeId)
         .select("type totalSeat");
     if (!vehicle) {
@@ -1006,7 +1028,7 @@ exports.previewTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res)
     }
     let towingCost = 0;
     if ((vehicle === null || vehicle === void 0 ? void 0 : vehicle.type) !== "Truck") {
-        const pricingDeatils = yield pricingRule_model_1.default.find({});
+        const pricingDeatils = await pricingRule_model_1.default.find({});
         console.log({ pricingDeatils });
         const includedMiles = ((_e = pricingDeatils[0]) === null || _e === void 0 ? void 0 : _e.includedMiles) || 0;
         const baseFee = ((_f = pricingDeatils[0]) === null || _f === void 0 ? void 0 : _f.baseFee) || 0;
@@ -1041,15 +1063,15 @@ exports.previewTowingService = (0, asyncHandler_utils_1.asyncHandler)((req, res)
         towingCost,
     };
     return (0, response_utils_1.handleResponse)(res, "success", 200, previewData, "Preview booking details");
-}));
+});
 // Function to fetch associated customer with the service request
-const fetchAssociatedCustomer = (serviceId) => __awaiter(void 0, void 0, void 0, function* () {
+const fetchAssociatedCustomer = async (serviceId) => {
     console.log("Function runs...: fetchAssociatedCustomer");
     console.log({ serviceId });
     if (!serviceId) {
         throw new Error("Service request ID is required.");
     }
-    const serviceRequest = yield towingServiceBooking_model_1.default.aggregate([
+    const serviceRequest = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 isDeleted: false,
@@ -1061,9 +1083,9 @@ const fetchAssociatedCustomer = (serviceId) => __awaiter(void 0, void 0, void 0,
         throw new Error("Service request not found.");
     }
     return serviceRequest[0].userId;
-});
+};
 exports.fetchAssociatedCustomer = fetchAssociatedCustomer;
-const verifyServiceCode = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const verifyServiceCode = async (req, res) => {
     var _a, _b, _c;
     try {
         const { serviceId, code } = req.body;
@@ -1073,7 +1095,7 @@ const verifyServiceCode = (req, res) => __awaiter(void 0, void 0, void 0, functi
             return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Service ID and code are required");
         }
         // 1. Find the service
-        const service = yield towingServiceBooking_model_1.default.findById(serviceId);
+        const service = await towingServiceBooking_model_1.default.findById(serviceId);
         if (!service) {
             return (0, response_utils_1.handleResponse)(res, "error", 404, "", "Service not found");
         }
@@ -1086,15 +1108,15 @@ const verifyServiceCode = (req, res) => __awaiter(void 0, void 0, void 0, functi
         if (service.serviceCode !== Number(code)) {
             return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Invalid verification code");
         }
-        const updateService = yield towingServiceBooking_model_1.default.updateOne({
+        const updateService = await towingServiceBooking_model_1.default.updateOne({
             _id: serviceId,
         }, {
             $set: { serviceProgess: "ServiceStarted", isServiceCodeVerified: true },
         }, {
             new: true,
         });
-        const customerDetails = yield user_model_1.default.findOne({ _id: service === null || service === void 0 ? void 0 : service.userId });
-        const spDetails = yield user_model_1.default.findOne({ _id: (_c = req.user) === null || _c === void 0 ? void 0 : _c._id });
+        const customerDetails = await user_model_1.default.findOne({ _id: service === null || service === void 0 ? void 0 : service.userId });
+        const spDetails = await user_model_1.default.findOne({ _id: (_c = req.user) === null || _c === void 0 ? void 0 : _c._id });
         (0, otp_controller_1.sendSMS)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.phone, customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails.countryCode, `Your booked service is marked started by ${spDetails === null || spDetails === void 0 ? void 0 : spDetails.fullName}`);
         (0, sendPushNotification_utils_1.sendPushNotification)(customerDetails === null || customerDetails === void 0 ? void 0 : customerDetails._id, "Your service code is verified.", `Your service is performed by  ${spDetails === null || spDetails === void 0 ? void 0 : spDetails.fullName}! `);
         return (0, response_utils_1.handleResponse)(res, "success", 200, service, "Service verified successfully");
@@ -1103,11 +1125,11 @@ const verifyServiceCode = (req, res) => __awaiter(void 0, void 0, void 0, functi
         console.error("Verification error:", error);
         return (0, response_utils_1.handleResponse)(res, "error", 500, "", "Server error");
     }
-});
+};
 exports.verifyServiceCode = verifyServiceCode;
-exports.fetchCustomersTotalServices = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.fetchCustomersTotalServices = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
-    const serviceDetails = yield towingServiceBooking_model_1.default.aggregate([
+    const serviceDetails = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 userId: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
@@ -1226,11 +1248,11 @@ exports.fetchCustomersTotalServices = (0, asyncHandler_utils_1.asyncHandler)((re
         },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, serviceDetails, "Service requests fetched successfully");
-}));
-exports.fetchOngoingServices = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.fetchOngoingServices = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-    const totalOngoingServices = yield towingServiceBooking_model_1.default.aggregate([
+    const totalOngoingServices = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 serviceProviderId: userId,
@@ -1280,8 +1302,8 @@ exports.fetchOngoingServices = (0, asyncHandler_utils_1.asyncHandler)((req, res)
             $lookup: {
                 from: "ratings",
                 foreignField: "ratedTo",
-                localField: "serviceProviderId",
-                as: "sp_ratings",
+                localField: "userId",
+                as: "customer_ratings",
             },
         },
         {
@@ -1290,7 +1312,9 @@ exports.fetchOngoingServices = (0, asyncHandler_utils_1.asyncHandler)((req, res)
                 sp_avatar: "$sp_details.avatar",
                 sp_phoneNumber: "$sp_details.phone",
                 sp_email: "$sp_details.email",
-                sp_avg_rating: { $ifNull: [{ $avg: "$sp_ratings.rating" }, 0] },
+                customer_avg_rating: {
+                    $ifNull: [{ $avg: "$customer_ratings.rating" }, 0],
+                },
             },
         },
         {
@@ -1354,11 +1378,11 @@ exports.fetchOngoingServices = (0, asyncHandler_utils_1.asyncHandler)((req, res)
         },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, totalOngoingServices, "Service requests fetched successfully");
-}));
-exports.fetchOngoingServicesByCustomer = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.fetchOngoingServicesByCustomer = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-    const totalOngoingServices = yield towingServiceBooking_model_1.default.aggregate([
+    const totalOngoingServices = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 userId: userId,
@@ -1482,9 +1506,19 @@ exports.fetchOngoingServicesByCustomer = (0, asyncHandler_utils_1.asyncHandler)(
         },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, totalOngoingServices, "Service requests fetched successfully");
-}));
-exports.fetchTransactions = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const totalTransactions = yield towingServiceBooking_model_1.default.aggregate([
+});
+exports.fetchTransactions = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    const { page = 1, limit = 10, query = "" } = req.query;
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    const searchQuery = query
+        ? {
+            isDeleted: false,
+            $or: [{ paymentIntentId: { $regex: query, $options: "i" } }],
+        }
+        : {};
+    const matchCriteria = Object.assign({}, searchQuery);
+    const totalTransactions = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 serviceProgess: "ServiceCompleted",
@@ -1545,11 +1579,17 @@ exports.fetchTransactions = (0, asyncHandler_utils_1.asyncHandler)((req, res) =>
                 // customer_fullName: 1,
             },
         },
+        {
+            $match: matchCriteria,
+        },
+        { $sort: { createdAt: -1 } },
+        { $skip: (pageNumber - 1) * limitNumber },
+        { $limit: limitNumber },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, totalTransactions, "Total transactions fetched successfully");
-}));
-exports.fetchTopPerformerSPs = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const totalOngoingServices = yield towingServiceBooking_model_1.default.aggregate([
+});
+exports.fetchTopPerformerSPs = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    const totalOngoingServices = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 serviceProgess: "ServiceCompleted",
@@ -1594,10 +1634,10 @@ exports.fetchTopPerformerSPs = (0, asyncHandler_utils_1.asyncHandler)((req, res)
         },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, totalOngoingServices, "Service requests fetched successfully");
-}));
-exports.fetchTransactionsSPWise = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.fetchTransactionsSPWise = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     const { serviceProviderId } = req.body;
-    const totalTransactions = yield towingServiceBooking_model_1.default.aggregate([
+    const totalTransactions = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 serviceProviderId: new mongoose_1.default.Types.ObjectId(serviceProviderId),
@@ -1661,12 +1701,12 @@ exports.fetchTransactionsSPWise = (0, asyncHandler_utils_1.asyncHandler)((req, r
         },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, totalTransactions, "Total transactions fetched successfully");
-}));
-exports.fetchTransactionsCustomerWise = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.fetchTransactionsCustomerWise = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
     // const {userId} = req.body;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-    const totalTransactions = yield towingServiceBooking_model_1.default.aggregate([
+    const totalTransactions = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 userId: new mongoose_1.default.Types.ObjectId(userId),
@@ -1725,10 +1765,10 @@ exports.fetchTransactionsCustomerWise = (0, asyncHandler_utils_1.asyncHandler)((
                 receivedBy: "$sp_fullName",
                 towing_cost: 1,
                 paidAt: "$updatedAt",
-                spAvatar: "$sp_avatar"
+                spAvatar: "$sp_avatar",
                 // customer_fullName: 1,
             },
         },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, totalTransactions, "Total transactions fetched successfully");
-}));
+});

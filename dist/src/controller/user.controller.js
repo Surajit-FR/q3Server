@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -21,13 +12,13 @@ const spRatings_model_1 = __importDefault(require("../models/spRatings.model"));
 const towingServiceBooking_model_1 = __importDefault(require("../models/towingServiceBooking.model"));
 const additionalInfo_model_1 = __importDefault(require("../models/additionalInfo.model"));
 const locationSession_models_1 = __importDefault(require("../models/locationSession.models"));
-exports.getSingleUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getSingleUser = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     console.log("Api runs...: getSingleUser");
     const { userId } = req.query;
     if (!userId) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "User ID is required");
     }
-    const userData = yield user_model_1.default.aggregate([
+    const userData = await user_model_1.default.aggregate([
         {
             $match: {
                 _id: new mongoose_1.default.Types.ObjectId(userId),
@@ -118,8 +109,8 @@ exports.getSingleUser = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __a
         return (0, response_utils_1.handleResponse)(res, "success", 200, userData, "User not found");
     }
     return (0, response_utils_1.handleResponse)(res, "success", 200, userData, "User fetched successfully");
-}));
-exports.getAllCustomer = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.getAllCustomer = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     console.log("Api runs...: getAllCustomer");
     const { page = 1, limit = 10, query = "", sortBy = "createdAt", sortType = "desc", } = req.query;
     const pageNumber = parseInt(page, 10);
@@ -137,7 +128,7 @@ exports.getAllCustomer = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __
     const sortCriteria = {};
     sortCriteria[sortBy] = sortType === "desc" ? -1 : 1;
     console.log("Api runs...: getAllCustomer");
-    const customersDetails = yield user_model_1.default.aggregate([
+    const customersDetails = await user_model_1.default.aggregate([
         {
             $match: matchCriteria,
         },
@@ -168,7 +159,7 @@ exports.getAllCustomer = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __
         { $skip: (pageNumber - 1) * limitNumber },
         { $limit: limitNumber },
     ]);
-    const totalRecords = yield user_model_1.default.countDocuments(matchCriteria);
+    const totalRecords = await user_model_1.default.countDocuments(matchCriteria);
     if (customersDetails.length == 0) {
         return (0, response_utils_1.handleResponse)(res, "success", 200, customersDetails, "Customers not found");
     }
@@ -180,8 +171,8 @@ exports.getAllCustomer = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __
             limit: limitNumber,
         },
     }, "Customers fetched successfully");
-}));
-exports.getAllProviders = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.getAllProviders = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     console.log("Api runs...: getAllProviders");
     const { page = 1, limit = 10, query = "", sortBy = "createdAt", sortType = "desc", } = req.query;
     const pageNumber = parseInt(page, 10);
@@ -198,7 +189,7 @@ exports.getAllProviders = (0, asyncHandler_utils_1.asyncHandler)((req, res) => _
     const matchCriteria = Object.assign({ isDeleted: false, userType: "ServiceProvider" }, searchQuery);
     const sortCriteria = {};
     sortCriteria[sortBy] = sortType === "desc" ? -1 : 1;
-    const providersDetails = yield user_model_1.default.aggregate([
+    const providersDetails = await user_model_1.default.aggregate([
         {
             $match: matchCriteria,
         },
@@ -244,7 +235,7 @@ exports.getAllProviders = (0, asyncHandler_utils_1.asyncHandler)((req, res) => _
         { $skip: (pageNumber - 1) * limitNumber },
         { $limit: limitNumber },
     ]);
-    const totalRecords = yield user_model_1.default.countDocuments(matchCriteria);
+    const totalRecords = await user_model_1.default.countDocuments(matchCriteria);
     if (providersDetails.length == 0) {
         return (0, response_utils_1.handleResponse)(res, "success", 200, providersDetails, "Providers not found");
     }
@@ -256,9 +247,9 @@ exports.getAllProviders = (0, asyncHandler_utils_1.asyncHandler)((req, res) => _
             limit: limitNumber,
         },
     }, "Providers fetched successfully");
-}));
+});
 // giveRating controller for customer
-exports.giveRating = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.giveRating = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
     console.log("Api runs...: giveRating");
     const { rating, ratedTo, comments } = req.body;
@@ -273,18 +264,18 @@ exports.giveRating = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awai
         comments,
     });
     // Save the rating to the database
-    const savedRating = yield newrating.save();
+    const savedRating = await newrating.save();
     if (savedRating) {
         return (0, response_utils_1.handleResponse)(res, "success", 201, savedRating, "Rating submitted successfully");
     }
     return (0, response_utils_1.handleResponse)(res, "success", 201, savedRating, "Error in add rating");
-}));
+});
 //update sp data
-exports.updateSp = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.updateSp = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
     console.log("Api runs...: updateSp");
     const spId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-    const ongoingServices = yield towingServiceBooking_model_1.default.aggregate([
+    const ongoingServices = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 serviceProviderId: spId,
@@ -304,7 +295,7 @@ exports.updateSp = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaite
     const { fullName, avatar, driverLicense, driverLicenseImage, insuranceNumber, insuranceImage, } = req.body;
     let isUpdated = false;
     if (fullName || avatar) {
-        const userUpdate = yield user_model_1.default.findByIdAndUpdate(spId, {
+        const userUpdate = await user_model_1.default.findByIdAndUpdate(spId, {
             $set: Object.assign(Object.assign({}, (fullName && { fullName })), (avatar && { avatar })),
         }, { runValidators: true });
         if (userUpdate)
@@ -314,22 +305,22 @@ exports.updateSp = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaite
         driverLicenseImage ||
         insuranceNumber ||
         insuranceImage) {
-        const additionalUpdate = yield additionalInfo_model_1.default.updateOne({ serviceProviderId: spId }, {
+        const additionalUpdate = await additionalInfo_model_1.default.updateOne({ serviceProviderId: spId }, {
             $set: Object.assign(Object.assign(Object.assign(Object.assign({}, (driverLicense && { driverLicense })), (driverLicenseImage && { driverLicenseImage })), (insuranceNumber && { insuranceNumber })), (insuranceImage && { insuranceImage })),
         }, { runValidators: true });
         if (additionalUpdate.modifiedCount > 0)
             isUpdated = true;
     }
     if (isUpdated) {
-        yield user_model_1.default.updateOne({ _id: spId }, { $set: { isVerified: false } });
+        await user_model_1.default.updateOne({ _id: spId }, { $set: { isVerified: false } });
     }
     return (0, response_utils_1.handleResponse)(res, "success", 200, {}, "Service provider updated successfully");
-}));
-exports.updateCustomer = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.updateCustomer = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
     console.log("Api runs...: updateSp");
     const { fullName, avatar } = req.body;
-    const updateCustomer = yield user_model_1.default.findOneAndUpdate({
+    const updateCustomer = await user_model_1.default.findOneAndUpdate({
         _id: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
     }, {
         $set: {
@@ -340,23 +331,23 @@ exports.updateCustomer = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __
         new: true,
     });
     return (0, response_utils_1.handleResponse)(res, "success", 200, "User updated successfully");
-}));
-exports.getCardValue = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const totalCustomer = yield user_model_1.default.find({
+});
+exports.getCardValue = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    const totalCustomer = await user_model_1.default.find({
         userType: "Customer", isDeleted: false
     }).countDocuments();
-    const totalSps = yield user_model_1.default.find({
+    const totalSps = await user_model_1.default.find({
         userType: "ServiceProvider", isDeleted: false
     }).countDocuments();
-    const totalServices = yield towingServiceBooking_model_1.default
-        .find({})
+    const totalServices = await towingServiceBooking_model_1.default
+        .find({ isDeleted: false })
         .countDocuments();
-    const totalActiveSps = yield locationSession_models_1.default.find({
+    const totalActiveSps = await locationSession_models_1.default.find({
         isActive: true,
     }).countDocuments();
     return (0, response_utils_1.handleResponse)(res, "success", 200, { totalCustomer, totalSps, totalServices, totalActiveSps }, "KPI card values fetched successfully");
-}));
-exports.fetchAllActiveSps = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const activeSps = yield locationSession_models_1.default.find({ isActive: true });
+});
+exports.fetchAllActiveSps = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    const activeSps = await locationSession_models_1.default.find({ isActive: true });
     return (0, response_utils_1.handleResponse)(res, "success", 200, activeSps, "All active sps fetched successfully");
-}));
+});

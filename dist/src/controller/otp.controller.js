@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -34,7 +25,7 @@ const generateVerificationCode = (length) => {
     return Math.floor(min + Math.random() * (max - min + 1));
 };
 exports.generateVerificationCode = generateVerificationCode;
-exports.sendOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.sendOTP = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     console.log("Api runs...: sendOTP");
     const { countryCode, phoneNumber, purpose, userType } = req.body; //phone number with country code
     console.log(req.body);
@@ -56,7 +47,7 @@ exports.sendOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter
     const otp = (0, exports.generateVerificationCode)(otpLength);
     const expiredAt = new Date(Date.now() + stepDuration * 1000);
     if (purpose !== "verifyPhone") {
-        const user = yield user_model_1.default.findOne({
+        const user = await user_model_1.default.findOne({
             phone: phoneNumber,
             userType,
             isDeleted: false,
@@ -71,7 +62,7 @@ exports.sendOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter
             otp,
             expiredAt,
         });
-        yield otpEntry.save();
+        await otpEntry.save();
     }
     else {
         const otpEntry = new otp_model_1.default({
@@ -80,23 +71,23 @@ exports.sendOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter
             otp,
             expiredAt,
         });
-        yield otpEntry.save();
+        await otpEntry.save();
     }
-    const message = yield client.messages.create({
+    const message = await client.messages.create({
         body: `Your OTP code is ${otp}`,
         from: config_1.TWILIO_PHONE_NUMBER,
         to: `${countryCode}${phoneNumber}`,
     });
     return (0, response_utils_1.handleResponse)(res, "success", 201, "", "Otp sent successfully");
-}));
-exports.verifyOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+exports.verifyOTP = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     console.log("Api runs...: verifyOTP");
     const { phoneNumber, otp, purpose } = req.body;
     console.log("verify otp payload", req.body);
     if (!phoneNumber || !otp || !purpose) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "phoneNumber, otp, and purpose are required");
     }
-    const otpEntry = yield otp_model_1.default.findOne({ phoneNumber });
+    const otpEntry = await otp_model_1.default.findOne({ phoneNumber });
     // Set default OTP for testing in non-production environments
     const defaultOtp = "00000";
     const isOtpValid = (otpEntry === null || otpEntry === void 0 ? void 0 : otpEntry.otp.toString()) === otp; //this is for live mode
@@ -108,7 +99,7 @@ exports.verifyOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __await
         return (0, response_utils_1.handleResponse)(res, "error", 400, "Invalid OTP");
     }
     else {
-        yield otp_model_1.default.deleteOne({ _id: otpEntry === null || otpEntry === void 0 ? void 0 : otpEntry._id });
+        await otp_model_1.default.deleteOne({ _id: otpEntry === null || otpEntry === void 0 ? void 0 : otpEntry._id });
     }
     switch (purpose) {
         case "forgetPassword": {
@@ -121,11 +112,11 @@ exports.verifyOTP = (0, asyncHandler_utils_1.asyncHandler)((req, res) => __await
         default:
             return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Invalid purpose");
     }
-}));
-const sendSMS = (to, countryCode, sms) => __awaiter(void 0, void 0, void 0, function* () {
+});
+const sendSMS = async (to, countryCode, sms) => {
     try {
         console.log("function runs:...sendSMS");
-        const message = yield client.messages.create({
+        const message = await client.messages.create({
             body: sms,
             from: config_1.TWILIO_PHONE_NUMBER,
             to: `${countryCode}${to}`,
@@ -141,5 +132,5 @@ const sendSMS = (to, countryCode, sms) => __awaiter(void 0, void 0, void 0, func
         }
         return (0, response_utils_1.handleResponse)("", "error", 500, {}, "Phone lookup failed. Please try again.");
     }
-});
+};
 exports.sendSMS = sendSMS;
