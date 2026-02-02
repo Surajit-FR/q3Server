@@ -735,14 +735,16 @@ exports.fetchTotalServiceByAdmin = (0, asyncHandler_utils_1.asyncHandler)(async 
     }, "Service requests fetched successfully");
 });
 exports.fetchTotalServiceProgresswiseBySp = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    var _a;
     console.log("Api runs...: fetchTotalServiceProgresswiseBySp");
+    const spId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const { serviceProgess } = req.body;
     const ServiceDetails = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
                 isDeleted: false,
                 serviceProgess,
-                // userId: customerId,
+                serviceProviderId: spId,
             },
         },
         {
@@ -824,7 +826,8 @@ exports.fetchTotalServiceProgresswiseBySp = (0, asyncHandler_utils_1.asyncHandle
     return (0, response_utils_1.handleResponse)(res, "success", 200, ServiceDetails, "Service requests fetched successfully");
 });
 exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
-    console.log("Api runs...: fetchSingleService");
+    var _a;
+    console.log("Api runs...: fetchSingleService", (_a = req.user) === null || _a === void 0 ? void 0 : _a._id);
     // await sendPushNotification("6932ab57ee4f70abf6980d64","title","body")
     const { serviceId } = req.query;
     const ServiceDetails = await towingServiceBooking_model_1.default.aggregate([
@@ -850,6 +853,7 @@ exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)(async (req, 
         },
         {
             $addFields: {
+                customerId: "$customer_details._id",
                 customer_fullName: "$customer_details.fullName",
                 customer_avatar: "$customer_details.avatar",
                 customer_email: "$customer_details.email",
@@ -901,6 +905,33 @@ exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)(async (req, 
         },
         {
             $lookup: {
+                from: "ratings",
+                foreignField: "ratedTo",
+                localField: "userId",
+                let: {
+                    spId: "$serviceProviderId",
+                    customerId: "$userId",
+                    serviceId: "$_id",
+                },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ["$ratedTo", "$$customerId"] },
+                                    { $eq: ["$ratedBy", "$$spId"] },
+                                    { $eq: ["$serviceId", "$$serviceId"] },
+                                    { $eq: ["$isDeleted", false] },
+                                ],
+                            },
+                        },
+                    },
+                ],
+                as: "spGivenRatings",
+            },
+        },
+        {
+            $lookup: {
                 from: "additionalinfos",
                 foreignField: "userId",
                 localField: "serviceProviderId",
@@ -921,6 +952,7 @@ exports.fetchSingleService = (0, asyncHandler_utils_1.asyncHandler)(async (req, 
         },
         {
             $addFields: {
+                providerId: "$sp_details._id",
                 sp_fullName: "$sp_details.fullName",
                 sp_avatar: "$sp_details.avatar",
                 sp_countryCode: "$sp_details.countryCode",

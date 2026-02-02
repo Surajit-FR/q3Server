@@ -9,14 +9,15 @@ const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
 const response_utils_1 = require("../../utils/response.utils");
 // addRating controller
 exports.addRating = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
-    var _a, _b;
+    var _a, _b, _c;
     const { rating, ratedTo, serviceId, comments } = req.body;
+    console.log("addRating", (_a = req.user) === null || _a === void 0 ? void 0 : _a._id);
     // Validate required fields
     if (!rating || !ratedTo) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, {}, "At least some rating required");
     }
     const existingRating = await rating_model_1.default.find({
-        ratedBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
+        ratedBy: (_b = req.user) === null || _b === void 0 ? void 0 : _b._id,
         ratedTo,
         serviceId,
     });
@@ -26,7 +27,7 @@ exports.addRating = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     }
     // Create a rating
     const newrating = new rating_model_1.default({
-        ratedBy: (_b = req.user) === null || _b === void 0 ? void 0 : _b._id,
+        ratedBy: (_c = req.user) === null || _c === void 0 ? void 0 : _c._id,
         ratedTo,
         serviceId,
         rating,
@@ -36,4 +37,3 @@ exports.addRating = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     const savedRating = await newrating.save();
     return (0, response_utils_1.handleResponse)(res, "success", 200, savedRating, "Rating submitted successfully");
 });
-// export
