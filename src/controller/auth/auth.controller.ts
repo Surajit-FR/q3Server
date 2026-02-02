@@ -121,9 +121,9 @@ export const startRegistration = asyncHandler(
 
     if (phone) {
       const existingPhone = await UserModel.findOne({
+        isDeleted: false,
         phone,
         userType,
-        isDeleted: false,
       });
       if (existingPhone) {
         throw handleResponse(
@@ -814,7 +814,7 @@ export const deleteuser = asyncHandler(
       return handleResponse(res, "error", 400, {}, "UserType not found");
     }
 
-    const updateUser = await UserModel.findOneAndUpdate(
+    const updateUser = await UserModel.findOneAndDelete(
       { _id: userId },
       {
         $set: {
