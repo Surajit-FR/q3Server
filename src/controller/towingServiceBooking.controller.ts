@@ -1915,14 +1915,13 @@ export const fetchOngoingServicesByCustomer = asyncHandler(
 export const fetchTransactions = asyncHandler(
   async (req: CustomRequest, res: Response) => {
     const { page = 1, limit = 10, query = "" } = req.query;
-    const pageNumber = parseInt(page as string, 10);
-    const limitNumber = parseInt(limit as string, 10);
+    // const pageNumber = parseInt(page as string, 10);
+    // const limitNumber = parseInt(limit as string, 10);
+    console.log(req.query, "...fetchTransactions");
 
     const searchQuery = query
       ? {
-          isDeleted: false,
-
-          $or: [{ paymentIntentId: { $regex: query, $options: "i" } }],
+          paymentIntentId: { $regex: query, $options: "i" },
         }
       : {};
 
@@ -1995,8 +1994,8 @@ export const fetchTransactions = asyncHandler(
         $match: matchCriteria,
       },
       { $sort: { createdAt: -1 } },
-      { $skip: (pageNumber - 1) * limitNumber },
-      { $limit: limitNumber },
+      // { $skip: (pageNumber - 1) * limitNumber },
+      // { $limit: limitNumber },
     ]);
 
     return handleResponse(
