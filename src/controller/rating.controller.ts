@@ -9,6 +9,8 @@ import { handleResponse } from "../../utils/response.utils";
 export const addRating = asyncHandler(
   async (req: CustomRequest, res: Response) => {
     const { rating, ratedTo, serviceId, comments } = req.body;
+    console.log("addRating",req.user?._id);
+    
 
     // Validate required fields
     if (!rating || !ratedTo) {
@@ -58,5 +60,3 @@ export const addRating = asyncHandler(
     );
   },
 );
-
-// export
