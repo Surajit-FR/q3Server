@@ -82,9 +82,9 @@ exports.startRegistration = (0, asyncHandler_utils_1.asyncHandler)(async (req, r
     console.log({ userData });
     if (phone) {
         const existingPhone = await user_model_1.default.findOne({
+            isDeleted: false,
             phone,
             userType,
-            isDeleted: false,
         });
         if (existingPhone) {
             throw (0, response_utils_1.handleResponse)(res, "error", 409, "", "User with phone already exists");
@@ -529,7 +529,7 @@ exports.deleteuser = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => 
     else {
         return (0, response_utils_1.handleResponse)(res, "error", 400, {}, "UserType not found");
     }
-    const updateUser = await user_model_1.default.findOneAndUpdate({ _id: userId }, {
+    const updateUser = await user_model_1.default.findOneAndDelete({ _id: userId }, {
         $set: {
             isDeleted: true,
             accessToken: "",
