@@ -1011,6 +1011,7 @@ export const fetchTotalServiceByAdmin = asyncHandler(
 export const fetchTotalServiceProgresswiseBySp = asyncHandler(
   async (req: CustomRequest, res: Response) => {
     console.log("Api runs...: fetchTotalServiceProgresswiseBySp");
+    const spId = req.user?._id;
 
     const { serviceProgess } = req.body;
     const ServiceDetails = await towingServiceBookingModel.aggregate([
@@ -1018,7 +1019,7 @@ export const fetchTotalServiceProgresswiseBySp = asyncHandler(
         $match: {
           isDeleted: false,
           serviceProgess,
-          // userId: customerId,
+          serviceProviderId: spId,
         },
       },
       {
@@ -1110,7 +1111,7 @@ export const fetchTotalServiceProgresswiseBySp = asyncHandler(
 
 export const fetchSingleService = asyncHandler(
   async (req: CustomRequest, res: Response) => {
-    console.log("Api runs...: fetchSingleService");
+    console.log("Api runs...: fetchSingleService",req.user?._id);
     // await sendPushNotification("6932ab57ee4f70abf6980d64","title","body")
 
     const { serviceId } = req.query;
@@ -1137,6 +1138,7 @@ export const fetchSingleService = asyncHandler(
       },
       {
         $addFields: {
+          customerId: "$customer_details._id",
           customer_fullName: "$customer_details.fullName",
           customer_avatar: "$customer_details.avatar",
           customer_email: "$customer_details.email",
@@ -1187,6 +1189,33 @@ export const fetchSingleService = asyncHandler(
           as: "customerGivenRatings",
         },
       },
+      {
+        $lookup: {
+          from: "ratings",
+          foreignField: "ratedTo",
+          localField: "userId",
+          let: {
+            spId: "$serviceProviderId",
+            customerId: "$userId",
+            serviceId: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$ratedTo", "$$customerId"] },
+                    { $eq: ["$ratedBy", "$$spId"] },
+                    { $eq: ["$serviceId", "$$serviceId"] },
+                    { $eq: ["$isDeleted", false] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "spGivenRatings",
+        },
+      },
 
       {
         $lookup: {
@@ -1211,6 +1240,7 @@ export const fetchSingleService = asyncHandler(
 
       {
         $addFields: {
+          providerId: "$sp_details._id",
           sp_fullName: "$sp_details.fullName",
           sp_avatar: "$sp_details.avatar",
           sp_countryCode: "$sp_details.countryCode",
