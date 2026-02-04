@@ -107,3 +107,25 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
     return res.status(200).json({ message: "Email verified successfully" });
   }
 });
+
+//contact us
+export const sendMailToAdmin = async (
+  from: string,
+  senderName: string,
+  html?: string
+) => {
+  try {
+    const info = await transporter.sendMail({
+      from: `${senderName}<${from}>`,
+      to: "miltonbaker.psoriatic@gmail.com",
+      subject: `New Message from ${senderName}`,
+      html,
+    });
+
+    console.log("Message sent: %s", info.messageId);
+    return info;
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw error;
+  }
+};
