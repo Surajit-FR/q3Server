@@ -212,12 +212,23 @@ interface ISPLocationTrackingSchema extends Document {
 }
 
 export interface IRatingSchema extends Document {
-    _id: ObjectId;
-    ratedBy: ObjectId;
-    ratedTo: ObjectId;
-    rating: number;
-    comments: string;
-    isDeleted: boolean;
-    createdAt?: Date;
-    updatedAt?: Date;
-};
+  _id: ObjectId;
+  ratedBy: ObjectId;
+  ratedTo: ObjectId;
+  rating: number;
+  comments: string;
+  isDeleted: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface IContactUsSchema {
+  fullName:string,
+  email:string,
+  issueType:string,
+  issueMsg: string;
+  isRead: boolean;
+  isDeleted: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
