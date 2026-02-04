@@ -77,6 +77,8 @@ export const fetchQueryMessage = asyncHandler(
           email: 1,
           issueType: 1,
           issueMsg: 1,
+          createdAt: 1,
+          updatedAt: 1,
         },
       },
     ]);

@@ -213,7 +213,7 @@ export const completeRegistration = asyncHandler(
     const user = await UserModel.findOne({
       phone,
       userType,
-      isDeleted:false,
+      isDeleted: false,
       isRegistered: false,
     });
 
@@ -503,6 +503,8 @@ export const logoutUser = asyncHandler(
       },
       { new: true },
     );
+
+    await firestore.collection("fcmTokens").doc(userId).delete();
 
     const cookieOptions = {
       httpOnly: true,
@@ -830,10 +832,10 @@ export const deleteuser = asyncHandler(
 
 export const deletAccount = asyncHandler(
   async (req: CustomRequest, res: Response) => {
-    const { userId } = req.user?._id;
-    const userDetails = await UserModel.findById({ _id: userId }).select(
-      "userType",
-    );
+    // console.log(req.user);
+    
+    const  userId = req.user?._id;
+    const userDetails = await UserModel.findOne({ _id: new mongoose.Types.ObjectId(userId) })
     console.log({ userDetails });
     const userType = userDetails?.userType;
 
@@ -885,7 +887,7 @@ export const deletAccount = asyncHandler(
     }
 
     const updateUser = await UserModel.findOneAndUpdate(
-      { _id: userId },
+      { _id: new mongoose.Types.ObjectId(userId) },
       {
         $set: {
           isDeleted: true,
