@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyEmail = exports.sendMailController = exports.sendMail = exports.generateVerificationCode = void 0;
+exports.sendMailToAdmin = exports.verifyEmail = exports.sendMailController = exports.sendMail = exports.generateVerificationCode = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const asyncHandler_utils_1 = require("./asyncHandler.utils");
 const response_utils_1 = require("./response.utils");
@@ -86,3 +86,21 @@ exports.verifyEmail = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) =>
         return res.status(200).json({ message: "Email verified successfully" });
     }
 });
+//contact us
+const sendMailToAdmin = async (from, senderName, html) => {
+    try {
+        const info = await transporter.sendMail({
+            from: `${senderName}<${from}>`,
+            to: "miltonbaker.psoriatic@gmail.com",
+            subject: `New Message from ${senderName}`,
+            html,
+        });
+        console.log("Message sent: %s", info.messageId);
+        return info;
+    }
+    catch (error) {
+        console.error("Error sending email:", error);
+        throw error;
+    }
+};
+exports.sendMailToAdmin = sendMailToAdmin;
