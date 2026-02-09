@@ -38,6 +38,8 @@ export const firestore = admin.firestore(); //Gets firebase store
 // Store FCM token
 export const storeFcmToken = async (req: Request, res: Response) => {
   try {
+    console.log("Functions runs...: storeFcmToken");
+
     const { userId, token, deviceId } = req.body;
 
     if (!userId || !token || !deviceId) {
@@ -82,6 +84,8 @@ export const storeFcmToken = async (req: Request, res: Response) => {
 //remove stale tokens
 export const removeStaleFcmTokens = async () => {
   try {
+    console.log("Functions runs...: removeStaleFcmTokens");
+
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
@@ -130,6 +134,8 @@ export async function sendPushNotification(
   dbData?: object,
 ) {
   try {
+    console.log("Functions runs...: sendPushNotification");
+
     const userRef = firestore.collection("fcmTokens").doc(userId.toString());
 
     const doc = await userRef.get();

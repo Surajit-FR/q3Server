@@ -213,7 +213,7 @@ export const completeRegistration = asyncHandler(
     const user = await UserModel.findOne({
       phone,
       userType,
-      isDeleted:false,
+      isDeleted: false,
       isRegistered: false,
     });
 
@@ -504,6 +504,8 @@ export const logoutUser = asyncHandler(
       { new: true },
     );
 
+    await firestore.collection("fcmTokens").doc(userId).delete();
+
     const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -618,6 +620,8 @@ export const resetPassword = asyncHandler(
   async (req: Request, res: Response) => {
     console.log("Api runs...: resetPassword");
 
+    console.log("Api runs...: resetPassword");
+
     const { input, password, userType } = req.body;
     console.log(req.body);
 
@@ -656,6 +660,8 @@ export const resetPassword = asyncHandler(
 // verifyServiceProvider controller
 export const verifyServiceProvider = asyncHandler(
   async (req: Request, res: Response) => {
+    console.log("Api runs...: verifyServiceProvider");
+
     const { serviceProviderId } = req.params;
     const { isVerified }: { isVerified: boolean } = req.body;
 
@@ -695,6 +701,8 @@ export const verifyServiceProvider = asyncHandler(
 
 export const banUser = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: banUser");
+
     const { isBan, userId } = req.body;
     if (isBan) {
       const prevOngoigServices = await towingServiceBookingModel.aggregate([
@@ -760,6 +768,8 @@ export const banUser = asyncHandler(
 
 export const deleteuser = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: deleteuser");
+
     const { userId } = req.body;
     const userDetails = await UserModel.findById({ _id: userId }).select(
       "userType",
@@ -830,10 +840,12 @@ export const deleteuser = asyncHandler(
 
 export const deletAccount = asyncHandler(
   async (req: CustomRequest, res: Response) => {
-    const { userId } = req.user?._id;
-    const userDetails = await UserModel.findById({ _id: userId }).select(
-      "userType",
-    );
+    console.log("Api runs...: deletAccount");
+
+    const userId = req.user?._id;
+    const userDetails = await UserModel.findOne({
+      _id: new mongoose.Types.ObjectId(userId),
+    });
     console.log({ userDetails });
     const userType = userDetails?.userType;
 
@@ -885,7 +897,7 @@ export const deletAccount = asyncHandler(
     }
 
     const updateUser = await UserModel.findOneAndUpdate(
-      { _id: userId },
+      { _id: new mongoose.Types.ObjectId(userId) },
       {
         $set: {
           isDeleted: true,

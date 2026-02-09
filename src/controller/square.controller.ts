@@ -15,6 +15,8 @@ export const createSquareCheckoutsession = async (
   res: any,
 ) => {
   try {
+    console.log("Api runs...: createSquareCheckoutsession");
+
     const { amount, serviceId } = req.body;
     console.log(req.body);
 

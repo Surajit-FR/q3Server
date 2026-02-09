@@ -6,6 +6,8 @@ import { CustomRequest } from "../../types/commonType";
 
 export const updateSPLocation = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: updateSPLocation");
+
     const { spId = req.user._id, serviceId, lat, lng } = req.body;
 
     if (!spId || !serviceId || !lat || !lng) {
@@ -34,23 +36,24 @@ export const updateSPLocation = asyncHandler(
       {
         upsert: true,
         new: true,
-      }
+      },
     );
     return handleResponse(
       res,
       "success",
       200,
       updatedDoc,
-      "SP location updated"
+      "SP location updated",
     );
-  }
+  },
 );
 
 export const getSPLocation = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: getSPLocation");
+
     const { serviceId } = req.body;
-    console.log(req.body,"fetch sp locats while tracking");
-    
+    console.log(req.body, "fetch sp locats while tracking");
 
     const locationRecord = await SPLocationTrackingModel.findOne({
       serviceId,
@@ -68,7 +71,7 @@ export const getSPLocation = asyncHandler(
       "success",
       200,
       locationRecord.lastLocations,
-      "SP location fetched successfully"
+      "SP location fetched successfully",
     );
-  }
+  },
 );

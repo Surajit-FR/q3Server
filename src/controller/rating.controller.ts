@@ -8,9 +8,10 @@ import { handleResponse } from "../../utils/response.utils";
 // addRating controller
 export const addRating = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: addRating");
+
     const { rating, ratedTo, serviceId, comments } = req.body;
-    console.log("addRating",req.user?._id);
-    
+    console.log("addRating", req.user?._id);
 
     // Validate required fields
     if (!rating || !ratedTo) {
