@@ -7,6 +7,8 @@ import ContactUsModel from "../models/contact.model";
 
 export const sendQueryMessage = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: sendQueryMessage");
+
     const { fullName, email, issueType, issueMsg } = req.body;
 
     console.log(req.body, "sendQueryMessage");
@@ -64,6 +66,8 @@ export const sendQueryMessage = asyncHandler(
 
 export const fetchQueryMessage = asyncHandler(
   async (req: Request, res: Response) => {
+    console.log("Api runs...: fetchQueryMessage");
+
     const queryMessages = await ContactUsModel.aggregate([
       {
         $match: {

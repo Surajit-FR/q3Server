@@ -19,6 +19,8 @@ const stripe = new Stripe(STRIPE_SECRET_KEY, {
 //session for towing service payment payment
 export const createCheckoutsession = async (req: CustomRequest, res: any) => {
   try {
+    console.log("Api runs...: createCheckoutsession");
+
     const { amount, serviceId } = req.body;
     const userId = req.user?._id;
     const currency = "usd";
@@ -97,6 +99,8 @@ export const payoutServiceProvider = async (
   req: CustomRequest,
   res: Response,
 ) => {
+  console.log("Api runs...: payoutServiceProvider");
+
   const {
     spId,
     first_name,
@@ -251,6 +255,8 @@ export const payoutServiceProvider = async (
 
 export const fetchSPPayout = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: fetchSPPayout");
+
     const { serviceProviderId } = req.body;
     if (!serviceProviderId) {
       return handleResponse(
@@ -264,15 +270,15 @@ export const fetchSPPayout = asyncHandler(
     const payouts = await payoutModel.aggregate([
       {
         $match: {
-          serviceProviderId:new mongoose.Types.ObjectId(serviceProviderId),
+          serviceProviderId: new mongoose.Types.ObjectId(serviceProviderId),
           status: "paid",
         },
       },
       {
-        $project:{
-          serviceId:0
-        }
-      }
+        $project: {
+          serviceId: 0,
+        },
+      },
     ]);
     return handleResponse(
       res,

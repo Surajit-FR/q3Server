@@ -620,6 +620,8 @@ export const resetPassword = asyncHandler(
   async (req: Request, res: Response) => {
     console.log("Api runs...: resetPassword");
 
+    console.log("Api runs...: resetPassword");
+
     const { input, password, userType } = req.body;
     console.log(req.body);
 
@@ -658,6 +660,8 @@ export const resetPassword = asyncHandler(
 // verifyServiceProvider controller
 export const verifyServiceProvider = asyncHandler(
   async (req: Request, res: Response) => {
+    console.log("Api runs...: verifyServiceProvider");
+
     const { serviceProviderId } = req.params;
     const { isVerified }: { isVerified: boolean } = req.body;
 
@@ -697,6 +701,8 @@ export const verifyServiceProvider = asyncHandler(
 
 export const banUser = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: banUser");
+
     const { isBan, userId } = req.body;
     if (isBan) {
       const prevOngoigServices = await towingServiceBookingModel.aggregate([
@@ -762,6 +768,8 @@ export const banUser = asyncHandler(
 
 export const deleteuser = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: deleteuser");
+
     const { userId } = req.body;
     const userDetails = await UserModel.findById({ _id: userId }).select(
       "userType",
@@ -832,10 +840,12 @@ export const deleteuser = asyncHandler(
 
 export const deletAccount = asyncHandler(
   async (req: CustomRequest, res: Response) => {
-    // console.log(req.user);
-    
-    const  userId = req.user?._id;
-    const userDetails = await UserModel.findOne({ _id: new mongoose.Types.ObjectId(userId) })
+    console.log("Api runs...: deletAccount");
+
+    const userId = req.user?._id;
+    const userDetails = await UserModel.findOne({
+      _id: new mongoose.Types.ObjectId(userId),
+    });
     console.log({ userDetails });
     const userType = userDetails?.userType;
 

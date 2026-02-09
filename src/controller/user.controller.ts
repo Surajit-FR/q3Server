@@ -482,14 +482,18 @@ export const updateCustomer = asyncHandler(
 
 export const getCardValue = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: getCardValue");
+
     const totalCustomer = await UserModel.find({
-      userType: "Customer", isDeleted:false
+      userType: "Customer",
+      isDeleted: false,
     }).countDocuments();
     const totalSps = await UserModel.find({
-      userType: "ServiceProvider",isDeleted:false
+      userType: "ServiceProvider",
+      isDeleted: false,
     }).countDocuments();
     const totalServices = await towingServiceBookingModel
-      .find({isDeleted:false})
+      .find({ isDeleted: false })
       .countDocuments();
     const totalActiveSps = await LocationSessionModel.find({
       isActive: true,
@@ -507,6 +511,8 @@ export const getCardValue = asyncHandler(
 
 export const fetchAllActiveSps = asyncHandler(
   async (req: CustomRequest, res: Response) => {
+    console.log("Api runs...: fetchAllActiveSps");
+
     const activeSps = await LocationSessionModel.find({ isActive: true });
     return handleResponse(
       res,
