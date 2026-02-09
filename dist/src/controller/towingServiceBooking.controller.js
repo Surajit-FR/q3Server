@@ -1120,6 +1120,7 @@ exports.fetchAssociatedCustomer = fetchAssociatedCustomer;
 const verifyServiceCode = async (req, res) => {
     var _a, _b, _c;
     try {
+        console.log("Api runs...: verifyServiceCode");
         const { serviceId, code } = req.body;
         const spId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
         console.log((_b = req.user) === null || _b === void 0 ? void 0 : _b._id);
@@ -1161,6 +1162,7 @@ const verifyServiceCode = async (req, res) => {
 exports.verifyServiceCode = verifyServiceCode;
 exports.fetchCustomersTotalServices = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
+    console.log("Api runs...: fetchCustomersTotalServices");
     const serviceDetails = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
@@ -1283,6 +1285,7 @@ exports.fetchCustomersTotalServices = (0, asyncHandler_utils_1.asyncHandler)(asy
 });
 exports.fetchOngoingServices = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
+    console.log("Api runs...: fetchOngoingServices");
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const totalOngoingServices = await towingServiceBooking_model_1.default.aggregate([
         {
@@ -1413,6 +1416,7 @@ exports.fetchOngoingServices = (0, asyncHandler_utils_1.asyncHandler)(async (req
 });
 exports.fetchOngoingServicesByCustomer = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
+    console.log("Api runs...: fetchOngoingServicesByCustomer");
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const totalOngoingServices = await towingServiceBooking_model_1.default.aggregate([
         {
@@ -1540,6 +1544,7 @@ exports.fetchOngoingServicesByCustomer = (0, asyncHandler_utils_1.asyncHandler)(
     return (0, response_utils_1.handleResponse)(res, "success", 200, totalOngoingServices, "Service requests fetched successfully");
 });
 exports.fetchTransactions = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    console.log("Api runs...: fetchTransactions");
     const { page = 1, limit = 10, query = "" } = req.query;
     // const pageNumber = parseInt(page as string, 10);
     // const limitNumber = parseInt(limit as string, 10);
@@ -1621,6 +1626,7 @@ exports.fetchTransactions = (0, asyncHandler_utils_1.asyncHandler)(async (req, r
     return (0, response_utils_1.handleResponse)(res, "success", 200, totalTransactions, "Total transactions fetched successfully");
 });
 exports.fetchTopPerformerSPs = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    console.log("Api runs...: fetchTopPerformerSPs");
     const totalOngoingServices = await towingServiceBooking_model_1.default.aggregate([
         {
             $match: {
@@ -1668,6 +1674,7 @@ exports.fetchTopPerformerSPs = (0, asyncHandler_utils_1.asyncHandler)(async (req
     return (0, response_utils_1.handleResponse)(res, "success", 200, totalOngoingServices, "Service requests fetched successfully");
 });
 exports.fetchTransactionsSPWise = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    console.log("Api runs...: fetchTransactionsSPWise");
     const { serviceProviderId } = req.body;
     const totalTransactions = await towingServiceBooking_model_1.default.aggregate([
         {
@@ -1736,6 +1743,7 @@ exports.fetchTransactionsSPWise = (0, asyncHandler_utils_1.asyncHandler)(async (
 });
 exports.fetchTransactionsCustomerWise = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
+    console.log("Api runs...: fetchTransactionsCustomerWise");
     // const {userId} = req.body;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const totalTransactions = await towingServiceBooking_model_1.default.aggregate([

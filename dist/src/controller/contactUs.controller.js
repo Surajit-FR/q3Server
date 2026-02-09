@@ -9,6 +9,7 @@ const response_utils_1 = require("../../utils/response.utils");
 const sendEmail_1 = require("../../utils/sendEmail");
 const contact_model_1 = __importDefault(require("../models/contact.model"));
 exports.sendQueryMessage = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    console.log("Api runs...: sendQueryMessage");
     const { fullName, email, issueType, issueMsg } = req.body;
     console.log(req.body, "sendQueryMessage");
     if (!fullName || !email || !issueType || !issueMsg) {
@@ -39,6 +40,7 @@ exports.sendQueryMessage = (0, asyncHandler_utils_1.asyncHandler)(async (req, re
     }
 });
 exports.fetchQueryMessage = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    console.log("Api runs...: fetchQueryMessage");
     const queryMessages = await contact_model_1.default.aggregate([
         {
             $match: {
@@ -52,6 +54,8 @@ exports.fetchQueryMessage = (0, asyncHandler_utils_1.asyncHandler)(async (req, r
                 email: 1,
                 issueType: 1,
                 issueMsg: 1,
+                createdAt: 1,
+                updatedAt: 1,
             },
         },
     ]);

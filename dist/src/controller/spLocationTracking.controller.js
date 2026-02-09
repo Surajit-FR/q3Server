@@ -8,6 +8,7 @@ const spLocationTracking_model_1 = __importDefault(require("../models/spLocation
 const asyncHandler_utils_1 = require("../../utils/asyncHandler.utils");
 const response_utils_1 = require("../../utils/response.utils");
 exports.updateSPLocation = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    console.log("Api runs...: updateSPLocation");
     const { spId = req.user._id, serviceId, lat, lng } = req.body;
     if (!spId || !serviceId || !lat || !lng) {
         return res.status(400).json({
@@ -34,6 +35,7 @@ exports.updateSPLocation = (0, asyncHandler_utils_1.asyncHandler)(async (req, re
     return (0, response_utils_1.handleResponse)(res, "success", 200, updatedDoc, "SP location updated");
 });
 exports.getSPLocation = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    console.log("Api runs...: getSPLocation");
     const { serviceId } = req.body;
     console.log(req.body, "fetch sp locats while tracking");
     const locationRecord = await spLocationTracking_model_1.default.findOne({

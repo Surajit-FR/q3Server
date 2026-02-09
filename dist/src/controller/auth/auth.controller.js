@@ -329,6 +329,7 @@ exports.logoutUser = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => 
             fcmToken: "",
         },
     }, { new: true });
+    await sendPushNotification_utils_1.firestore.collection("fcmTokens").doc(userId).delete();
     const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -410,6 +411,7 @@ exports.forgetPassword = (0, asyncHandler_utils_1.asyncHandler)(async (req, res)
 });
 exports.resetPassword = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     console.log("Api runs...: resetPassword");
+    console.log("Api runs...: resetPassword");
     const { input, password, userType } = req.body;
     console.log(req.body);
     if (!input) {
@@ -430,6 +432,7 @@ exports.resetPassword = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) 
 });
 // verifyServiceProvider controller
 exports.verifyServiceProvider = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    console.log("Api runs...: verifyServiceProvider");
     const { serviceProviderId } = req.params;
     const { isVerified } = req.body;
     if (!serviceProviderId) {
@@ -451,6 +454,7 @@ exports.verifyServiceProvider = (0, asyncHandler_utils_1.asyncHandler)(async (re
     return (0, response_utils_1.handleResponse)(res, "success", 200, {}, message);
 });
 exports.banUser = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    console.log("Api runs...: banUser");
     const { isBan, userId } = req.body;
     if (isBan) {
         const prevOngoigServices = await towingServiceBooking_model_1.default.aggregate([
@@ -489,6 +493,7 @@ exports.banUser = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     }
 });
 exports.deleteuser = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    console.log("Api runs...: deleteuser");
     const { userId } = req.body;
     const userDetails = await user_model_1.default.findById({ _id: userId }).select("userType");
     console.log({ userDetails });
@@ -539,8 +544,11 @@ exports.deleteuser = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => 
 });
 exports.deletAccount = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a;
-    const { userId } = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-    const userDetails = await user_model_1.default.findById({ _id: userId }).select("userType");
+    console.log("Api runs...: deletAccount");
+    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+    const userDetails = await user_model_1.default.findOne({
+        _id: new mongoose_1.default.Types.ObjectId(userId),
+    });
     console.log({ userDetails });
     const userType = userDetails === null || userDetails === void 0 ? void 0 : userDetails.userType;
     if (userType === "ServiceProvider") {
@@ -579,7 +587,7 @@ exports.deletAccount = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) =
     else {
         return (0, response_utils_1.handleResponse)(res, "error", 400, {}, "UserType not found");
     }
-    const updateUser = await user_model_1.default.findOneAndUpdate({ _id: userId }, {
+    const updateUser = await user_model_1.default.findOneAndUpdate({ _id: new mongoose_1.default.Types.ObjectId(userId) }, {
         $set: {
             isDeleted: true,
             accessToken: "",

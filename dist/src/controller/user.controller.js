@@ -333,11 +333,14 @@ exports.updateCustomer = (0, asyncHandler_utils_1.asyncHandler)(async (req, res)
     return (0, response_utils_1.handleResponse)(res, "success", 200, "User updated successfully");
 });
 exports.getCardValue = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    console.log("Api runs...: getCardValue");
     const totalCustomer = await user_model_1.default.find({
-        userType: "Customer", isDeleted: false
+        userType: "Customer",
+        isDeleted: false,
     }).countDocuments();
     const totalSps = await user_model_1.default.find({
-        userType: "ServiceProvider", isDeleted: false
+        userType: "ServiceProvider",
+        isDeleted: false,
     }).countDocuments();
     const totalServices = await towingServiceBooking_model_1.default
         .find({ isDeleted: false })
@@ -348,6 +351,7 @@ exports.getCardValue = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) =
     return (0, response_utils_1.handleResponse)(res, "success", 200, { totalCustomer, totalSps, totalServices, totalActiveSps }, "KPI card values fetched successfully");
 });
 exports.fetchAllActiveSps = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    console.log("Api runs...: fetchAllActiveSps");
     const activeSps = await locationSession_models_1.default.find({ isActive: true });
     return (0, response_utils_1.handleResponse)(res, "success", 200, activeSps, "All active sps fetched successfully");
 });

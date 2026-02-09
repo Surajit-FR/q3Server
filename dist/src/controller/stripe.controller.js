@@ -19,6 +19,7 @@ const stripe = new stripe_1.default(config_1.STRIPE_SECRET_KEY, {
 const createCheckoutsession = async (req, res) => {
     var _a;
     try {
+        console.log("Api runs...: createCheckoutsession");
         const { amount, serviceId } = req.body;
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
         const currency = "usd";
@@ -85,6 +86,7 @@ const createCheckoutsession = async (req, res) => {
 exports.createCheckoutsession = createCheckoutsession;
 const payoutServiceProvider = async (req, res) => {
     var _a;
+    console.log("Api runs...: payoutServiceProvider");
     const { spId, first_name, last_name, amount, serviceId, socialSecurity, dob, accountNumber, ifsc, routing_number, } = req.body;
     if (!spId || !amount) {
         res.status(400).json({
@@ -213,6 +215,7 @@ const payoutServiceProvider = async (req, res) => {
 };
 exports.payoutServiceProvider = payoutServiceProvider;
 exports.fetchSPPayout = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
+    console.log("Api runs...: fetchSPPayout");
     const { serviceProviderId } = req.body;
     if (!serviceProviderId) {
         return (0, response_utils_1.handleResponse)(res, "error", 400, "", "Service Provider ID is required");
@@ -226,9 +229,9 @@ exports.fetchSPPayout = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) 
         },
         {
             $project: {
-                serviceId: 0
-            }
-        }
+                serviceId: 0,
+            },
+        },
     ]);
     return (0, response_utils_1.handleResponse)(res, "success", 200, payouts, "Payouts fetched successfully");
 });

@@ -16,6 +16,7 @@ const client = new square_1.SquareClient({
 const createSquareCheckoutsession = async (req, res) => {
     var _a, _b, _c;
     try {
+        console.log("Api runs...: createSquareCheckoutsession");
         const { amount, serviceId } = req.body;
         console.log(req.body);
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;

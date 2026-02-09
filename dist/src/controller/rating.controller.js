@@ -10,6 +10,7 @@ const response_utils_1 = require("../../utils/response.utils");
 // addRating controller
 exports.addRating = (0, asyncHandler_utils_1.asyncHandler)(async (req, res) => {
     var _a, _b, _c;
+    console.log("Api runs...: addRating");
     const { rating, ratedTo, serviceId, comments } = req.body;
     console.log("addRating", (_a = req.user) === null || _a === void 0 ? void 0 : _a._id);
     // Validate required fields

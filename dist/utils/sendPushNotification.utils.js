@@ -30,6 +30,7 @@ exports.firestore = firebase_admin_1.default.firestore(); //Gets firebase store
 const storeFcmToken = async (req, res) => {
     var _a;
     try {
+        console.log("Functions runs...: storeFcmToken");
         const { userId, token, deviceId } = req.body;
         if (!userId || !token || !deviceId) {
             res
@@ -66,6 +67,7 @@ exports.storeFcmToken = storeFcmToken;
 //remove stale tokens
 const removeStaleFcmTokens = async () => {
     try {
+        console.log("Functions runs...: removeStaleFcmTokens");
         const oneMonthAgo = new Date();
         oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
         const snapshot = await exports.firestore.collection("fcmTokens").get();
@@ -104,6 +106,7 @@ exports.removeStaleFcmTokens = removeStaleFcmTokens;
 async function sendPushNotification(userId, title, body, dbData) {
     var _a;
     try {
+        console.log("Functions runs...: sendPushNotification");
         const userRef = exports.firestore.collection("fcmTokens").doc(userId.toString());
         const doc = await userRef.get();
         if (!doc.exists)
